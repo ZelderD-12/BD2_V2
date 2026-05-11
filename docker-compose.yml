@@ -1,0 +1,32 @@
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: clinica_sqlserver
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: ${SA_PASSWORD:-ClinicaDBgrupo3#}
+      MSSQL_PID: "Express"
+    ports:
+      - "${SQLSERVER_PORT:-1436}:1433"
+    volumes:
+      - sqlserver_data:/var/opt/mssql
+    networks:
+      - clinica_network
+    restart: unless-stopped
+
+  # Bun solo como imagen construida, no se ejecuta
+  bun_app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: clinica_bun_app
+    command: ["echo", "Bun image ready - not running"]
+    networks:
+      - clinica_network
+
+volumes:
+  sqlserver_data:
+
+networks:
+  clinica_network:
+    driver: bridge

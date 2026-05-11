@@ -1,0 +1,5 @@
+bun add dotenv --cwd pakages/backend
+bun add mssql --cwd pakages/backend
+bun add elysia 
+bun add mssql
+bun add @elysiajs/cors

@@ -1,0 +1,60 @@
+.PHONY: dev stop clean start
+
+# Detectar sistema operativo
+ifeq ($(OS),Windows_NT)
+    KILL_BUN = @taskkill /F /IM bun.exe 2>nul || true
+    KILL_NODE = @taskkill /F /IM node.exe 2>nul || true
+else
+    KILL_BUN = @pkill bun 2>/dev/null || true
+    KILL_NODE = @pkill node 2>/dev/null || true
+endif
+
+dev:
+	@echo  Limpiando procesos anteriores...
+	$(KILL_BUN)
+	$(KILL_NODE)
+	@echo  Iniciando servicios...
+	@bun run dev
+
+dev-backend:
+	@echo  Iniciando Backend...
+	@cd packages/backend && bun --hot src/index.ts
+
+dev-frontend:
+	@echo  Iniciando Frontend...
+	@cd packages/frontend && bun run dev
+
+stop:
+	@echo  Deteniendo servicios...
+	$(KILL_BUN)
+	$(KILL_NODE)
+	@echo  Servicios detenidos
+
+start: stop dev
+
+# Reconstruir Docker
+docker-build:
+	@docker-compose build
+
+docker-up:
+	@docker-compose up -d
+
+docker-down:
+	@docker-compose down
+
+docker-restart: docker-down docker-up
+
+# Instalar dependencias
+install:
+	@bun install
+	@cd packages/backend && bun install
+	@cd packages/frontend && bun install
+
+# Limpiar caché y dependencias
+clean:
+	@echo  Limpiando caché...
+	@rm -rf node_modules packages/backend/node_modules packages/frontend/node_modules
+	@echo  Reinstalando dependencias...
+	@bun install
+	@cd packages/backend && bun install
+	@cd packages/frontend && bun install

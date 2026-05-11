@@ -1,0 +1,15 @@
+{
+  "name": "clinica-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": ["pakages/*"],
+  "scripts": {
+    "dev": "bun run --filter '*' dev",
+    "dev:backend": "bun run --filter backend dev",
+    "dev:frontend": "bun run --filter frontend dev"
+  },
+  "devDependencies": {
+    "@types/mssql": "^12.3.0",
+    "concurrently": "^9.2.1"
+  }
+}
