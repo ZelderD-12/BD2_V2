@@ -8,3 +8,6 @@ WITH
     MOVE 'ClinicaF' TO '/var/opt/mssql/data/ClinicaF.mdf',
     MOVE 'ClinicaF_log' TO '/var/opt/mssql/data/ClinicaF_log.ldf',
     REPLACE;
+
+
+

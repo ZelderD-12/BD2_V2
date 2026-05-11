@@ -1,4 +1,4 @@
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000'
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080'
 
 export const api = {
   async login(email: string, password: string) {
@@ -10,8 +10,17 @@ export const api = {
     return res.json()
   },
 
+  async register(userData: any) {
+    const res = await fetch(`${API_URL}/Usuario/crear`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(userData)
+    })
+    return res.json()
+  },
+
   async getDbTest() {
-    const res = await fetch(`${API_URL}/api/db-test`)
+    const res = await fetch(`${API_URL}/health`)
     return res.json()
   },
 

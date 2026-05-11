@@ -1,52 +1,14 @@
-// api.ts
-import dotenv from 'dotenv';
-dotenv.config();
-
 import { Elysia } from 'elysia';
 import { cors } from '@elysiajs/cors';
-import { login, crearUsuario, actualizarUsuario, obtenerUsuario } from './Controlles/usuarios';
-import { 
-    pagarConTarjeta,
-    pagarConTransferencia,
-    consultarSaldo, 
-    obtenerHistorial, 
-    obtenerDetallePago 
-} from './services/transferencias';
-
-import {
-    reservarCitaService,
-    obtenerCitasPaciente,
-    obtenerServicios,
-    obtenerMedicos
-} from './services/citas';
-
-import {
-    generarTicketService,
-    llamarSiguienteService,
-    cambiarEstadoTicketService,
-    obtenerColaPublicaService
-} from './services/tickets';
+import { getConnection, sql } from './Connection';
 
 const app = new Elysia();
 
-// Configuración CORS corregida
 app.use(cors({
-    origin: true, // Permite cualquier origen
+    origin: '*',
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'Idempotency-Key', 'X-Requested-With'],
-    exposeHeaders: ['Content-Length', 'X-Request-Id'], // 👈 CORREGIDO: exposeHeaders (sin 'd')
-    credentials: true,
-    maxAge: 86400 // 24 horas
+    allowedHeaders: ['Content-Type', 'Authorization']
 }));
-
-// Manejo explícito de OPTIONS para preflight
-app.options('*', ({ set }) => {
-    set.headers['Access-Control-Allow-Origin'] = '*';
-    set.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE, OPTIONS';
-    set.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization, Idempotency-Key';
-    set.status = 204;
-    return null;
-});
 
 // Health check
 app.get('/', () => ({
@@ -59,43 +21,73 @@ app.get('/health', () => ({
     timestamp: new Date().toISOString()
 }));
 
-// Usuarios
-app.post('/Login', login);
-app.post('/Usuario/crear', crearUsuario);
-app.put('/Usuario/actualizar', actualizarUsuario);
-app.get('/Usuario/:id', obtenerUsuario);
+// Test conexión BD
+app.get('/api/db-test', async ({ set }) => {
+    try {
+        const pool = await getConnection();
+        const result = await pool.request().query(`
+            SELECT 
+                @@SERVERNAME as server_name,
+                DB_NAME() as database_name,
+                @@VERSION as version,
+                GETDATE() as server_time
+        `);
+        return {
+            success: true,
+            message: 'Conexion exitosa a SQL Server',
+            data: result.recordset[0]
+        };
+    } catch (error: any) {
+        set.status = 500;
+        return { success: false, message: 'Error de conexion', error: error.message };
+    }
+});
 
-// =============================================
-// PAGOS A FAMKON (usando email/telefono)
-// =============================================
+// LOGIN
+app.post('/Login', async ({ body, set }) => {
+    const { email, password } = body as { email: string; password: string };
 
-// Pago con tarjeta
-app.post('/pagos/tarjeta', pagarConTarjeta);
+    if (!email || !password) {
+        set.status = 400;
+        return { success: false, message: 'Email y password requeridos' };
+    }
 
-// Pago con transferencia bancaria
-app.post('/pagos/transferencia', pagarConTransferencia);
+    try {
+        const pool = await getConnection();
+        const result = await pool.request()
+            .input('email', sql.VarChar(100), email)
+            .input('password', sql.VarChar(125), password)
+            .input('ip_origen', sql.VarChar(50), 'localhost')
+            .input('user_agent', sql.VarChar(200), 'test')
+            .execute('sp_login_usuario');
 
-// Consultar saldo (por email o telefono)
-app.get('/pagos/saldo', consultarSaldo);
+        const data = result.recordset?.[0];
 
-// Obtener historial de pagos
-app.get('/pagos/historial', obtenerHistorial);
+        if (data?.Resultado === 1) {
+            return {
+                success: true,
+                message: data.Mensaje,
+                token: data.token,
+                usuario: {
+                    id: data.id_usuario,
+                    nombres: data.nombres,
+                    apellidos: data.apellidos,
+                    email: data.email,
+                    rol: data.rol,
+                    rol_nombre: data.rol_nombre
+                }
+            };
+        }
 
-// Obtener detalle de un pago
-app.get('/pagos/detalle/:id', obtenerDetallePago);
+        set.status = 401;
+        return { success: false, message: data?.Mensaje || 'Credenciales incorrectas', code: data?.Codigo };
 
-app.post('/api/reservar/cita',      reservarCitaService);
-app.get('/api/citas/paciente/:id',  obtenerCitasPaciente);
-app.get('/api/citas/servicios',     obtenerServicios);
-app.get('/api/citas/medicos',       obtenerMedicos);
+    } catch (error: any) {
+        set.status = 500;
+        return { success: false, message: 'Error interno', error: error.message };
+    }
+});
 
-// Tickets y cola de recepcion
-app.post('/api/tickets/generar',         generarTicketService);
-app.post('/api/tickets/siguiente',       llamarSiguienteService);
-app.post('/api/tickets/:id/estado',      cambiarEstadoTicketService);
-app.get('/api/pantalla/cola',            obtenerColaPublicaService);
-
-const port = parseInt(process.env.APP_PORT || '8080');
+const port = 8080;
 app.listen(port);
-
-console.log(`\n API Clinica FamKon corriendo en http://localhost:${port}`);
+console.log(`API corriendo en http://localhost:${port}`);

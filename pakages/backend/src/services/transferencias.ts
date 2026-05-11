@@ -1,5 +1,5 @@
 // services/transferencias.ts
-import { sql, getConnection } from '../Connetion';
+import { sql, getConnection } from '../Connection';
 import type { Context } from 'elysia';
 
 interface PagoBody {
