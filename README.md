@@ -38,3 +38,8 @@ make clean            # Limpiar y reinstalar
 make docker-up        # Iniciar Docker
 make docker-down      # Detener Docker
 make docker-restart   # Reiniciar Docker
+
+make db-export    # Exporta la BD a Downloads con fecha
+make db-import    # Importa desde Downloads/ClinicaF.bak
+make dev          # Iniciar desarrollo
+make stop         # Detener todo
