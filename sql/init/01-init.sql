@@ -9,5 +9,12 @@ WITH
     MOVE 'ClinicaF_log' TO '/var/opt/mssql/data/ClinicaF_log.ldf',
     REPLACE;
 
+USE ClinicaF;
 
+EXEC dbo.sp_login_usuario 
+    @email = 'tobiasgusito@gmail.com',
+    @password = '123456789',
+    @ip_origen = 'localhost',
+    @user_agent = 'test';
 
+SELECT * FROM dbo.Rol;

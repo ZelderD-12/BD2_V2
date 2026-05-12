@@ -2,7 +2,7 @@ import { Link, useLocation } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 
 export default function Nav() {
-  const { isLoggedIn, userRol } = useAuth()
+  const { isLoggedIn, tienePermiso } = useAuth()
   const location = useLocation()
 
   return (
@@ -26,7 +26,7 @@ export default function Nav() {
               <Link to="/pagar" className="nav-simple-link">Pagar</Link>
             </li>
           )}
-          {userRol === 'Resepcionista' && (
+          {tienePermiso('VER_RECEPCION') && (
             <li id="navRecepcionSimple" style={{ display: 'list-item' }}>
               <Link to="/recepcion" className="nav-simple-link">Panel Recepción</Link>
             </li>

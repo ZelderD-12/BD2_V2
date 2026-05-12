@@ -10,14 +10,8 @@ export default function LoginPage() {
   const [message, setMessage] = useState('')
   const [messageType, setMessageType] = useState<'success' | 'error'>('error')
   const [loading, setLoading] = useState(false)
-  const { login, isLoggedIn } = useAuth()
+  const { login, isLoggedIn, userRolId } = useAuth()
   const navigate = useNavigate()
-
-  useEffect(() => {
-    if (isLoggedIn) {
-      navigate('/')
-    }
-  }, [isLoggedIn, navigate])
 
   const getRedirectPath = (rolId: number): string => {
     // Roles 5 (Recepción/Secretaría) y 6 (Recepción) -> recepcion
@@ -27,6 +21,12 @@ export default function LoginPage() {
     // Los demás van al home
     return '/'
   }
+
+  useEffect(() => {
+    if (isLoggedIn && userRolId != null) {
+      navigate(getRedirectPath(Number(userRolId)))
+    }
+  }, [isLoggedIn, userRolId, navigate])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -49,21 +49,20 @@ export default function LoginPage() {
       const result = await api.login(email, password)
 
       if (result.success && result.token) {
+        const rolNum = Number(result.usuario.rol)
         const userData = {
           id: result.usuario.id,
           nombres: result.usuario.nombres,
           apellidos: result.usuario.apellidos,
           email: result.usuario.email,
-          rol: result.usuario.rol,
+          rol: Number.isFinite(rolNum) ? rolNum : result.usuario.rol,
           rol_nombre: result.usuario.rol_nombre
         }
 
         login(result.token, userData)
         setMessage('Inicio de sesión exitoso. Redirigiendo...')
         setMessageType('success')
-        
-        const redirectPath = getRedirectPath(result.usuario.rol)
-        setTimeout(() => navigate(redirectPath), 1500)
+        navigate(getRedirectPath(Number.isFinite(rolNum) ? rolNum : 0))
         return
       }
 

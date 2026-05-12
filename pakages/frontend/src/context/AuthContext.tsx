@@ -1,7 +1,7 @@
 import { createContext, useState, useContext } from 'react'
 import type { ReactNode } from 'react'
 
-interface User {
+export interface Usuario {
   id: number
   nombres: string
   apellidos: string
@@ -10,22 +10,35 @@ interface User {
   rol_nombre: string
 }
 
+export const PERMISOS = {
+  VER_RECEPCION: [5, 6],
+  VER_CITAS: [2, 3, 5, 6],
+  CREAR_USUARIO: [5, 6],
+  GESTIONAR_TICKETS: [5, 6],
+}
+
+export const tienePermiso = (rolId: number | null, permiso: keyof typeof PERMISOS): boolean => {
+  if (!rolId) return false
+  return PERMISOS[permiso].includes(rolId)
+}
+
 interface AuthContextType {
   token: string | null
-  user: User | null
+  user: Usuario | null
   userNombre: string | null
   userRol: string | null
   userRolId: number | null
-  login: (token: string, user: User) => void
+  login: (token: string, user: Usuario) => void
   logout: () => void
   isLoggedIn: boolean
+  tienePermiso: (permiso: keyof typeof PERMISOS) => boolean
 }
 
 const AuthContext = createContext<AuthContextType>(null!)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [token, setToken] = useState(localStorage.getItem('auth_token'))
-  const [user, setUser] = useState<User | null>(
+  const [user, setUser] = useState<Usuario | null>(
     localStorage.getItem('user_data') 
       ? JSON.parse(localStorage.getItem('user_data')!) 
       : null
@@ -35,12 +48,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const userRol = user?.rol_nombre || null
   const userRolId = user?.rol || null
 
-  const login = (token: string, userData: User) => {
+  const login = (token: string, userData: Usuario) => {
     localStorage.setItem('auth_token', token)
     localStorage.setItem('user_data', JSON.stringify(userData))
-    localStorage.setItem('user_nombre', `${userData.nombres} ${userData.apellidos}`)
-    localStorage.setItem('user_rol', userData.rol_nombre)
-    localStorage.setItem('user_rol_id', String(userData.rol))
     setToken(token)
     setUser(userData)
   }
@@ -51,12 +61,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null)
   }
 
+  const checkPermiso = (permiso: keyof typeof PERMISOS) => {
+    return tienePermiso(userRolId, permiso)
+  }
+
   return (
-    <AuthContext.Provider value={{ token, user, userNombre, userRol, userRolId, login, logout, isLoggedIn: !!token }}>
+    <AuthContext.Provider value={{ 
+      token, user, userNombre, userRol, userRolId, 
+      login, logout, isLoggedIn: !!token, 
+      tienePermiso: checkPermiso 
+    }}>
       {children}
     </AuthContext.Provider>
   )
 }
 
 export const useAuth = () => useContext(AuthContext)
-export default AuthContext

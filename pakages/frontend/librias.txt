@@ -1,2 +1,3 @@
 bun add react-router-dom
 bun add dotenv --cwd pakages/frontend
+bun install

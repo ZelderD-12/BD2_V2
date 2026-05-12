@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useAuth } from '../../context/AuthContext'
+import { useAuth, tienePermiso } from '../../context/AuthContext'
 import '../../assets/styles/recepcion.css'
 
 const API_BASE = 'http://localhost:8080'
@@ -16,7 +16,7 @@ interface Ticket {
 }
 
 export default function RecepcionPage() {
-  const { isLoggedIn, userRol } = useAuth()
+  const { isLoggedIn, userRolId } = useAuth()
   const navigate = useNavigate()
 
   // Form state
@@ -45,11 +45,10 @@ export default function RecepcionPage() {
       navigate('/login')
       return
     }
-    if (userRol !== 'Resepcionista') {
+    if (!tienePermiso(userRolId, 'VER_RECEPCION')) {
       navigate('/')
-      return
     }
-  }, [isLoggedIn, userRol, navigate])
+  }, [isLoggedIn, userRolId, navigate])
 
   const getAuthHeaders = () => {
     const token = localStorage.getItem('auth_token')

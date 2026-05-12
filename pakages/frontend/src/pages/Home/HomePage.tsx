@@ -5,7 +5,7 @@ import { api } from '../../services/api'
 import '../../assets/styles/FamKon_Clinic.css'
 
 export default function HomePage() {
-  const { isLoggedIn, userRol } = useAuth()
+  const { isLoggedIn, tienePermiso } = useAuth()
   const [servicios, setServicios] = useState<any[]>([])
 
   useEffect(() => {
@@ -32,7 +32,7 @@ export default function HomePage() {
           <div className="hero-buttons">
             <Link to={isLoggedIn ? "/citas" : "/login"} className="btn btn-primary">Agendar Cita</Link>
             <a href="#servicios" className="btn btn-secondary">Ver Servicios</a>
-            {userRol === 'Resepcionista' && (
+            {tienePermiso('VER_RECEPCION') && (
               <Link to="/recepcion" className="btn btn-secondary">Recepción</Link>
             )}
           </div>
