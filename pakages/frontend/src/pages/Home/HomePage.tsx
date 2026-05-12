@@ -9,18 +9,17 @@ export default function HomePage() {
   const [servicios, setServicios] = useState<any[]>([])
 
   useEffect(() => {
-    api.getServicios()
-      .then(res => {
-        if (res.success) setServicios(res.data || [])
-      })
-      .catch(() => {
-        setServicios([
-          { id_servicio: 1, servicio: 'Consulta General' },
-          { id_servicio: 2, servicio: 'Odontología' },
-          { id_servicio: 3, servicio: 'Cardiología' },
-          { id_servicio: 4, servicio: 'Neurología' }
-        ])
-      })
+    // Datos de prueba - no llama a la API por ahora
+    setServicios([
+      { id_servicio: 1, servicio: 'Consulta General' },
+      { id_servicio: 2, servicio: 'Odontología' },
+      { id_servicio: 3, servicio: 'Cardiología' },
+      { id_servicio: 4, servicio: 'Neurología' },
+      { id_servicio: 5, servicio: 'Pediatría' },
+      { id_servicio: 6, servicio: 'Laboratorio Clínico' },
+      { id_servicio: 7, servicio: 'Radiología' },
+      { id_servicio: 8, servicio: 'Medicina a Domicilio' }
+    ])
   }, [])
 
   return (

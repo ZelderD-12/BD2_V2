@@ -162,14 +162,9 @@ export const obtenerServicios = async ({ set }: Context) => {
         const result = await pool.request()
             .query(`
                 SELECT 
-                    s.id_servicio,
-                    s.__nombre__ AS servicio,
-                    s.duracion_slot_min,
-                    s.capacidad_slot,
-                    e.__nombre__ AS especialidad
-                FROM dbo.servicios s
-                INNER JOIN dbo.especialidades e ON s.id_especialidad = e.id_especialidad
-                WHERE s.__activo__ = 1
+                    id_servicio,
+                    nombre AS servicio
+                FROM dbo.Servicio
             `);
 
         return {
@@ -177,14 +172,10 @@ export const obtenerServicios = async ({ set }: Context) => {
             data: result.recordset
         };
 
-    } catch (error) {
+    } catch (error: any) {
         console.error('Error en obtenerServicios:', error);
         set.status = 500;
-        return {
-            success: false,
-            error: 'Error interno del servidor',
-            code: 'SERVER_ERROR'
-        };
+        return { success: false, error: error.message };
     }
 };
 
