@@ -151,7 +151,10 @@ body {
 
 /* ========== HERO SECTION ========== */
 .hero {
-    background: linear-gradient(135deg, var(--celeste-claro) 0%, var(--celeste) 100%);
+    background: linear-gradient(135deg, rgba(0,119,182,0.4) 0%, rgba(0,180,216,0.4) 100%), url('/images/fondoclinica.jpg');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
     min-height: 100vh;
     display: flex;
     flex-direction: column;
@@ -159,6 +162,16 @@ body {
     align-items: center;
     text-align: center;
     padding: 160px 20px 60px;
+    animation: moverFondo 20s ease-in-out infinite alternate;
+}
+
+@keyframes moverFondo {
+    0% {
+        background-position: left;
+    }
+    100% {
+        background-position: right;
+    }
 }
 
 .hero-content h1 {
