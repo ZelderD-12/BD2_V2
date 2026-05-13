@@ -88,9 +88,15 @@ export default function RecepcionPage() {
       if (data.success) {
         setCola(data.data || []);
         setContadorCola(data.data?.length || 0);
+        
+        // Llamado automático: si hay tickets con minutos_para_cita <= 0 y no hay ticket actual
+        const listos = (data.data || []).filter((t: Ticket) => t.minutos_para_cita != null && t.minutos_para_cita <= 0 && t.minutos_para_cita >= -5);
+        if (listos.length > 0 && !ticketActual) {
+          await seleccionarTicket(listos[0]);
+        }
       }
     } catch (error) { console.error("Error cargando cola:", error); }
-  }, [idSede]);
+  }, [idSede, ticketActual]);
 
   useEffect(() => {
     cargarColaConGracia();
@@ -119,6 +125,48 @@ export default function RecepcionPage() {
     finally { setGenerando(false); }
   };
 
+  // Seleccionar ticket manualmente de la cola
+  const seleccionarTicket = async (ticket: Ticket) => {
+    try {
+      const res = await fetch(`${API_BASE}/api/tickets/${ticket.id_ticket}/cambiar-estado`, {
+        method: "POST", headers: getAuthHeaders(),
+        body: JSON.stringify({ nuevo_estado: "LLAMADO" })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setTicketActual({ ...ticket, estado: "LLAMADO" });
+        setTimerActivo(true);
+        cargarColaConGracia();
+        setMensajeAccion({ texto: `Ticket ${ticket.codigo_ticket} llamado`, tipo: "success" });
+      } else {
+        setMensajeAccion({ texto: data.error || "Error al llamar", tipo: "error" });
+      }
+    } catch {
+      setMensajeAccion({ texto: "Error de conexión", tipo: "error" });
+    }
+  };
+
+  // Cancelar ticket desde la cola
+  const cancelarTicket = async (ticket: Ticket, e: React.MouseEvent) => {
+    e.stopPropagation(); // Evitar que se active seleccionarTicket
+    if (!confirm(`¿Cancelar ticket ${ticket.codigo_ticket}?`)) return;
+    try {
+      const res = await fetch(`${API_BASE}/api/tickets/${ticket.id_ticket}/cambiar-estado`, {
+        method: "POST", headers: getAuthHeaders(),
+        body: JSON.stringify({ nuevo_estado: "NO_SHOW", motivo: "Cancelado por recepción" })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setMensajeAccion({ texto: `Ticket ${ticket.codigo_ticket} cancelado`, tipo: "success" });
+        cargarColaConGracia();
+      } else {
+        setMensajeAccion({ texto: data.error || "Error", tipo: "error" });
+      }
+    } catch {
+      setMensajeAccion({ texto: "Error de conexión", tipo: "error" });
+    }
+  };
+
   const llamarSiguiente = async () => {
     if (!idSede || !idServicio) { setMensajeLlamar({ texto: "Selecciona sede y servicio", tipo: "error" }); return; }
     setLlamando(true);
@@ -142,12 +190,12 @@ export default function RecepcionPage() {
   const cambiarEstado = async (nuevoEstado: string, motivo?: string) => {
     if (!ticketActual) return;
     try {
-      const res = await fetch(`${API_BASE}/api/tickets/${ticketActual.id_ticket}/estado`, {
+      const res = await fetch(`${API_BASE}/api/tickets/${ticketActual.id_ticket}/cambiar-estado`, {
         method: "POST", headers: getAuthHeaders(),
         body: JSON.stringify({ nuevo_estado: nuevoEstado, motivo: motivo || null })
       });
       const data = await res.json();
-      if (res.status === 200) {
+      if (data.success) {
         setMensajeAccion({ texto: `Ticket actualizado a ${nuevoEstado}`, tipo: "success" });
         if (nuevoEstado === "FINALIZADO" || nuevoEstado === "NO_SHOW") {
           setTicketActual(null); setTimerActivo(false); setTiempoLlamado(0);
@@ -215,9 +263,9 @@ export default function RecepcionPage() {
             </div>
 
             <div className="panel-card">
-              <div className="card-header verde"><i className="fas fa-bullhorn"></i><h2>Llamar Siguiente</h2></div>
+              <div className="card-header verde"><i className="fas fa-bullhorn"></i><h2>Llamar Siguiente (Auto)</h2></div>
               <div className="card-body llamar-body">
-                <p className="llamar-desc">Llama al siguiente paciente en cola según prioridad</p>
+                <p className="llamar-desc">Llama al siguiente según prioridad</p>
                 <button className="btn-llamar" onClick={llamarSiguiente} disabled={llamando}>
                   {llamando ? <><i className="fas fa-spinner fa-spin"></i> Llamando...</> : <><i className="fas fa-bullhorn"></i> Llamar Siguiente</>}
                 </button>
@@ -264,10 +312,12 @@ export default function RecepcionPage() {
                   <div className="cola-vacia"><i className="fas fa-check-circle"></i><p>Cola vacía</p></div>
                 ) : (
                   cola.map((t, i) => (
-                    <div key={t.id_ticket} className={`cola-item prior-${t.prioridad}`}>
+                    <div key={t.id_ticket} className={`cola-item prior-${t.prioridad}`}
+                         onClick={() => seleccionarTicket(t)}
+                         style={{ cursor: 'pointer', position: 'relative' }}>
                       <span className="cola-posicion">{i + 1}</span>
                       <span className="cola-codigo">{t.codigo_ticket}</span>
-                      <div className="cola-datos">
+                      <div className="cola-datos" style={{ flex: 1 }}>
                         <p><span className={`prioridad-badge prior-${t.prioridad}`}>{t.prioridad}</span></p>
                         {t.minutos_para_cita != null && (
                           <p style={{ fontSize: "0.7rem", color: t.minutos_para_cita < 0 ? "#dc3545" : "#28a745", margin: 0 }}>
@@ -276,6 +326,13 @@ export default function RecepcionPage() {
                           </p>
                         )}
                       </div>
+                      <button 
+                        className="btn-accion btn-no-show" 
+                        style={{ fontSize: '0.7rem', padding: '4px 10px', minWidth: 'auto' }}
+                        onClick={(e) => cancelarTicket(t, e)}
+                        title="Cancelar ticket">
+                        <i className="fas fa-times"></i>
+                      </button>
                     </div>
                   ))
                 )}

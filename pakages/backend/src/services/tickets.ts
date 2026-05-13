@@ -197,3 +197,32 @@ export const obtenerTicketsColaActuales = async ({ query, set }: Context) => {
         return { success: false, error: error.message };
     }
 };
+
+export const cambiarEstadoTicketManual = async ({ params, body, set, request }: Context) => {
+    const idUsuario = extraerUsuario(request.headers.get('authorization'));
+    if (!idUsuario) { set.status = 401; return { success: false, error: 'No autorizado' }; }
+
+    const { id } = params as { id: string };
+    const { nuevo_estado, motivo } = body as { nuevo_estado: string; motivo?: string };
+
+    try {
+        const pool = await getConnection();
+        const result = await pool.request()
+            .input('id_ticket', sql.Int, parseInt(id))
+            .input('nuevo_estado', sql.VarChar(20), nuevo_estado)
+            .input('id_usuario', sql.Int, idUsuario)
+            .input('motivo', sql.VarChar(300), motivo || null)
+            .output('mensaje_out', sql.VarChar(200))
+            .execute('dbo.sp_CambiarEstadoTicketManual');
+
+        const rv = result.returnValue;
+        const mensaje = result.output.mensaje_out;
+
+        if (rv !== 0) { set.status = rv === 404 ? 404 : 422; return { success: false, error: mensaje }; }
+
+        return { success: true, mensaje, data: { id_ticket: parseInt(id), estado: nuevo_estado } };
+    } catch (error) {
+        set.status = 500;
+        return { success: false, error: 'Error interno' };
+    }
+};
