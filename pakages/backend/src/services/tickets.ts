@@ -46,25 +46,49 @@ export const generarTicketService = async ({ body, set, request }: Context) => {
     const idUsuario = extraerUsuario(request.headers.get('authorization'));
     if (!idUsuario) { set.status = 401; return { success: false, error: 'No autorizado', code: 'UNAUTHORIZED' }; }
 
-    const { nombres, apellidos, id_sede, prioridad, id_cita } = body as {
+    const { nombres, apellidos, id_sede, prioridad, id_cita, id_servicio } = body as {
         nombres: string;
         apellidos: string;
         id_sede: number;
+        id_servicio: number;
         prioridad?: string;
         id_cita?: number;
     };
 
-    if (!nombres || !apellidos || !id_sede) {
+    if (!nombres || !apellidos || !id_sede || id_servicio == null || Number.isNaN(Number(id_servicio))) {
         set.status = 422;
-        return { success: false, error: 'nombres, apellidos e id_sede son requeridos', code: 'MISSING_FIELDS' };
+        return { success: false, error: 'nombres, apellidos, id_sede e id_servicio son requeridos', code: 'MISSING_FIELDS' };
     }
+
+    const idServicioNum = Number(id_servicio);
 
     try {
         const pool = await getConnection();
+
+        if (id_cita) {
+            const chk = await pool.request()
+                .input('id_cita', sql.Int, id_cita)
+                .query('SELECT id_servicio FROM dbo.Cita WHERE id_cita = @id_cita');
+            const fila = chk.recordset?.[0] as { id_servicio?: number } | undefined;
+            if (fila == null || fila.id_servicio == null) {
+                set.status = 404;
+                return { success: false, error: 'Cita no encontrada', code: 'CITA_NOT_FOUND' };
+            }
+            if (Number(fila.id_servicio) !== idServicioNum) {
+                set.status = 422;
+                return {
+                    success: false,
+                    error: 'El servicio seleccionado no coincide con el de la cita',
+                    code: 'SERVICIO_CITA_MISMATCH'
+                };
+            }
+        }
+
         const req = pool.request()
             .input('nombres', sql.VarChar(120), nombres)
             .input('apellidos', sql.VarChar(120), apellidos)
             .input('id_sede', sql.Int, id_sede)
+            .input('id_servicio', sql.Int, idServicioNum)
             .input('prioridad', sql.VarChar(20), prioridad || 'NORMAL')
             .input('id_cita', sql.Int, id_cita || null)
             .input('id_recepcionista', sql.Int, idUsuario)
@@ -115,6 +139,7 @@ export const llamarSiguienteService = async ({ body, set, request }: Context) =>
         const mensaje = result.output.mensaje_out;
 
         if (rv === 404) { set.status = 404; return { success: false, error: mensaje, code: 'COLA_VACIA' }; }
+        if (rv === 409) { set.status = 409; return { success: false, error: mensaje, code: 'TICKET_TOMADO' }; }
         if (rv === 500) { set.status = 500; return { success: false, error: 'Error interno' }; }
 
         return { success: true, mensaje, data: { id_ticket: result.output.id_ticket_out, codigo_ticket: result.output.codigo_out, prioridad: result.output.prioridad_out, estado: 'LLAMADO' } };

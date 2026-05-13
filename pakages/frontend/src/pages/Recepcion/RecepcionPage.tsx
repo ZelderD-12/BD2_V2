@@ -36,7 +36,9 @@ export default function RecepcionPage() {
   const navigate = useNavigate();
 
   const [idSede, setIdSede] = useState("1");
-  const [idServicio, setIdServicio] = useState("1");
+  const [idServicio, setIdServicio] = useState("");
+  const [serviciosCola, setServiciosCola] = useState<{ id_servicio: number; servicio: string }[]>([]);
+  const [cargandoServiciosCola, setCargandoServiciosCola] = useState(true);
   const [nombres, setNombres] = useState("");
   const [apellidos, setApellidos] = useState("");
   const [prioridad, setPrioridad] = useState("NORMAL");
@@ -60,6 +62,33 @@ export default function RecepcionPage() {
     setColaSeleccion(null);
     setDetallePaciente(null);
     setCargandoPaciente(false);
+  }, []);
+
+  useEffect(() => {
+    let cancel = false;
+    (async () => {
+      setCargandoServiciosCola(true);
+      try {
+        const res = await fetch(`${API_BASE}/api/citas/servicios`);
+        const data = await res.json();
+        if (cancel || !data.success) return;
+        const list = (data.data || []).map((s: { id_servicio: number; servicio?: string; nombre?: string }) => ({
+          id_servicio: Number(s.id_servicio),
+          servicio: String(s.servicio ?? s.nombre ?? `Servicio ${s.id_servicio}`),
+        }));
+        setServiciosCola(list);
+        setIdServicio((prev) => {
+          if (list.length === 0) return "";
+          if (prev && list.some((x) => String(x.id_servicio) === prev)) return prev;
+          return String(list[0].id_servicio);
+        });
+      } catch {
+        if (!cancel) setServiciosCola([]);
+      } finally {
+        if (!cancel) setCargandoServiciosCola(false);
+      }
+    })();
+    return () => { cancel = true; };
   }, []);
 
   useEffect(() => {
@@ -121,9 +150,11 @@ export default function RecepcionPage() {
     if (!idSede) return;
     try {
       const fecha = encodeURIComponent(new Date().toISOString());
+      const colaPubQs = new URLSearchParams({ id_sede: idSede });
+      if (idServicio.trim() !== "") colaPubQs.set("id_servicio", idServicio);
       const [resActuales, resPublica] = await Promise.all([
         fetch(`${API_BASE}/api/tickets/cola-actuales?id_sede=${idSede}&fecha_hora=${fecha}&minutos_gracia=5`),
-        fetch(`${API_BASE}/api/pantalla/cola?id_sede=${idSede}`),
+        fetch(`${API_BASE}/api/pantalla/cola?${colaPubQs}`),
       ]);
       const dataActuales = await resActuales.json();
       const dataPublica = await resPublica.json();
@@ -190,11 +221,17 @@ export default function RecepcionPage() {
 
   const generarTicket = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!nombres || !apellidos || !idSede) {
-      setMensajeTicket({ texto: "Completa nombre, apellidos y sede", tipo: "error" }); return;
+    if (!nombres || !apellidos || !idSede || !idServicio) {
+      setMensajeTicket({ texto: "Completa nombre, apellidos, sede y servicio", tipo: "error" }); return;
     }
     setGenerando(true);
-    const body: Record<string, unknown> = { nombres, apellidos, id_sede: parseInt(idSede), prioridad };
+    const body: Record<string, unknown> = {
+      nombres,
+      apellidos,
+      id_sede: parseInt(idSede),
+      id_servicio: parseInt(idServicio, 10),
+      prioridad,
+    };
     if (idCita) body.id_cita = parseInt(idCita);
     try {
       const res = await fetch(`${API_BASE}/api/tickets/generar`, {
@@ -332,7 +369,9 @@ export default function RecepcionPage() {
           <h1><i className="fas fa-concierge-bell"></i> Panel de Recepción</h1>
           <p>Gestión de tickets y cola de atención</p>
           <button className="btn-pantalla" onClick={() => {
-            window.open(`/pantalla?id_sede=${idSede}`, "PantallaPublica", "fullscreen=yes,menubar=no,toolbar=no,location=no,status=no,titlebar=no");
+            const qs = new URLSearchParams({ id_sede: idSede });
+            if (idServicio.trim() !== "") qs.set("id_servicio", idServicio);
+            window.open(`/pantalla?${qs}`, "PantallaPublica", "fullscreen=yes,menubar=no,toolbar=no,location=no,status=no,titlebar=no");
           }}>
             <i className="fas fa-tv"></i> Abrir Pantalla Pública
           </button>
@@ -361,8 +400,12 @@ export default function RecepcionPage() {
                       <option value="1">Sede Zona 19</option><option value="2">Sede Zona 10</option>
                     </select></div>
                   <div className="form-group"><label><i className="fas fa-stethoscope"></i> Servicio (cola pública)</label>
-                    <select value={idServicio} onChange={e => setIdServicio(e.target.value)} required>
-                      <option value="1">Consulta general</option><option value="2">Otro</option>
+                    <select value={idServicio} onChange={e => setIdServicio(e.target.value)} required disabled={cargandoServiciosCola || serviciosCola.length === 0}>
+                      {cargandoServiciosCola && <option value="">Cargando servicios…</option>}
+                      {!cargandoServiciosCola && serviciosCola.length === 0 && <option value="">Sin servicios en catálogo</option>}
+                      {!cargandoServiciosCola && serviciosCola.map((s) => (
+                        <option key={s.id_servicio} value={String(s.id_servicio)}>{s.servicio}</option>
+                      ))}
                     </select></div>
                   <div className="form-group"><label><i className="fas fa-user"></i> Nombres</label>
                     <input type="text" value={nombres} onChange={e => setNombres(e.target.value)} placeholder="Ej: Maria" required /></div>
