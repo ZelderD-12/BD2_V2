@@ -15,7 +15,7 @@ logs
 _.log
 report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
  nul
-
+tscongfg.json
 
 # caches
 .eslintcache

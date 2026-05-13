@@ -12,7 +12,8 @@ import {
     generarTicketService,
     llamarSiguienteService,
     cambiarEstadoTicketService,
-    obtenerColaPublicaService
+    obtenerColaPublicaService,
+    obtenerTicketsColaActuales 
 } from './services/tickets';
 
 const app = new Elysia();
@@ -69,6 +70,7 @@ app.post('/api/tickets/generar', generarTicketService);
 app.post('/api/tickets/siguiente', llamarSiguienteService);
 app.post('/api/tickets/:id/estado', cambiarEstadoTicketService);
 app.get('/api/pantalla/cola', obtenerColaPublicaService);
+app.get('/api/tickets/cola-actuales', obtenerTicketsColaActuales);
 
 const port = 8080;
 app.listen(port);

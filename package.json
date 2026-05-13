@@ -11,5 +11,8 @@
   "devDependencies": {
     "@types/mssql": "^12.3.0",
     "concurrently": "^9.2.1"
+  },
+  "dependencies": {
+    "cookie": "^1.1.1"
   }
 }

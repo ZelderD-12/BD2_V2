@@ -4,6 +4,9 @@
   "workspaces": {
     "": {
       "name": "bun-react-template",
+      "dependencies": {
+        "cookie": "^1.1.1",
+      },
       "devDependencies": {
         "@types/mssql": "^12.3.0",
         "concurrently": "^9.2.1",
