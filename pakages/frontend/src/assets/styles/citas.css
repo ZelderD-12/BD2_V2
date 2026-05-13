@@ -573,6 +573,184 @@
     font-size: 2rem;
     margin-bottom: 10px;
 }
+/* =========================================
+   ESTADOS
+========================================= */
+
+.estado-PENDIENTE {
+    background: #ffc107;
+    color: #212529;
+}
+
+.estado-CONFIRMADA {
+    background: #28a745;
+    color: white;
+}
+
+.estado-CANCELADA {
+    background: #dc3545;
+    color: white;
+}
+
+.estado-ATENDIDA {
+    background: #6c757d;
+    color: white;
+}
+
+/* =========================================
+   CITAS CONFIRMADAS
+========================================= */
+
+.cita-confirmada-info {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: #d4edda;
+    color: #155724;
+    padding: 10px 16px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin-top: 15px;
+    border: 1px solid #28a745;
+}
+
+.cita-confirmada-info i {
+    color: #28a745;
+}
+
+/* =========================================
+   CITAS EXPIRADAS
+========================================= */
+
+.cita-expirada {
+    opacity: 0.75;
+    border-left: 5px solid #6c757d;
+}
+
+.cita-expirada .cita-especialidad {
+    color: #6c757d;
+}
+
+.cita-expirada .cita-info p {
+    color: #868e96;
+}
+
+/* =========================================
+   ACCIONES
+========================================= */
+
+.cita-acciones {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+    flex-wrap: wrap;
+}
+
+.btn-accion-cita {
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s;
+    border: none;
+    font-family: 'Poppins', sans-serif;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.btn-accion-cita.btn-confirmar {
+    background: #28a745;
+    color: white;
+}
+
+.btn-accion-cita.btn-modificar {
+    background: #FFA500;
+    color: white;
+}
+
+.btn-accion-cita.btn-cancelar {
+    background: #dc3545;
+    color: white;
+}
+
+.btn-accion-cita.btn-confirmar:hover {
+    background: #218838;
+}
+
+.btn-accion-cita.btn-modificar:hover {
+    background: #e69500;
+}
+
+.btn-accion-cita.btn-cancelar:hover {
+    background: #c82333;
+}
+
+.cita-confirmada-box {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-top: 20px;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+/* =========================================
+   BADGE CONFIRMADA
+========================================= */
+
+.cita-confirmada-info {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: #d4edda;
+    color: #155724;
+    padding: 10px 18px;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    border: 1px solid #28a745;
+}
+
+.cita-confirmada-info i {
+    color: #28a745;
+}
+
+/* =========================================
+   TICKET CITA
+========================================= */
+
+.ticket-cita {
+    background: #212529;
+    color: white;
+    padding: 12px 18px;
+    border-radius: 14px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    min-width: 170px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+}
+
+.ticket-label {
+    font-size: 0.75rem;
+    color: #CED4DA;
+    margin-bottom: 4px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.ticket-id {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #ffffff;
+    letter-spacing: 2px;
+    font-family: monospace;
+}
+
 
 /* Responsive */
 @media (max-width: 768px) {

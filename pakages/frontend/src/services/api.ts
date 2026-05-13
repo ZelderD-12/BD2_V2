@@ -53,13 +53,20 @@ export const api = {
     return res.json()
   },
 
-  // Citas
+  // ========== CITAS ==========
+  
   async getCitasPaciente(idPaciente: number) {
     const res = await fetch(`${API_URL}/api/citas/paciente/${idPaciente}`)
     return res.json()
   },
 
-  async reservarCita(data: any) {
+  async reservarCita(data: {
+    id_paciente: number;
+    id_medico: number;
+    id_servicio: number;
+    fecha_inicio: string;
+    motivo_consulta?: string;
+  }) {
     const res = await fetch(`${API_URL}/api/reservar/cita`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -68,7 +75,40 @@ export const api = {
     return res.json()
   },
 
-  // Tickets (Recepción)
+  async confirmarCita(idCita: number, idPaciente: number) {
+    const res = await fetch(`${API_URL}/api/citas/${idCita}/confirmar`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id_paciente: idPaciente })
+    })
+    return res.json()
+  },
+
+  async modificarCita(idCita: number, data: {
+    id_paciente: number;
+    nuevo_id_servicio?: number;
+    nueva_fecha_inicio?: string;
+    motivo_consulta?: string;
+  }) {
+    const res = await fetch(`${API_URL}/api/citas/${idCita}/modificar`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    })
+    return res.json()
+  },
+
+  async cancelarCita(idCita: number, idPaciente: number, motivo?: string) {
+    const res = await fetch(`${API_URL}/api/citas/${idCita}/cancelar`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id_paciente: idPaciente, motivo_cancelacion: motivo })
+    })
+    return res.json()
+  },
+
+  // ========== TICKETS (RECEPCIÓN) ==========
+  
   async generarTicket(data: any) {
     const token = localStorage.getItem('auth_token')
     const res = await fetch(`${API_URL}/api/tickets/generar`, {
