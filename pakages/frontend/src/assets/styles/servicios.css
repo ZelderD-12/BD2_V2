@@ -1,0 +1,212 @@
+.servicios-page {
+    margin-top: 120px;
+    padding: 40px 20px;
+    min-height: 100vh;
+    background: #F8F9FA;
+  }
+  
+  .servicios-header {
+    text-align: center;
+    margin-bottom: 60px;
+  }
+  
+  .servicios-title {
+    font-size: 3rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, #0077B6, #00C49A);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 15px;
+  }
+  
+  .servicios-title i {
+    margin-right: 15px;
+    -webkit-text-fill-color: #00C49A;
+    color: #00C49A;
+  }
+  
+  .servicios-subtitle {
+    font-size: 1.2rem;
+    color: #6C757D;
+    max-width: 600px;
+    margin: 0 auto;
+  }
+  
+  .servicios-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 25px;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  
+  .servicio-card {
+    background: white;
+    border-radius: 20px;
+    padding: 30px 25px;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+    border: 3px solid transparent;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .servicio-card:hover {
+    transform: translateY(-10px) scale(1.02);
+    box-shadow: 0 15px 40px rgba(0,0,0,0.1);
+  }
+  
+  .servicio-card.selected {
+    padding: 35px 25px;
+    transform: translateY(-5px) scale(1.01);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+  }
+  
+  .servicio-card-glow {
+    position: absolute;
+    top: -50px;
+    right: -50px;
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    opacity: 0.1;
+    transition: all 0.5s;
+  }
+  
+  .servicio-icon {
+    width: 90px;
+    height: 90px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 20px;
+    transition: all 0.3s;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+  }
+  
+  .servicio-card.selected .servicio-icon {
+    transform: scale(1.1) rotate(5deg);
+  }
+  
+  .servicio-icon i {
+    font-size: 2.2rem;
+    color: white;
+    transition: all 0.3s;
+  }
+  
+  .servicio-card.selected .servicio-icon i {
+    transform: scale(1.1);
+  }
+  
+  .servicio-name {
+    text-align: center;
+    color: #212529;
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin-bottom: 10px;
+    transition: color 0.3s;
+  }
+  
+  .servicio-card.selected .servicio-name {
+    color: #0077B6;
+  }
+  
+  .servicio-desc {
+    text-align: center;
+    color: #6C757D;
+    font-size: 0.9rem;
+    line-height: 1.6;
+    opacity: 0.8;
+    transition: all 0.3s;
+  }
+  
+  .servicio-card.selected .servicio-desc {
+    opacity: 1;
+  }
+  
+  .servicio-details {
+    max-height: 0;
+    overflow: hidden;
+    transition: all 0.4s ease;
+    opacity: 0;
+    margin-top: 0;
+  }
+  
+  .servicio-card.selected .servicio-details {
+    max-height: 100px;
+    opacity: 1;
+    margin-top: 20px;
+  }
+  
+  .servicio-details-inner {
+    border-top: 1px solid #E9ECEF;
+    padding-top: 15px;
+    display: flex;
+    justify-content: space-around;
+    gap: 10px;
+  }
+  
+  .servicio-detail-item {
+    text-align: center;
+  }
+  
+  .servicio-detail-item i {
+    font-size: 1.2rem;
+  }
+  
+  .servicio-detail-item p {
+    font-size: 0.8rem;
+    color: #6C757D;
+    margin-top: 5px;
+  }
+  
+  .servicio-check {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    animation: popIn 0.3s ease;
+  }
+  
+  .servicio-check i {
+    color: white;
+    font-size: 0.9rem;
+  }
+  
+  .servicios-back {
+    text-align: center;
+    margin-top: 50px;
+  }
+  
+  .servicios-back a {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    background: linear-gradient(135deg, #0077B6, #00B4D8);
+    color: white;
+    padding: 12px 30px;
+    border-radius: 30px;
+    text-decoration: none;
+    font-size: 1rem;
+    font-weight: 600;
+    transition: all 0.3s;
+    box-shadow: 0 10px 30px rgba(0,119,182,0.3);
+  }
+  
+  .servicios-back a:hover {
+    transform: translateY(-3px);
+  }
+  
+  @keyframes popIn {
+    from { transform: scale(0); }
+    to { transform: scale(1); }
+  }

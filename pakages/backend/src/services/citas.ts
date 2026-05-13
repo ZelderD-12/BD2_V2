@@ -160,12 +160,7 @@ export const obtenerServicios = async ({ set }: Context) => {
         const pool = await getConnection();
 
         const result = await pool.request()
-            .query(`
-                SELECT 
-                    id_servicio,
-                    nombre AS servicio
-                FROM dbo.Servicio
-            `);
+            .execute('sp_obtener_servicios');
 
         return {
             success: true,

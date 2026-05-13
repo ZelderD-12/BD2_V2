@@ -238,9 +238,9 @@ export const cambiarEstadoTicketService = async ({ params, body, set, request }:
 export const obtenerColaPublicaService = async ({ query, set }: Context) => {
     const { id_sede, id_servicio } = query as { id_sede?: string; id_servicio?: string };
 
-    if (!id_sede || !id_servicio) {
+    if (!id_sede) {
         set.status = 422;
-        return { success: false, error: 'id_sede e id_servicio son requeridos', code: 'MISSING_FIELDS' };
+        return { success: false, error: 'id_sede es requerido', code: 'MISSING_FIELDS' };
     }
 
     try {
@@ -248,10 +248,9 @@ export const obtenerColaPublicaService = async ({ query, set }: Context) => {
 
         const result = await pool.request()
             .input('id_sede',     sql.Int, parseInt(id_sede))
-            .input('id_servicio', sql.Int, parseInt(id_servicio))
+            .input('id_servicio', sql.Int, id_servicio ? parseInt(id_servicio) : null)
             .execute('dbo.sp_ObtenerColaPublica');
 
-        // El SP devuelve dos recordsets: llamado actual y proximos 5
         const llamado  = (result.recordsets as any[])[0]?.[0] || null;
         const proximos = (result.recordsets as any[][])[1] || [];
 

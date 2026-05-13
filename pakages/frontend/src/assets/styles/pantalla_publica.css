@@ -1,332 +1,191 @@
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+.pantalla-publica {
+  font-family: 'Poppins', sans-serif;
+  background: linear-gradient(135deg, #0077B6 0%, #00B4D8 100%);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  color: white;
+  overflow: hidden;
 }
 
-body {
-    font-family: 'Poppins', sans-serif;
-    background: linear-gradient(135deg, #0077B6 0%, #00B4D8 100%);
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    color: white;
-}
-
-/* ========== HEADER ========== */
+/* Header */
 .pantalla-header {
-    background: rgba(0, 0, 0, 0.25);
-    padding: 18px 40px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border-bottom: 2px solid rgba(255,255,255,0.15);
+  background: rgba(0,0,0,0.25);
+  padding: 15px 40px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 2px solid rgba(255,255,255,0.15);
 }
 
-.header-logo {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    font-size: 1.8rem;
-    font-weight: 700;
-    color: white;
+.pantalla-logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 1.6rem;
+  font-weight: 700;
 }
 
-.header-logo i {
-    color: #00C49A;
-    font-size: 2rem;
-    animation: latido 1.5s ease-in-out infinite;
+.pantalla-logo i {
+  color: #00C49A;
+  font-size: 2rem;
+  animation: latido 1.5s infinite;
 }
+
+.pantalla-info {
+  display: flex;
+  gap: 25px;
+  align-items: center;
+}
+
+.pantalla-reloj {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #6EE7B7;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pantalla-sede {
+  color: rgba(255,255,255,0.85);
+}
+
+/* Body */
+.pantalla-body {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 30px;
+  padding: 40px;
+  align-items: start;
+}
+
+/* Llamado */
+.llamado-label, .cola-label {
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.7);
+  margin-bottom: 15px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.llamado-label i, .cola-label i { color: #6EE7B7; }
+
+.llamado-ticket {
+  background: white;
+  border-radius: 20px;
+  padding: 40px;
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+  animation: aparecer 0.5s ease;
+}
+
+.llamado-codigo {
+  font-size: 8rem;
+  font-weight: 900;
+  background: linear-gradient(135deg, #0077B6, #00B4D8);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  line-height: 1;
+  margin-bottom: 15px;
+}
+
+.llamado-paciente {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #212529;
+  margin-bottom: 15px;
+}
+
+.llamado-ventanilla {
+  font-size: 1rem;
+  color: #6C757D;
+  margin-top: 10px;
+}
+
+.llamado-ventanilla i { color: #00C49A; margin-right: 5px; }
+
+.llamado-vacio {
+  background: rgba(255,255,255,0.1);
+  border: 2px dashed rgba(255,255,255,0.3);
+  border-radius: 20px;
+  padding: 60px;
+  text-align: center;
+}
+
+.llamado-vacio i { font-size: 4rem; opacity: 0.3; display: block; margin-bottom: 15px; }
+.llamado-vacio p { opacity: 0.5; }
+
+/* Cola */
+.cola-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.cola-item {
+  background: rgba(255,255,255,0.15);
+  backdrop-filter: blur(5px);
+  border-radius: 14px;
+  padding: 16px 22px;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  border-left: 5px solid;
+}
+
+.cola-pos { font-size: 1.3rem; font-weight: 800; opacity: 0.4; min-width: 30px; }
+.cola-codigo { font-size: 1.8rem; font-weight: 800; min-width: 110px; }
+
+.cola-vacia {
+  text-align: center;
+  padding: 50px;
+  opacity: 0.4;
+}
+.cola-vacia i { font-size: 3rem; display: block; margin-bottom: 12px; }
+
+/* Prioridades */
+.prior-NORMAL { border-color: rgba(255,255,255,0.4); }
+.prior-ANCIANO { border-color: #90E0EF; }
+.prior-EMBARAZO { border-color: #6f42c1; }
+.prior-DISCAPACIDAD { border-color: #fd7e14; }
+.prior-ESPECIAL { border-color: #dc3545; }
+
+.llamado-prioridad, .cola-prioridad {
+  display: inline-block;
+  padding: 5px 15px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+.prior-NORMAL { background: #6C757D50; }
+.prior-ANCIANO { background: #0077B650; }
+.prior-EMBARAZO { background: #6f42c150; }
+.prior-DISCAPACIDAD { background: #fd7e1450; }
+.prior-ESPECIAL { background: #dc354550; }
+
+/* Footer */
+.pantalla-footer {
+  background: rgba(0,0,0,0.3);
+  padding: 14px 30px;
+  border-top: 2px solid rgba(255,255,255,0.1);
+}
+.pantalla-footer marquee { color: rgba(255,255,255,0.7); }
 
 @keyframes latido {
-    0%, 100% { transform: scale(1); }
-    50%       { transform: scale(1.15); }
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.15); }
 }
-
-.header-info {
-    display: flex;
-    align-items: center;
-    gap: 25px;
-    font-size: 1.1rem;
-}
-
-.hora-actual {
-    font-size: 1.6rem;
-    font-weight: 700;
-    font-variant-numeric: tabular-nums;
-    color: #6EE7B7;
-}
-
-.sede-label {
-    color: rgba(255,255,255,0.85);
-    font-size: 1rem;
-}
-
-.sede-label i {
-    color: #6EE7B7;
-    margin-right: 5px;
-}
-
-/* ========== BODY ========== */
-.pantalla-body {
-    flex: 1;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 0;
-    padding: 40px;
-    gap: 30px;
-    align-items: start;
-}
-
-/* ========== SECCION LLAMADO ========== */
-.seccion-llamado {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-}
-
-.llamado-label {
-    font-size: 1rem;
-    font-weight: 600;
-    letter-spacing: 3px;
-    text-transform: uppercase;
-    color: rgba(255,255,255,0.7);
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.llamado-label i {
-    color: #6EE7B7;
-}
-
-/* Estado vacio */
-.ticket-llamado-vacio {
-    background: rgba(255,255,255,0.1);
-    border-radius: 20px;
-    border: 2px dashed rgba(255,255,255,0.3);
-    padding: 60px 30px;
-    text-align: center;
-}
-
-.sin-ticket i {
-    font-size: 4rem;
-    color: rgba(255,255,255,0.3);
-    display: block;
-    margin-bottom: 15px;
-}
-
-.sin-ticket p {
-    color: rgba(255,255,255,0.5);
-    font-size: 1.1rem;
-}
-
-/* Ticket activo */
-.ticket-llamado-activo {
-    background: white;
-    border-radius: 20px;
-    padding: 40px 35px;
-    text-align: center;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-    animation: aparecer 0.5s ease;
-}
-
 @keyframes aparecer {
-    from { transform: scale(0.9); opacity: 0; }
-    to   { transform: scale(1);   opacity: 1; }
-}
-
-.ticket-numero-pantalla {
-    font-size: 7rem;
-    font-weight: 900;
-    line-height: 1;
-    margin-bottom: 15px;
-    background: linear-gradient(135deg, #0077B6, #00B4D8);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-}
-
-.ticket-paciente-nombre {
-    font-size: 1.5rem;
-    font-weight: 600;
-    color: #212529;
-    margin-bottom: 15px;
-}
-
-.ticket-prioridad-pantalla {
-    display: inline-block;
-    padding: 8px 25px;
-    border-radius: 30px;
-    font-size: 1rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    margin-bottom: 15px;
-}
-
-.prior-ESPECIAL     { background: #dc3545; color: white; }
-.prior-EMBARAZO     { background: #6f42c1; color: white; }
-.prior-DISCAPACIDAD { background: #fd7e14; color: white; }
-.prior-ANCIANO      { background: #0077B6; color: white; }
-.prior-NORMAL       { background: #6C757D; color: white; }
-
-.ticket-consultorio {
-    font-size: 1rem;
-    color: #6C757D;
-}
-
-.ticket-consultorio i {
-    color: #00C49A;
-    margin-right: 6px;
-}
-
-/* ========== SECCION PROXIMOS ========== */
-.seccion-proximos {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-}
-
-.proximos-label {
-    font-size: 1rem;
-    font-weight: 600;
-    letter-spacing: 3px;
-    text-transform: uppercase;
-    color: rgba(255,255,255,0.7);
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.proximos-label i {
-    color: #6EE7B7;
-}
-
-.proximos-lista {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-}
-
-.proximos-vacio {
-    text-align: center;
-    padding: 50px;
-    color: rgba(255,255,255,0.4);
-}
-
-.proximos-vacio i {
-    font-size: 3rem;
-    display: block;
-    margin-bottom: 12px;
-    color: rgba(255,255,255,0.3);
-}
-
-.proximo-item {
-    background: rgba(255,255,255,0.15);
-    backdrop-filter: blur(5px);
-    border-radius: 14px;
-    padding: 16px 22px;
-    display: flex;
-    align-items: center;
-    gap: 18px;
-    border-left: 5px solid rgba(255,255,255,0.4);
-    transition: all 0.3s;
-}
-
-.proximo-item.prior-ESPECIAL     { border-left-color: #dc3545; }
-.proximo-item.prior-EMBARAZO     { border-left-color: #6f42c1; }
-.proximo-item.prior-DISCAPACIDAD { border-left-color: #fd7e14; }
-.proximo-item.prior-ANCIANO      { border-left-color: #90E0EF; }
-.proximo-item.prior-NORMAL       { border-left-color: rgba(255,255,255,0.4); }
-
-.proximo-pos {
-    font-size: 1.3rem;
-    font-weight: 800;
-    color: rgba(255,255,255,0.4);
-    min-width: 30px;
-}
-
-.proximo-codigo {
-    font-size: 1.8rem;
-    font-weight: 800;
-    color: white;
-    min-width: 110px;
-}
-
-.proximo-datos {
-    flex: 1;
-}
-
-.proximo-prioridad {
-    display: inline-block;
-    padding: 3px 12px;
-    border-radius: 20px;
-    font-size: 0.75rem;
-    font-weight: 700;
-    text-transform: uppercase;
-}
-
-/* ========== FOOTER ========== */
-.pantalla-footer {
-    background: rgba(0, 0, 0, 0.3);
-    padding: 14px 30px;
-    border-top: 2px solid rgba(255,255,255,0.1);
-}
-
-.footer-mensaje {
-    color: rgba(255,255,255,0.75);
-    font-size: 1rem;
-    font-weight: 500;
-}
-
-/* ========== INDICADOR DE ACTUALIZACION ========== */
-.indicador-refresh {
-    position: fixed;
-    bottom: 60px;
-    right: 20px;
-    background: rgba(0, 196, 154, 0.2);
-    border: 1px solid rgba(0, 196, 154, 0.4);
-    color: #6EE7B7;
-    padding: 6px 14px;
-    border-radius: 20px;
-    font-size: 0.75rem;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-}
-
-/* ========== RESPONSIVE ========== */
-@media (max-width: 900px) {
-    .pantalla-body {
-        grid-template-columns: 1fr;
-        padding: 20px;
-    }
-
-    .ticket-numero-pantalla {
-        font-size: 5rem;
-    }
-
-    .pantalla-header {
-        padding: 14px 20px;
-    }
-
-    .header-logo {
-        font-size: 1.4rem;
-    }
-
-    .hora-actual {
-        font-size: 1.2rem;
-    }
-}
-
-@media (max-width: 480px) {
-    .ticket-numero-pantalla {
-        font-size: 4rem;
-    }
-
-    .proximo-codigo {
-        font-size: 1.4rem;
-    }
+  from { transform: scale(0.9); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
 }

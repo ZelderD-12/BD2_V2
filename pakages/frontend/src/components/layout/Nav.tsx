@@ -14,21 +14,22 @@ export default function Nav() {
               Inicio
             </Link>
           </li>
-          <li><a href="#servicios" className="nav-simple-link">Servicios</a></li>
+          <li>
+            <Link to="/servicios" className={`nav-simple-link ${location.pathname === '/servicios' ? 'active' : ''}`}>
+              Servicios
+            </Link>
+          </li>
           <li><a href="#contacto" className="nav-simple-link">Contacto</a></li>
           <li>
-            <Link to={isLoggedIn ? "/citas" : "/login"} className="nav-simple-link" id="navCitasSimple">
+            <Link to={isLoggedIn ? "/citas" : "/login"} className="nav-simple-link">
               Mis Citas
             </Link>
           </li>
-          {isLoggedIn && (
-            <li id="navPagarSimple" style={{ display: 'list-item' }}>
-              <Link to="/pagar" className="nav-simple-link">Pagar</Link>
-            </li>
-          )}
           {tienePermiso('VER_RECEPCION') && (
-            <li id="navRecepcionSimple" style={{ display: 'list-item' }}>
-              <Link to="/recepcion" className="nav-simple-link">Panel Recepción</Link>
+            <li>
+              <Link to="/recepcion" className={`nav-simple-link ${location.pathname === '/recepcion' ? 'active' : ''}`}>
+                Panel Recepción
+              </Link>
             </li>
           )}
         </ul>

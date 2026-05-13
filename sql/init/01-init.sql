@@ -18,3 +18,15 @@ EXEC dbo.sp_login_usuario
     @user_agent = 'test';
 
 SELECT * FROM dbo.Rol;
+
+
+-- Asegúrate que existen las tablas necesarias
+-- Insertar un ticket de prueba en EN_ESPERA (id_estado_ticket = 1)
+INSERT INTO dbo.Ticket (id_paciente, id_sede, id_servicio, prioridad, id_estado_ticket, codigo_ticket, fecha_generacion)
+VALUES (1, 1, 1, 'NORMAL', 1, 'A001', GETDATE());
+
+INSERT INTO dbo.Ticket (id_paciente, id_sede, id_servicio, prioridad, id_estado_ticket, codigo_ticket, fecha_generacion)
+VALUES (1, 1, 1, 'ANCIANO', 1, 'A002', GETDATE());
+
+INSERT INTO dbo.Ticket (id_paciente, id_sede, id_servicio, prioridad, id_estado_ticket, codigo_ticket, fecha_generacion)
+VALUES (1, 1, 1, 'EMBARAZO', 1, 'A003', GETDATE());
