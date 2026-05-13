@@ -404,6 +404,28 @@
     transition: all 0.3s;
 }
 
+.recepcion-page .cola-item.cola-item-seleccionado {
+  outline: 2px solid #0077B6;
+  outline-offset: 1px;
+  background: rgba(0, 119, 182, 0.08);
+}
+
+.recepcion-page .btn-cerrar-detalle-cola {
+  background: #fff;
+  border: 1px solid #ced4da;
+  color: #495057;
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  white-space: nowrap;
+  font-weight: 500;
+}
+.recepcion-page .btn-cerrar-detalle-cola:hover {
+  background: #e9ecef;
+  border-color: #adb5bd;
+}
+
 .recepcion-page .cola-item:hover {
     background: #E9ECEF;
 }

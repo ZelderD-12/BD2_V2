@@ -4,10 +4,21 @@ import '../../assets/styles/pantalla_publica.css'
 
 const API_BASE = 'http://localhost:8080'
 
+function normEst(t: Record<string, unknown>): string {
+  const e = t.estado ?? t.estado_ticket ?? t.id_estado_ticket
+  if (typeof e === 'number') {
+    const map = ['EN_ESPERA', 'LLAMADO', 'EN_ATENCION', 'FINALIZADO', 'NO_SHOW']
+    if (e >= 1 && e <= 5) return map[e - 1]
+    return String(e)
+  }
+  return String(e ?? '').toUpperCase()
+}
+
 export default function PantallaPage() {
   const [searchParams] = useSearchParams()
   const idSede = searchParams.get('id_sede') || '1'
-  const idServicio = searchParams.get('id_servicio') || '1'
+  /** Sin `id_servicio` la API envía NULL al SP: cola de toda la sede (evita ocultar tickets de otro servicio). */
+  const idServicio = searchParams.get('id_servicio')
 
   const [hora, setHora] = useState('')
   const [llamado, setLlamado] = useState<any>(null)
@@ -73,20 +84,47 @@ export default function PantallaPage() {
 
   const obtenerCola = useCallback(async () => {
     try {
-      const res = await fetch(`${API_BASE}/api/pantalla/cola?id_sede=${idSede}&id_servicio=${idServicio}`)
-      const data = await res.json()
-      if (data.success) {
-        const nuevo = data.data.llamado_actual || null
-        setCola(data.data.proximos?.slice(0, 5) || [])
+      const fecha = encodeURIComponent(new Date().toISOString())
+      const qsPub = new URLSearchParams({ id_sede: idSede })
+      if (idServicio != null && idServicio !== '' && idServicio.toLowerCase() !== 'all') {
+        qsPub.set('id_servicio', idServicio)
+      }
+      const [resPub, resAct] = await Promise.all([
+        fetch(`${API_BASE}/api/pantalla/cola?${qsPub}`),
+        fetch(`${API_BASE}/api/tickets/cola-actuales?id_sede=${idSede}&fecha_hora=${fecha}&minutos_gracia=5`)
+      ])
+      const dataPub = await resPub.json()
+      const dataAct = await resAct.json()
 
-        if (nuevo && nuevo.id_ticket !== ultimoLlamadoId) {
-          setLlamado(nuevo)
-          setUltimoLlamadoId(nuevo.id_ticket)
-          beep()
-          hablar(`Cita ${nuevo.codigo_ticket}. Pase a ventanilla.`)
-        } else if (!nuevo) {
-          setLlamado(null)
+      const activosAct = (dataAct.success ? dataAct.data || [] : []).filter((t: Record<string, unknown>) => {
+        const s = normEst(t)
+        return s !== 'FINALIZADO' && s !== 'NO_SHOW'
+      })
+
+      const llamadoPublica = dataPub.success ? dataPub.data?.llamado_actual : null
+      const llamadoAct = activosAct.find((t: Record<string, unknown>) => normEst(t) === 'LLAMADO') as Record<string, unknown> | undefined
+      const nuevo = (llamadoPublica as Record<string, unknown> | null) || llamadoAct || null
+
+      const byId = new Map<number, Record<string, unknown>>()
+      for (const t of activosAct) byId.set(t.id_ticket as number, t)
+      if (dataPub.success) {
+        for (const p of (dataPub.data?.proximos || []) as Record<string, unknown>[]) {
+          if (normEst(p) === 'FINALIZADO' || normEst(p) === 'NO_SHOW') continue
+          if (!byId.has(p.id_ticket as number)) byId.set(p.id_ticket as number, p)
         }
+      }
+      setCola([...byId.values()].slice(0, 8))
+
+      if (nuevo && (nuevo as { id_ticket?: number }).id_ticket !== ultimoLlamadoId) {
+        const nt = nuevo as { id_ticket: number; codigo_ticket?: string }
+        setLlamado(nuevo)
+        setUltimoLlamadoId(nt.id_ticket)
+        beep()
+        hablar(`Ticket ${nt.codigo_ticket ?? ''}. Pase a ventanilla.`)
+      } else if (!nuevo) {
+        setLlamado(null)
+      } else {
+        setLlamado(nuevo)
       }
     } catch (e) {}
   }, [idSede, idServicio, ultimoLlamadoId])

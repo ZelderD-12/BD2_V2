@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth, tienePermiso } from "../../context/AuthContext";
 import "../../assets/styles/recepcion.css";
@@ -9,11 +9,26 @@ interface Ticket {
   id_ticket: number;
   codigo_ticket: string;
   prioridad: string;
-  estado: string;
+  estado?: string;
+  estado_ticket?: number | string;
   paciente?: string;
   id_paciente?: number;
   servicio?: string;
   minutos_para_cita?: number;
+}
+
+function estadoDeTicket(t: Ticket): string {
+  const e = t.estado ?? t.estado_ticket;
+  if (typeof e === "number") {
+    const map = ["EN_ESPERA", "LLAMADO", "EN_ATENCION", "FINALIZADO", "NO_SHOW"];
+    return map[e - 1] || String(e);
+  }
+  return String(e || "EN_ESPERA").toUpperCase();
+}
+
+function ticketActivoEnCola(t: Ticket): boolean {
+  const e = estadoDeTicket(t);
+  return e !== "FINALIZADO" && e !== "NO_SHOW";
 }
 
 export default function RecepcionPage() {
@@ -36,6 +51,16 @@ export default function RecepcionPage() {
   const [contadorCola, setContadorCola] = useState(0);
   const [tiempoLlamado, setTiempoLlamado] = useState(0);
   const [timerActivo, setTimerActivo] = useState(false);
+  const [colaSeleccion, setColaSeleccion] = useState<Ticket | null>(null);
+  const [detallePaciente, setDetallePaciente] = useState<Record<string, unknown> | null>(null);
+  const [cargandoPaciente, setCargandoPaciente] = useState(false);
+  const colaCardRef = useRef<HTMLDivElement>(null);
+
+  const cerrarDetalleCola = useCallback(() => {
+    setColaSeleccion(null);
+    setDetallePaciente(null);
+    setCargandoPaciente(false);
+  }, []);
 
   useEffect(() => {
     if (!isLoggedIn) { navigate("/login"); return; }
@@ -43,7 +68,7 @@ export default function RecepcionPage() {
   }, [isLoggedIn, userRolId, navigate]);
 
   useEffect(() => {
-    let interval: any;
+    let interval: ReturnType<typeof setInterval>;
     if (timerActivo && ticketActual) {
       setTiempoLlamado(0);
       interval = setInterval(() => {
@@ -58,7 +83,7 @@ export default function RecepcionPage() {
 
   const handleNoShowAutomatico = async () => {
     if (!ticketActual) return;
-    await cambiarEstado("NO_SHOW", "Paciente no se presentó en 5 minutos");
+    await cambiarEstadoPorId(ticketActual.id_ticket, "NO_SHOW", "Paciente no se presentó en 5 minutos");
     setMensajeAccion({ texto: `⚠️ Ticket ${ticketActual.codigo_ticket} marcado como No Show.`, tipo: "error" });
   };
 
@@ -73,25 +98,67 @@ export default function RecepcionPage() {
     return (c === "x" ? r : (r & 0x3) | 0x8).toString(16);
   });
 
+  const cargarPacienteSeleccion = async (ticket: Ticket) => {
+    setCargandoPaciente(true);
+    setDetallePaciente(null);
+    try {
+      const q = new URLSearchParams({
+        codigo_ticket: ticket.codigo_ticket,
+        id_ticket: String(ticket.id_ticket),
+      });
+      const res = await fetch(`${API_BASE}/api/tickets/paciente-por-codigo?${q}`, { headers: getAuthHeaders() });
+      const data = await res.json();
+      if (data.success) setDetallePaciente(data.data);
+      else setMensajeAccion({ texto: data.error || "No se pudo cargar el paciente", tipo: "error" });
+    } catch {
+      setMensajeAccion({ texto: "Error de conexión al cargar paciente", tipo: "error" });
+    } finally {
+      setCargandoPaciente(false);
+    }
+  };
+
   const cargarColaConGracia = useCallback(async () => {
     if (!idSede) return;
     try {
-      const ahora = new Date().toISOString();
-      const res = await fetch(
-        `${API_BASE}/api/tickets/cola-actuales?id_sede=${idSede}&fecha_hora=${ahora}&minutos_gracia=5`,
-        { headers: getAuthHeaders() }
-      );
-      const data = await res.json();
-      if (data.success) {
-        setCola(data.data || []);
-        setContadorCola(data.data?.length || 0);
-        const listos = (data.data || []).filter((t: Ticket) => t.minutos_para_cita != null && t.minutos_para_cita <= 0 && t.minutos_para_cita >= -5);
-        if (listos.length > 0 && !ticketActual) {
-          await seleccionarTicket(listos[0]);
+      const fecha = encodeURIComponent(new Date().toISOString());
+      const [resActuales, resPublica] = await Promise.all([
+        fetch(`${API_BASE}/api/tickets/cola-actuales?id_sede=${idSede}&fecha_hora=${fecha}&minutos_gracia=5`),
+        fetch(`${API_BASE}/api/pantalla/cola?id_sede=${idSede}`),
+      ]);
+      const dataActuales = await resActuales.json();
+      const dataPublica = await resPublica.json();
+
+      const byId = new Map<number, Ticket>();
+
+      for (const t of dataActuales.data || []) {
+        const row = t as Ticket;
+        byId.set(row.id_ticket, { ...row, estado: estadoDeTicket(row) });
+      }
+
+      if (dataPublica.success) {
+        const llamado = dataPublica.data?.llamado_actual as Ticket | null;
+        if (llamado?.id_ticket && ticketActivoEnCola(llamado) && !byId.has(llamado.id_ticket)) {
+          byId.set(llamado.id_ticket, { ...llamado, estado: estadoDeTicket(llamado) });
+        }
+        const proximos = (dataPublica.data?.proximos || []) as Ticket[];
+        for (const t of proximos) {
+          if (!byId.has(t.id_ticket) && ticketActivoEnCola(t)) {
+            byId.set(t.id_ticket, { ...t, estado: estadoDeTicket(t) });
+          }
         }
       }
+
+      const merged = [...byId.values()];
+      const activos = merged.filter(ticketActivoEnCola);
+      setCola(activos);
+      setContadorCola(activos.length);
+
+      setColaSeleccion((prev) => {
+        if (!prev) return null;
+        return activos.find((x) => x.id_ticket === prev.id_ticket) ?? null;
+      });
     } catch (error) { console.error("Error cargando cola:", error); }
-  }, [idSede, ticketActual]);
+  }, [idSede, idServicio]);
 
   useEffect(() => {
     cargarColaConGracia();
@@ -99,13 +166,35 @@ export default function RecepcionPage() {
     return () => clearInterval(interval);
   }, [cargarColaConGracia]);
 
+  useEffect(() => {
+    if (!colaSeleccion) return;
+    const handleMouseDown = (e: MouseEvent) => {
+      const root = colaCardRef.current;
+      if (root && e.target instanceof Node && !root.contains(e.target)) {
+        cerrarDetalleCola();
+      }
+    };
+    document.addEventListener("mousedown", handleMouseDown);
+    return () => document.removeEventListener("mousedown", handleMouseDown);
+  }, [colaSeleccion, cerrarDetalleCola]);
+
+  const seleccionarFilaCola = (ticket: Ticket) => {
+    if (colaSeleccion?.id_ticket === ticket.id_ticket) {
+      cerrarDetalleCola();
+      return;
+    }
+    setColaSeleccion(ticket);
+    setDetallePaciente(null);
+    void cargarPacienteSeleccion(ticket);
+  };
+
   const generarTicket = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!nombres || !apellidos || !idSede) {
       setMensajeTicket({ texto: "Completa nombre, apellidos y sede", tipo: "error" }); return;
     }
     setGenerando(true);
-    const body: any = { nombres, apellidos, id_sede: parseInt(idSede), prioridad };
+    const body: Record<string, unknown> = { nombres, apellidos, id_sede: parseInt(idSede), prioridad };
     if (idCita) body.id_cita = parseInt(idCita);
     try {
       const res = await fetch(`${API_BASE}/api/tickets/generar`, {
@@ -120,49 +209,81 @@ export default function RecepcionPage() {
     finally { setGenerando(false); }
   };
 
-  const seleccionarTicket = async (ticket: Ticket) => {
+  const actualizarTicketLocal = (id_ticket: number, patch: Partial<Ticket>) => {
+    setCola((prev) => prev.map((t) => (t.id_ticket === id_ticket ? { ...t, ...patch } : t)));
+    setColaSeleccion((prev) => (prev?.id_ticket === id_ticket ? { ...prev, ...patch } : prev));
+    setTicketActual((prev) => (prev?.id_ticket === id_ticket ? { ...prev, ...patch } : prev));
+  };
+
+  const cambiarEstadoPorId = async (
+    id_ticket: number,
+    nuevoEstado: string,
+    motivo?: string,
+    snapshot?: Ticket | null
+  ) => {
     try {
-      const res = await fetch(`${API_BASE}/api/tickets/${ticket.id_ticket}/cambiar-estado`, {
-        method: "POST", headers: getAuthHeaders(), body: JSON.stringify({ nuevo_estado: "LLAMADO" })
+      const res = await fetch(`${API_BASE}/api/tickets/${id_ticket}/cambiar-estado`, {
+        method: "POST", headers: getAuthHeaders(),
+        body: JSON.stringify({ nuevo_estado: nuevoEstado, motivo: motivo || null })
       });
       const data = await res.json();
       if (data.success) {
-        setTicketActual({ ...ticket, estado: "LLAMADO" });
-        setTimerActivo(true);
+        setMensajeAccion({ texto: `Ticket actualizado a ${nuevoEstado}`, tipo: "success" });
+        actualizarTicketLocal(id_ticket, { estado: nuevoEstado });
+        if (nuevoEstado === "FINALIZADO" || nuevoEstado === "NO_SHOW") {
+          if (ticketActual?.id_ticket === id_ticket) {
+            setTicketActual(null); setTimerActivo(false); setTiempoLlamado(0);
+          }
+          if (colaSeleccion?.id_ticket === id_ticket) {
+            setColaSeleccion(null); setDetallePaciente(null);
+          }
+        }
+        if (nuevoEstado === "LLAMADO") {
+          const enCola =
+            snapshot && snapshot.id_ticket === id_ticket
+              ? snapshot
+              : colaSeleccion?.id_ticket === id_ticket
+                ? colaSeleccion
+                : cola.find((c) => c.id_ticket === id_ticket);
+          if (enCola) {
+            setTicketActual({ ...enCola, estado: "LLAMADO" });
+            setTimerActivo(true);
+          }
+        }
+        if (nuevoEstado === "EN_ESPERA") {
+          if (ticketActual?.id_ticket === id_ticket) {
+            setTicketActual(null);
+            setTimerActivo(false);
+            setTiempoLlamado(0);
+          }
+        }
         cargarColaConGracia();
-        setMensajeAccion({ texto: `Ticket ${ticket.codigo_ticket} llamado`, tipo: "success" });
-      } else { setMensajeAccion({ texto: data.error || "Error", tipo: "error" }); }
-    } catch { setMensajeAccion({ texto: "Error de conexión", tipo: "error" }); }
+        return true;
+      }
+      setMensajeAccion({ texto: data.error || "Error", tipo: "error" });
+      return false;
+    } catch {
+      setMensajeAccion({ texto: "Error de conexión", tipo: "error" });
+      return false;
+    }
+  };
+
+  const llamarTicketSeleccion = async () => {
+    if (!colaSeleccion) return;
+    await cambiarEstadoPorId(colaSeleccion.id_ticket, "LLAMADO", undefined, colaSeleccion);
   };
 
   const regresarAEspera = async () => {
     if (!ticketActual) return;
-    try {
-      const res = await fetch(`${API_BASE}/api/tickets/${ticketActual.id_ticket}/cambiar-estado`, {
-        method: "POST", headers: getAuthHeaders(),
-        body: JSON.stringify({ nuevo_estado: "EN_ESPERA", motivo: "Error de selección - regresa a cola" })
-      });
-      const data = await res.json();
-      if (data.success) {
-        setMensajeAccion({ texto: `Ticket regresado a cola de espera`, tipo: "info" });
-        setTicketActual(null); setTimerActivo(false); setTiempoLlamado(0);
-        cargarColaConGracia();
-      } else { setMensajeAccion({ texto: data.error || "Error", tipo: "error" }); }
-    } catch { setMensajeAccion({ texto: "Error de conexión", tipo: "error" }); }
+    await cambiarEstadoPorId(ticketActual.id_ticket, "EN_ESPERA", "Error de selección - regresa a cola");
+    setMensajeAccion({ texto: `Ticket regresado a cola de espera`, tipo: "info" });
   };
 
   const cancelarTicket = async (ticket: Ticket, e: React.MouseEvent) => {
     e.stopPropagation();
     if (!confirm(`¿Cancelar ticket ${ticket.codigo_ticket}?`)) return;
-    try {
-      const res = await fetch(`${API_BASE}/api/tickets/${ticket.id_ticket}/cambiar-estado`, {
-        method: "POST", headers: getAuthHeaders(),
-        body: JSON.stringify({ nuevo_estado: "NO_SHOW", motivo: "Cancelado por recepción" })
-      });
-      const data = await res.json();
-      if (data.success) { setMensajeAccion({ texto: `Ticket cancelado`, tipo: "success" }); cargarColaConGracia(); }
-      else { setMensajeAccion({ texto: data.error || "Error", tipo: "error" }); }
-    } catch { setMensajeAccion({ texto: "Error de conexión", tipo: "error" }); }
+    await cambiarEstadoPorId(ticket.id_ticket, "NO_SHOW", "Cancelado por recepción");
+    setMensajeAccion({ texto: `Ticket cancelado`, tipo: "success" });
   };
 
   const llamarSiguiente = async () => {
@@ -186,24 +307,23 @@ export default function RecepcionPage() {
 
   const cambiarEstado = async (nuevoEstado: string, motivo?: string) => {
     if (!ticketActual) return;
-    try {
-      const res = await fetch(`${API_BASE}/api/tickets/${ticketActual.id_ticket}/cambiar-estado`, {
-        method: "POST", headers: getAuthHeaders(),
-        body: JSON.stringify({ nuevo_estado: nuevoEstado, motivo: motivo || null })
-      });
-      const data = await res.json();
-      if (data.success) {
-        setMensajeAccion({ texto: `Ticket actualizado a ${nuevoEstado}`, tipo: "success" });
-        if (nuevoEstado === "FINALIZADO" || nuevoEstado === "NO_SHOW") {
-          setTicketActual(null); setTimerActivo(false); setTiempoLlamado(0);
-        } else { setTicketActual({ ...ticketActual, estado: nuevoEstado }); }
-        cargarColaConGracia();
-      } else { setMensajeAccion({ texto: data.error || "Error", tipo: "error" }); }
-    } catch { setMensajeAccion({ texto: "Error de conexión", tipo: "error" }); }
+    await cambiarEstadoPorId(ticketActual.id_ticket, nuevoEstado, motivo);
+  };
+
+  const nombrePacienteDetalle = () => {
+    if (!detallePaciente) return null;
+    const nc = detallePaciente.nombre_completo as string | undefined;
+    if (nc && String(nc).trim()) return String(nc).trim();
+    const ap = detallePaciente as Record<string, string>;
+    const n = ap.nombres ?? "";
+    const apellido = ap.apellidos ?? ap.apellido ?? "";
+    const joined = `${n} ${apellido}`.trim();
+    return joined || null;
   };
 
   const minutos = Math.floor(tiempoLlamado / 60);
   const segundos = tiempoLlamado % 60;
+  const estSel = colaSeleccion ? estadoDeTicket(colaSeleccion) : "";
 
   return (
     <div className="recepcion-page">
@@ -212,7 +332,7 @@ export default function RecepcionPage() {
           <h1><i className="fas fa-concierge-bell"></i> Panel de Recepción</h1>
           <p>Gestión de tickets y cola de atención</p>
           <button className="btn-pantalla" onClick={() => {
-            window.open(`/pantalla?id_sede=${idSede}&id_servicio=${idServicio}`, "PantallaPublica", "fullscreen=yes,menubar=no,toolbar=no,location=no,status=no,titlebar=no");
+            window.open(`/pantalla?id_sede=${idSede}`, "PantallaPublica", "fullscreen=yes,menubar=no,toolbar=no,location=no,status=no,titlebar=no");
           }}>
             <i className="fas fa-tv"></i> Abrir Pantalla Pública
           </button>
@@ -239,6 +359,10 @@ export default function RecepcionPage() {
                   <div className="form-group"><label><i className="fas fa-building"></i> Sede</label>
                     <select value={idSede} onChange={e => setIdSede(e.target.value)} required>
                       <option value="1">Sede Zona 19</option><option value="2">Sede Zona 10</option>
+                    </select></div>
+                  <div className="form-group"><label><i className="fas fa-stethoscope"></i> Servicio (cola pública)</label>
+                    <select value={idServicio} onChange={e => setIdServicio(e.target.value)} required>
+                      <option value="1">Consulta general</option><option value="2">Otro</option>
                     </select></div>
                   <div className="form-group"><label><i className="fas fa-user"></i> Nombres</label>
                     <input type="text" value={nombres} onChange={e => setNombres(e.target.value)} placeholder="Ej: Maria" required /></div>
@@ -284,17 +408,17 @@ export default function RecepcionPage() {
                       <div className="ticket-detalle">
                         <p><i className="fas fa-user"></i> <strong>Paciente:</strong> {ticketActual.paciente || `ID: ${ticketActual.id_paciente}`}</p>
                         <p><i className="fas fa-sort-amount-up"></i> <strong>Prioridad:</strong> <span className={`prioridad-badge prior-${ticketActual.prioridad}`}>{ticketActual.prioridad}</span></p>
-                        <p><i className="fas fa-clock"></i> <strong>Estado:</strong> {ticketActual.estado}</p>
+                        <p><i className="fas fa-clock"></i> <strong>Estado:</strong> {estadoDeTicket(ticketActual)}</p>
                       </div>
                     </div>
                     <div className="acciones-ticket">
-                      {ticketActual.estado === "LLAMADO" && (<>
+                      {estadoDeTicket(ticketActual) === "LLAMADO" && (<>
                         <button className="btn-accion btn-en-atencion" onClick={() => cambiarEstado("EN_ATENCION")}><i className="fas fa-user-check"></i> En Atención</button>
                         <button className="btn-accion btn-no-show" onClick={() => { if (confirm("¿Marcar como No Show?")) cambiarEstado("NO_SHOW", "Paciente no se presentó"); }}><i className="fas fa-user-slash"></i> No Show</button>
                         <button className="btn-accion" style={{ background: '#6C757D', color: 'white' }} onClick={regresarAEspera}><i className="fas fa-undo"></i> Volver a cola</button>
                       </>)}
-                      {ticketActual.estado === "EN_ATENCION" && (
-                        <button className="btn-accion btn-finalizar" onClick={() => { if (confirm("¿Finalizar atención?")) cambiarEstado("FINALIZADO"); }}><i className="fas fa-check-circle"></i> Finalizar</button>
+                      {estadoDeTicket(ticketActual) === "EN_ATENCION" && (
+                        <button className="btn-accion btn-finalizar" onClick={() => { if (confirm("¿Finalizar ticket? El paciente ya fue atendido; saldrá de la cola pública.")) cambiarEstado("FINALIZADO", "Atención médica completada"); }}><i className="fas fa-check-circle"></i> Finalizar atención</button>
                       )}
                     </div>
                   </>
@@ -303,20 +427,30 @@ export default function RecepcionPage() {
               </div>
             </div>
 
-            <div className="panel-card">
+            <div className="panel-card" ref={colaCardRef}>
               <div className="card-header"><i className="fas fa-list-ol"></i><h2>Cola de Espera (Hoy)</h2><span className="badge-contador">{contadorCola}</span></div>
               <div className="card-body">
+                <p style={{ fontSize: "0.8rem", color: "#666", marginTop: 0 }}>
+                  Lista unificada (citas del momento + cola pública). Solo turnos en espera, llamados o en atención.
+                  Pulse una fila para ver el paciente; pulse de nuevo la misma fila, use Cerrar o haga clic fuera de esta tarjeta para ocultar el panel.
+                </p>
                 {cola.length === 0 ? (
                   <div className="cola-vacia"><i className="fas fa-check-circle"></i><p>Cola vacía</p></div>
                 ) : (
                   cola.map((t, i) => (
-                    <div key={t.id_ticket} className={`cola-item prior-${t.prioridad}`}
-                         onClick={() => seleccionarTicket(t)}
-                         style={{ cursor: 'pointer', position: 'relative' }}>
+                    <div
+                      key={t.id_ticket}
+                      className={`cola-item prior-${t.prioridad}${colaSeleccion?.id_ticket === t.id_ticket ? " cola-item-seleccionado" : ""}`}
+                      onClick={() => seleccionarFilaCola(t)}
+                      style={{ cursor: "pointer", position: "relative" }}
+                    >
                       <span className="cola-posicion">{i + 1}</span>
                       <span className="cola-codigo">{t.codigo_ticket}</span>
                       <div className="cola-datos" style={{ flex: 1 }}>
-                        <p><span className={`prioridad-badge prior-${t.prioridad}`}>{t.prioridad}</span></p>
+                        <p style={{ margin: 0 }}>
+                          <span className={`prioridad-badge prior-${t.prioridad}`}>{t.prioridad}</span>
+                          <span style={{ marginLeft: 8, fontSize: "0.75rem", color: "#555" }}>{estadoDeTicket(t)}</span>
+                        </p>
                         {t.minutos_para_cita != null && (
                           <p style={{ fontSize: "0.7rem", color: t.minutos_para_cita < 0 ? "#dc3545" : "#28a745", margin: 0 }}>
                             <i className={`fas ${t.minutos_para_cita < 0 ? "fa-exclamation-circle" : "fa-clock"}`}></i>{" "}
@@ -330,6 +464,54 @@ export default function RecepcionPage() {
                       </button>
                     </div>
                   ))
+                )}
+
+                {colaSeleccion && (
+                  <div className="cola-detalle-seleccion" style={{
+                    marginTop: 16, padding: 14, borderRadius: 10, border: "1px solid #dee2e6",
+                    background: "#f8f9fa"
+                  }}>
+                    <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
+                      <div>
+                        <strong><i className="fas fa-id-card"></i> {colaSeleccion.codigo_ticket}</strong>
+                        <span style={{ marginLeft: 10, fontSize: "0.85rem" }}>Estado: {estSel}</span>
+                      </div>
+                      <button
+                        type="button"
+                        className="btn-cerrar-detalle-cola"
+                        onClick={(e) => { e.stopPropagation(); cerrarDetalleCola(); }}
+                        title="Cerrar sin cambiar el ticket"
+                      >
+                        <i className="fas fa-times"></i> Cerrar
+                      </button>
+                    </div>
+                    <div style={{ marginTop: 10 }}>
+                      {cargandoPaciente && <p style={{ margin: 0, color: "#666" }}><i className="fas fa-spinner fa-spin"></i> Cargando paciente…</p>}
+                      {!cargandoPaciente && nombrePacienteDetalle() && (
+                        <p style={{ margin: "8px 0", fontSize: "1.05rem" }}><i className="fas fa-user"></i> {nombrePacienteDetalle()}</p>
+                      )}
+                      {!cargandoPaciente && detallePaciente === null && (
+                        <p style={{ margin: 0, color: "#999", fontSize: "0.9rem" }}>Sin datos de paciente para este id_ticket.</p>
+                      )}
+                    </div>
+                    <div className="acciones-ticket" style={{ marginTop: 12, flexWrap: "wrap", gap: 8 }}>
+                      {estSel === "EN_ESPERA" && (
+                        <button type="button" className="btn-accion btn-llamar" onClick={llamarTicketSeleccion}><i className="fas fa-bullhorn"></i> Llamar</button>
+                      )}
+                      {estSel === "LLAMADO" && (
+                        <>
+                          <button type="button" className="btn-accion btn-en-atencion" onClick={() => void cambiarEstadoPorId(colaSeleccion.id_ticket, "EN_ATENCION")}><i className="fas fa-user-check"></i> En atención</button>
+                          <button type="button" className="btn-accion" style={{ background: "#6C757D", color: "white" }} onClick={() => void cambiarEstadoPorId(colaSeleccion.id_ticket, "EN_ESPERA", "Regreso a cola")}><i className="fas fa-undo"></i> En espera</button>
+                        </>
+                      )}
+                      {(estSel === "EN_ESPERA" || estSel === "LLAMADO") && (
+                        <button type="button" className="btn-accion btn-no-show" onClick={() => { if (confirm("¿No show?")) void cambiarEstadoPorId(colaSeleccion.id_ticket, "NO_SHOW"); }}><i className="fas fa-user-slash"></i> No show</button>
+                      )}
+                      {estSel === "EN_ATENCION" && (
+                        <button type="button" className="btn-accion btn-finalizar" onClick={() => { if (confirm("¿Finalizar ticket? El paciente ya fue atendido; saldrá de la cola pública.")) void cambiarEstadoPorId(colaSeleccion.id_ticket, "FINALIZADO", "Atención médica completada"); }}><i className="fas fa-check-circle"></i> Finalizar atención</button>
+                      )}
+                    </div>
+                  </div>
                 )}
               </div>
             </div>
