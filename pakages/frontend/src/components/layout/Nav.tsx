@@ -5,8 +5,8 @@ export default function Nav() {
   const { isLoggedIn, tienePermiso, userRolId } = useAuth()
   const location = useLocation()
 
-  // Recepción (5,6) no ve Mis Citas
-  const esRecepcion = userRolId === 5 || userRolId === 6
+  // Citas: visible sin login (redirige a login) y para paciente (rol 2) al iniciar sesión
+  const mostrarCitas = !isLoggedIn || userRolId === 2
 
   return (
     <nav className="navbar-simple">
@@ -24,11 +24,14 @@ export default function Nav() {
           </li>
           <li><a href="#contacto" className="nav-simple-link">Contacto</a></li>
           
-          {/* Mis Citas - NO aparece para Recepción */}
-          {isLoggedIn && !esRecepcion && (
+          {/* Citas: público o paciente (rol 2) */}
+          {mostrarCitas && (
             <li>
-              <Link to="/citas" className={`nav-simple-link ${location.pathname === '/citas' ? 'active' : ''}`}>
-                Mis Citas
+              <Link
+                to={isLoggedIn ? '/citas' : '/login'}
+                className={`nav-simple-link ${location.pathname === '/citas' ? 'active' : ''}`}
+              >
+                Citas
               </Link>
             </li>
           )}

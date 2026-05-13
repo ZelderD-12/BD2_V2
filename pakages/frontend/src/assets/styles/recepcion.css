@@ -331,11 +331,11 @@
 }
 
 /* Clases de prioridad - aplican en todo el documento pero están prefijadas */
-.prior-ESPECIAL    { background: #dc3545; color: white; }
-.prior-EMBARAZO    { background: #6f42c1; color: white; }
-.prior-DISCAPACIDAD{ background: #fd7e14; color: white; }
-.prior-ANCIANO     { background: #0077B6; color: white; }
-.prior-NORMAL      { background: #6C757D; color: white; }
+.recepcion-page .prior-ESPECIAL    { background: #dc3545; color: white; }
+.recepcion-page .prior-EMBARAZO    { background: #6f42c1; color: white; }
+.recepcion-page .prior-DISCAPACIDAD{ background: #fd7e14; color: white; }
+.recepcion-page .prior-ANCIANO     { background: #0077B6; color: white; }
+.recepcion-page .prior-NORMAL      { background: #6C757D; color: white; }
 
 /* ========== ACCIONES DEL TICKET ========== */
 .recepcion-page .acciones-ticket {

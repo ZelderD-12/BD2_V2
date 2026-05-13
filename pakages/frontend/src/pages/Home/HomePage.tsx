@@ -1,26 +1,9 @@
-import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
-import { api } from '../../services/api'
 import '../../assets/styles/FamKon_Clinic.css'
 
 export default function HomePage() {
   const { isLoggedIn, tienePermiso } = useAuth()
-  const [servicios, setServicios] = useState<any[]>([])
-
-  useEffect(() => {
-    // Datos de prueba - no llama a la API por ahora
-    setServicios([
-      { id_servicio: 1, servicio: 'Consulta General' },
-      { id_servicio: 2, servicio: 'Odontología' },
-      { id_servicio: 3, servicio: 'Cardiología' },
-      { id_servicio: 4, servicio: 'Neurología' },
-      { id_servicio: 5, servicio: 'Pediatría' },
-      { id_servicio: 6, servicio: 'Laboratorio Clínico' },
-      { id_servicio: 7, servicio: 'Radiología' },
-      { id_servicio: 8, servicio: 'Medicina a Domicilio' }
-    ])
-  }, [])
 
   return (
     <>
@@ -30,7 +13,7 @@ export default function HomePage() {
           <p>Tu salud es nuestra prioridad.</p>
           <div className="hero-buttons">
             <Link to={isLoggedIn ? "/citas" : "/login"} className="btn btn-primary">Agendar Cita</Link>
-            <a href="#servicios" className="btn btn-secondary">Ver Servicios</a>
+            <Link to="/servicios" className="btn btn-secondary">Ver Servicios</Link>
             {tienePermiso('VER_RECEPCION') && (
               <Link to="/recepcion" className="btn btn-secondary">Recepción</Link>
             )}
@@ -40,20 +23,6 @@ export default function HomePage() {
           <div className="stat"><h3>+1000</h3><p>Pacientes</p></div>
           <div className="stat"><h3>+15</h3><p>Médicos</p></div>
           <div className="stat"><h3>+8</h3><p>Años</p></div>
-        </div>
-      </section>
-
-      <section id="servicios" className="servicios">
-        <div className="container">
-          <h2>Nuestros Servicios</h2>
-          <div className="servicios-grid">
-            {servicios.map(s => (
-              <div key={s.id_servicio} className="servicio-card">
-                <i className="fas fa-stethoscope"></i>
-                <h3>{s.servicio}</h3>
-              </div>
-            ))}
-          </div>
         </div>
       </section>
     </>

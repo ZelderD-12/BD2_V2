@@ -1,17 +1,19 @@
-* {
-    margin: 0;
-    padding: 0;
+/* assets/styles/citas.css */
+
+/* ELIMINAR estos selectores globales - están rompiendo todo */
+/* * { margin: 0; padding: 0; box-sizing: border-box; } */
+/* body { font-family: 'Poppins', sans-serif; background: linear-gradient(135deg, #F8F9FA 0%, #E9ECEF 100%); min-height: 100vh; } */
+
+/* Solo aplicar dentro del contenedor de citas */
+.citas-page,
+.citas-page * {
     box-sizing: border-box;
 }
 
-body {
-    font-family: 'Poppins', sans-serif;
-    background: linear-gradient(135deg, #F8F9FA 0%, #E9ECEF 100%);
-    min-height: 100vh;
-}
-
 .citas-page {
-    padding: 40px 20px;
+    padding: 120px 20px 40px; /* Aumentado el padding-top para el nav fijo */
+    font-family: 'Poppins', sans-serif;
+    min-height: 100vh;
 }
 
 .citas-container {
@@ -24,7 +26,7 @@ body {
     margin-bottom: 40px;
 }
 
-.btn-back {
+.citas-page .btn-back {
     display: inline-flex;
     align-items: center;
     gap: 8px;
@@ -36,9 +38,11 @@ body {
     font-size: 0.9rem;
     transition: all 0.3s;
     margin-bottom: 20px;
+    border: none;
+    cursor: pointer;
 }
 
-.btn-back:hover {
+.citas-page .btn-back:hover {
     background: #00B4D8;
     transform: translateX(-5px);
 }
@@ -58,12 +62,16 @@ body {
     color: #6C757D;
 }
 
+/* Acciones */
 .citas-actions {
     text-align: center;
     margin-bottom: 40px;
 }
 
-.btn-nueva-cita {
+.citas-page .btn-nueva-cita {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
     background: linear-gradient(135deg, #00C49A 0%, #009B77 100%);
     color: white;
     border: none;
@@ -76,17 +84,14 @@ body {
     font-family: 'Poppins', sans-serif;
 }
 
-.btn-nueva-cita:hover {
+.citas-page .btn-nueva-cita:hover {
     transform: translateY(-3px);
     box-shadow: 0 5px 20px rgba(0, 196, 154, 0.4);
 }
 
-.btn-nueva-cita i {
-    margin-right: 8px;
-}
-
+/* Modal */
 .modal-cita {
-    display: none;
+    display: flex;
     position: fixed;
     z-index: 2000;
     left: 0;
@@ -95,6 +100,10 @@ body {
     height: 100%;
     background-color: rgba(0, 0, 0, 0.5);
     animation: fadeIn 0.3s ease;
+    justify-content: center;
+    align-items: flex-start;
+    padding-top: 5%;
+    overflow-y: auto;
 }
 
 @keyframes fadeIn {
@@ -104,23 +113,17 @@ body {
 
 .modal-cita-content {
     background-color: white;
-    margin: 5% auto;
     width: 90%;
     max-width: 550px;
     border-radius: 20px;
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
     animation: slideDown 0.3s ease;
+    margin-bottom: 40px;
 }
 
 @keyframes slideDown {
-    from {
-        transform: translateY(-50px);
-        opacity: 0;
-    }
-    to {
-        transform: translateY(0);
-        opacity: 1;
-    }
+    from { transform: translateY(-50px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
 }
 
 .modal-cita-header {
@@ -133,13 +136,24 @@ body {
     align-items: center;
 }
 
+.modal-cita-header.bg-warning {
+    background: linear-gradient(135deg, #FFA500 0%, #FF8C00 100%);
+}
+
+.modal-cita-header.bg-danger {
+    background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+}
+
+.modal-cita-header.bg-success {
+    background: linear-gradient(135deg, #28a745 0%, #218838 100%);
+}
+
 .modal-cita-header h2 {
     margin: 0;
     font-size: 1.3rem;
-}
-
-.modal-cita-header h2 i {
-    margin-right: 10px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
 }
 
 .close-modal {
@@ -147,6 +161,10 @@ body {
     font-weight: bold;
     cursor: pointer;
     transition: all 0.3s;
+    background: none;
+    border: none;
+    color: white;
+    line-height: 1;
 }
 
 .close-modal:hover {
@@ -157,6 +175,7 @@ body {
     padding: 30px;
 }
 
+/* Formulario */
 .form-group-cita {
     margin-bottom: 20px;
 }
@@ -175,7 +194,8 @@ body {
 }
 
 .form-group-cita input,
-.form-group-cita select {
+.form-group-cita select,
+.form-group-cita textarea {
     width: 100%;
     padding: 12px 15px;
     border: 2px solid #E9ECEF;
@@ -183,10 +203,25 @@ body {
     font-size: 0.95rem;
     font-family: 'Poppins', sans-serif;
     transition: all 0.3s;
+    background: white;
+    color: #212529;
+    line-height: 1.35;
+}
+
+.form-group-cita select option {
+    color: #212529;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 400;
+}
+
+.form-group-cita textarea {
+    resize: vertical;
+    min-height: 80px;
 }
 
 .form-group-cita input:focus,
-.form-group-cita select:focus {
+.form-group-cita select:focus,
+.form-group-cita textarea:focus {
     outline: none;
     border-color: #00C49A;
     box-shadow: 0 0 0 3px rgba(0, 196, 154, 0.1);
@@ -198,7 +233,9 @@ body {
     gap: 15px;
 }
 
-.btn-guardar-cita {
+/* Botones */
+.btn-guardar-cita,
+.btn-modificar-cita {
     width: 100%;
     background: linear-gradient(135deg, #00C49A 0%, #009B77 100%);
     color: white;
@@ -213,34 +250,171 @@ body {
     margin-top: 10px;
 }
 
-.btn-guardar-cita:hover {
+.btn-modificar-cita {
+    background: linear-gradient(135deg, #FFA500 0%, #FF8C00 100%);
+}
+
+.btn-guardar-cita:hover,
+.btn-modificar-cita:hover {
     transform: translateY(-2px);
     box-shadow: 0 5px 15px rgba(0, 196, 154, 0.4);
 }
 
-.mensaje-cita {
-    margin-top: 15px;
-    padding: 12px;
+.btn-guardar-cita:disabled,
+.btn-modificar-cita:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* Info cita actual en modales */
+.info-cita-actual {
+    background: #F8F9FA;
     border-radius: 10px;
-    text-align: center;
+    padding: 15px;
+    margin-bottom: 20px;
+}
+
+.info-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+    color: #495057;
     font-size: 0.9rem;
-    display: none;
 }
 
-.mensaje-cita.success {
-    display: block;
-    background: #d4edda;
-    color: #155724;
-    border-left: 4px solid #28a745;
+.info-item:last-child {
+    margin-bottom: 0;
 }
 
-.mensaje-cita.error {
-    display: block;
-    background: #f8d7da;
-    color: #721c24;
-    border-left: 4px solid #dc3545;
+.info-item i {
+    color: #00C49A;
+    width: 20px;
 }
 
+/* Alertas */
+.alerta-cancelacion {
+    background: #fff3cd;
+    border: 2px solid #ffc107;
+    border-radius: 10px;
+    padding: 15px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+}
+
+.alerta-cancelacion i {
+    color: #ffc107;
+    font-size: 1.5rem;
+    margin-top: 2px;
+}
+
+.alerta-cancelacion p {
+    color: #856404;
+    margin: 0;
+    font-size: 0.9rem;
+}
+
+.confirmacion-info {
+    background: #d1ecf1;
+    border: 2px solid #17a2b8;
+    border-radius: 10px;
+    padding: 15px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+}
+
+.confirmacion-info i {
+    color: #17a2b8;
+    font-size: 1.5rem;
+    margin-top: 2px;
+}
+
+.confirmacion-info p {
+    color: #0c5460;
+    margin: 0;
+    font-size: 0.9rem;
+}
+
+/* Acciones en modales */
+.acciones-modal {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.btn-cancelar-confirmar,
+.btn-confirmar-ok {
+    flex: 1;
+    padding: 12px;
+    border: none;
+    border-radius: 10px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+    font-family: 'Poppins', sans-serif;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.btn-cancelar-confirmar {
+    background: #dc3545;
+    color: white;
+}
+
+.btn-confirmar-ok {
+    background: #28a745;
+    color: white;
+}
+
+.btn-cancelar-volver,
+.btn-confirmar-cancelar {
+    padding: 12px 20px;
+    background: #6C757D;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+    font-family: 'Poppins', sans-serif;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-cancelar-confirmar:hover { background: #c82333; }
+.btn-confirmar-ok:hover { background: #218838; }
+.btn-cancelar-volver:hover,
+.btn-confirmar-cancelar:hover { background: #5a6268; }
+
+.btn-cancelar-confirmar:disabled,
+.btn-confirmar-ok:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* Estados badges */
+.estado-badge {
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: white;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+/* Grid de citas */
 .citas-grid {
     display: grid;
     gap: 20px;
@@ -252,7 +426,6 @@ body {
     padding: 25px;
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
     transition: all 0.3s;
-    border-left: 5px solid #00C49A;
 }
 
 .cita-card:hover {
@@ -273,38 +446,13 @@ body {
     font-size: 1.2rem;
     font-weight: 600;
     color: #0077B6;
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
 .cita-especialidad i {
     color: #00C49A;
-    margin-right: 8px;
-}
-
-.estado-badge {
-    padding: 5px 12px;
-    border-radius: 20px;
-    font-size: 0.75rem;
-    font-weight: 600;
-}
-
-.estado-CONFIRMADA {
-    background: #d4edda;
-    color: #155724;
-}
-
-.estado-PENDIENTE {
-    background: #fff3cd;
-    color: #856404;
-}
-
-.estado-CANCELADA {
-    background: #f8d7da;
-    color: #721c24;
-}
-
-.estado-ATENDIDA {
-    background: #d1ecf1;
-    color: #0c5460;
 }
 
 .cita-info {
@@ -318,21 +466,25 @@ body {
     margin: 0;
     color: #6C757D;
     font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
 .cita-info i {
     color: #00C49A;
-    width: 25px;
+    width: 20px;
 }
 
-.cita-buttons {
+/* Acciones en tarjeta */
+.cita-acciones {
     display: flex;
     gap: 10px;
     margin-top: 15px;
     flex-wrap: wrap;
 }
 
-.btn-cita {
+.btn-accion-cita {
     padding: 8px 16px;
     border-radius: 20px;
     font-size: 0.8rem;
@@ -341,35 +493,52 @@ body {
     transition: all 0.3s;
     border: none;
     font-family: 'Poppins', sans-serif;
+    display: flex;
+    align-items: center;
+    gap: 5px;
 }
 
-.btn-confirmar {
+.btn-accion-cita.btn-confirmar {
     background: #28a745;
     color: white;
 }
 
-.btn-confirmar:hover {
-    background: #218838;
+.btn-accion-cita.btn-modificar {
+    background: #FFA500;
+    color: white;
 }
 
-.btn-cancelar {
+.btn-accion-cita.btn-cancelar {
     background: #dc3545;
     color: white;
 }
 
-.btn-cancelar:hover {
-    background: #c82333;
+.btn-accion-cita.btn-confirmar:hover { background: #218838; }
+.btn-accion-cita.btn-modificar:hover { background: #e69500; }
+.btn-accion-cita.btn-cancelar:hover { background: #c82333; }
+
+/* Mensajes */
+.mensaje-cita {
+    margin-top: 15px;
+    padding: 12px;
+    border-radius: 10px;
+    text-align: center;
+    font-size: 0.9rem;
 }
 
-.btn-ticket {
-    background: #0077B6;
-    color: white;
+.mensaje-cita.success {
+    background: #d4edda;
+    color: #155724;
+    border-left: 4px solid #28a745;
 }
 
-.btn-ticket:hover {
-    background: #005f8c;
+.mensaje-cita.error {
+    background: #f8d7da;
+    color: #721c24;
+    border-left: 4px solid #dc3545;
 }
 
+/* Empty state */
 .empty-state {
     text-align: center;
     padding: 60px;
@@ -390,8 +559,10 @@ body {
 
 .empty-state p {
     color: #6C757D;
+    margin-bottom: 20px;
 }
 
+/* Loading */
 .loading-spinner {
     text-align: center;
     padding: 50px;
@@ -403,18 +574,21 @@ body {
     margin-bottom: 10px;
 }
 
+/* Responsive */
 @media (max-width: 768px) {
+    .citas-page {
+        padding: 100px 15px 30px;
+    }
+    
     .citas-header h1 {
         font-size: 1.8rem;
     }
     
     .form-row-cita {
         grid-template-columns: 1fr;
-        gap: 0;
     }
     
     .modal-cita-content {
-        margin: 10% auto;
         width: 95%;
     }
     
@@ -422,7 +596,8 @@ body {
         grid-template-columns: 1fr;
     }
     
-    .cita-buttons {
-        justify-content: center;
+    .cita-acciones,
+    .acciones-modal {
+        flex-direction: column;
     }
 }

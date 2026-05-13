@@ -119,7 +119,7 @@ export default function CitasPage() {
   if (!isLoggedIn) return null
 
   return (
-    <div className="citas-page" style={{ marginTop: 120 }}>
+    <div className="citas-page">
       <div className="citas-container">
         <div className="citas-header">
           <Link to="/" className="btn-back">

@@ -32,7 +32,7 @@
   border-bottom: 2px solid rgba(255,255,255,0.15);
 }
 
-.header-logo {
+.pantalla-publica-wrapper .header-logo {
   display: flex;
   align-items: center;
   gap: 12px;
@@ -41,7 +41,7 @@
   color: white;
 }
 
-.header-logo i {
+.pantalla-publica-wrapper .header-logo i {
   color: #00C49A;
   font-size: 2rem;
   animation: latido 1.5s ease-in-out infinite;
@@ -52,26 +52,26 @@
   50%       { transform: scale(1.15); }
 }
 
-.header-info {
+.pantalla-publica-wrapper .header-info {
   display: flex;
   align-items: center;
   gap: 25px;
   font-size: 1.1rem;
 }
 
-.hora-actual {
+.pantalla-publica-wrapper .hora-actual {
   font-size: 1.6rem;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   color: #6EE7B7;
 }
 
-.sede-label {
+.pantalla-publica-wrapper .sede-label {
   color: rgba(255,255,255,0.85);
   font-size: 1rem;
 }
 
-.sede-label i {
+.pantalla-publica-wrapper .sede-label i {
   color: #6EE7B7;
   margin-right: 5px;
 }
@@ -170,11 +170,11 @@
   margin-bottom: 15px;
 }
 
-.prior-ESPECIAL     { background: #dc3545; color: white; }
-.prior-EMBARAZO     { background: #6f42c1; color: white; }
-.prior-DISCAPACIDAD { background: #fd7e14; color: white; }
-.prior-ANCIANO      { background: #0077B6; color: white; }
-.prior-NORMAL       { background: #6C757D; color: white; }
+.pantalla-publica-wrapper .prior-ESPECIAL     { background: #dc3545; color: white; }
+.pantalla-publica-wrapper .prior-EMBARAZO     { background: #6f42c1; color: white; }
+.pantalla-publica-wrapper .prior-DISCAPACIDAD { background: #fd7e14; color: white; }
+.pantalla-publica-wrapper .prior-ANCIANO      { background: #0077B6; color: white; }
+.pantalla-publica-wrapper .prior-NORMAL       { background: #6C757D; color: white; }
 
 .ticket-consultorio {
   font-size: 1rem;

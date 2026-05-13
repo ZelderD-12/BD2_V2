@@ -206,7 +206,7 @@ export default function RecepcionPage() {
   const segundos = tiempoLlamado % 60;
 
   return (
-    <div className="recepcion-page" style={{ marginTop: 120 }}>
+    <div className="recepcion-page">
       <div className="recepcion-container">
         <div className="recepcion-titulo">
           <h1><i className="fas fa-concierge-bell"></i> Panel de Recepción</h1>
