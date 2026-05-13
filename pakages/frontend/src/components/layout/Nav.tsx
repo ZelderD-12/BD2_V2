@@ -2,8 +2,11 @@ import { Link, useLocation } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 
 export default function Nav() {
-  const { isLoggedIn, tienePermiso } = useAuth()
+  const { isLoggedIn, tienePermiso, userRolId } = useAuth()
   const location = useLocation()
+
+  // Recepción (5,6) no ve Mis Citas
+  const esRecepcion = userRolId === 5 || userRolId === 6
 
   return (
     <nav className="navbar-simple">
@@ -20,11 +23,17 @@ export default function Nav() {
             </Link>
           </li>
           <li><a href="#contacto" className="nav-simple-link">Contacto</a></li>
-          <li>
-            <Link to={isLoggedIn ? "/citas" : "/login"} className="nav-simple-link">
-              Mis Citas
-            </Link>
-          </li>
+          
+          {/* Mis Citas - NO aparece para Recepción */}
+          {isLoggedIn && !esRecepcion && (
+            <li>
+              <Link to="/citas" className={`nav-simple-link ${location.pathname === '/citas' ? 'active' : ''}`}>
+                Mis Citas
+              </Link>
+            </li>
+          )}
+          
+          {/* Panel Recepción - SOLO para roles 5 y 6 */}
           {tienePermiso('VER_RECEPCION') && (
             <li>
               <Link to="/recepcion" className={`nav-simple-link ${location.pathname === '/recepcion' ? 'active' : ''}`}>
