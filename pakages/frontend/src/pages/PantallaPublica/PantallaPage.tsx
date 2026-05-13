@@ -4,30 +4,39 @@ import '../../assets/styles/pantalla_publica.css'
 
 const API_BASE = 'http://localhost:8080'
 
-interface TicketLlamado {
-  id_ticket: number
-  codigo_ticket: string
-  prioridad: string
-  paciente?: string
-  ventanilla?: string
-}
-
-interface TicketEnCola {
-  id_ticket: number
-  codigo_ticket: string
-  prioridad: string
-}
-
 export default function PantallaPage() {
   const [searchParams] = useSearchParams()
   const idSede = searchParams.get('id_sede') || '1'
   const idServicio = searchParams.get('id_servicio') || '1'
 
   const [hora, setHora] = useState('')
-  const [llamado, setLlamado] = useState<TicketLlamado | null>(null)
-  const [cola, setCola] = useState<TicketEnCola[]>([])
+  const [llamado, setLlamado] = useState<any>(null)
+  const [cola, setCola] = useState<any[]>([])
+  const [ultimoLlamadoId, setUltimoLlamadoId] = useState<number | null>(null)
 
-  // Reloj en tiempo real
+  // Limpiar estilos del body al montar/desmontar
+  useEffect(() => {
+    const originalStyles = {
+      background: document.body.style.background,
+      overflow: document.body.style.overflow,
+      color: document.body.style.color,
+      minHeight: document.body.style.minHeight
+    }
+    
+    document.body.style.background = 'linear-gradient(135deg, #0077B6 0%, #00B4D8 100%)'
+    document.body.style.overflow = 'hidden'
+    document.body.style.color = 'white'
+    document.body.style.minHeight = '100vh'
+    
+    return () => {
+      document.body.style.background = originalStyles.background
+      document.body.style.overflow = originalStyles.overflow
+      document.body.style.color = originalStyles.color
+      document.body.style.minHeight = originalStyles.minHeight
+    }
+  }, [])
+
+  // Reloj
   useEffect(() => {
     const timer = setInterval(() => {
       const ahora = new Date()
@@ -36,19 +45,51 @@ export default function PantallaPage() {
     return () => clearInterval(timer)
   }, [])
 
-  // Obtener cola cada 3 segundos
+  // Sonido beep
+  const beep = () => {
+    try {
+      const ctx = new (window.AudioContext || (window as any).webkitAudioContext)()
+      const osc = ctx.createOscillator()
+      const gain = ctx.createGain()
+      osc.connect(gain); gain.connect(ctx.destination)
+      osc.type = 'sine'
+      osc.frequency.setValueAtTime(880, ctx.currentTime)
+      gain.gain.setValueAtTime(0.3, ctx.currentTime)
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3)
+      osc.start(ctx.currentTime)
+      osc.stop(ctx.currentTime + 0.3)
+    } catch (e) {}
+  }
+
+  // Voz
+  const hablar = (texto: string) => {
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel()
+      const u = new SpeechSynthesisUtterance(texto)
+      u.lang = 'es-ES'; u.rate = 0.9; u.volume = 1
+      window.speechSynthesis.speak(u)
+    }
+  }
+
   const obtenerCola = useCallback(async () => {
     try {
       const res = await fetch(`${API_BASE}/api/pantalla/cola?id_sede=${idSede}&id_servicio=${idServicio}`)
       const data = await res.json()
       if (data.success) {
-        setLlamado(data.data.llamado_actual || null)
+        const nuevo = data.data.llamado_actual || null
         setCola(data.data.proximos?.slice(0, 5) || [])
+
+        if (nuevo && nuevo.id_ticket !== ultimoLlamadoId) {
+          setLlamado(nuevo)
+          setUltimoLlamadoId(nuevo.id_ticket)
+          beep()
+          hablar(`Cita ${nuevo.codigo_ticket}. Pase a ventanilla.`)
+        } else if (!nuevo) {
+          setLlamado(null)
+        }
       }
-    } catch (error) {
-      console.error('Error obteniendo cola:', error)
-    }
-  }, [idSede, idServicio])
+    } catch (e) {}
+  }, [idSede, idServicio, ultimoLlamadoId])
 
   useEffect(() => {
     obtenerCola()
@@ -57,86 +98,73 @@ export default function PantallaPage() {
   }, [obtenerCola])
 
   return (
-    <div className="pantalla-publica">
-      {/* Header */}
-      <header className="pantalla-header">
-        <div className="pantalla-logo">
+    <div className="pantalla-publica-wrapper">
+      <div className="pantalla-header">
+        <div className="header-logo">
           <i className="fas fa-heartbeat"></i>
           <span>FamKon Clinic</span>
         </div>
-        <div className="pantalla-info">
-          <div className="pantalla-reloj">
-            <i className="fas fa-clock"></i>
-            <span>{hora}</span>
-          </div>
-          <div className="pantalla-sede">
-            <i className="fas fa-map-marker-alt"></i>
-            <span>Sede Zona 19</span>
-          </div>
+        <div className="header-info">
+          <span className="hora-actual">{hora}</span>
+          <span className="sede-label"><i className="fas fa-map-marker-alt"></i> Sede Zona 19</span>
         </div>
-      </header>
+      </div>
 
-      {/* Cuerpo */}
-      <main className="pantalla-body">
-        {/* Ticket llamado */}
-        <section className="pantalla-llamado">
+      <div className="pantalla-body">
+        <div className="seccion-llamado">
           <div className="llamado-label">
-            <i className="fas fa-bullhorn"></i> TURNO EN ATENCIÓN
+            <i className="fas fa-bullhorn"></i> TURNO EN ATENCION
           </div>
           {llamado ? (
-            <div className="llamado-ticket">
-              <div className="llamado-codigo">{llamado.codigo_ticket}</div>
-              {llamado.paciente && (
-                <div className="llamado-paciente">
-                  <i className="fas fa-user"></i> {llamado.paciente}
-                </div>
-              )}
-              <div className={`llamado-prioridad prior-${llamado.prioridad}`}>
-                {llamado.prioridad}
-              </div>
-              <div className="llamado-ventanilla">
-                <i className="fas fa-door-open"></i> Pase a ventanilla
-                {llamado.ventanilla && <span> #{llamado.ventanilla}</span>}
-              </div>
+            <div className="ticket-llamado-activo">
+              <div className="ticket-numero-pantalla">{llamado.codigo_ticket}</div>
+              {llamado.paciente && <div className="ticket-paciente-nombre"><i className="fas fa-user"></i> {llamado.paciente}</div>}
+              <div className={`ticket-prioridad-pantalla prior-${llamado.prioridad}`}>{llamado.prioridad}</div>
+              <div className="ticket-consultorio"><i className="fas fa-door-open"></i> Pase a ventanilla</div>
             </div>
           ) : (
-            <div className="llamado-vacio">
-              <i className="fas fa-hourglass-half"></i>
-              <p>Esperando llamado...</p>
+            <div className="ticket-llamado-vacio">
+              <div className="sin-ticket">
+                <i className="fas fa-hourglass-half"></i>
+                <p>Esperando llamado...</p>
+              </div>
             </div>
           )}
-        </section>
+        </div>
 
-        {/* Cola de espera */}
-        <section className="pantalla-cola">
-          <div className="cola-label">
-            <i className="fas fa-list-ol"></i> PRÓXIMOS
+        <div className="seccion-proximos">
+          <div className="proximos-label">
+            <i className="fas fa-list-ol"></i> PROXIMOS
           </div>
-          {cola.length === 0 ? (
-            <div className="cola-vacia">
-              <i className="fas fa-check-circle"></i>
-              <p>Sin pacientes en espera</p>
-            </div>
-          ) : (
-            <div className="cola-lista">
-              {cola.map((ticket, index) => (
-                <div key={ticket.id_ticket} className={`cola-item prior-${ticket.prioridad}`}>
-                  <span className="cola-pos">{index + 1}</span>
-                  <span className="cola-codigo">{ticket.codigo_ticket}</span>
-                  <span className={`cola-prioridad prior-${ticket.prioridad}`}>{ticket.prioridad}</span>
+          <div className="proximos-lista">
+            {cola.length === 0 ? (
+              <div className="proximos-vacio">
+                <i className="fas fa-check-circle"></i>
+                <p>Sin pacientes en espera</p>
+              </div>
+            ) : (
+              cola.map((t, i) => (
+                <div key={t.id_ticket} className={`proximo-item prior-${t.prioridad}`}>
+                  <span className="proximo-pos">{i + 1}</span>
+                  <span className="proximo-codigo">{t.codigo_ticket}</span>
+                  <div className="proximo-datos">
+                    <span className={`proximo-prioridad prior-${t.prioridad}`}>{t.prioridad}</span>
+                  </div>
                 </div>
-              ))}
-            </div>
-          )}
-        </section>
-      </main>
+              ))
+            )}
+          </div>
+        </div>
+      </div>
 
-      {/* Footer */}
-      <footer className="pantalla-footer">
-        <marquee>
-          Bienvenido a FamKon Clinic | Por favor esté atento a su número de turno | Gracias por su paciencia
+      <div className="pantalla-footer">
+        <marquee className="footer-mensaje">
+          Bienvenido a FamKon Clinic &nbsp;&nbsp;|&nbsp;&nbsp;
+          Por favor este atento a su numero de turno &nbsp;&nbsp;|&nbsp;&nbsp;
+          Gracias por su paciencia &nbsp;&nbsp;|&nbsp;&nbsp;
+          Respete el orden de llegada
         </marquee>
-      </footer>
+      </div>
     </div>
   )
 }

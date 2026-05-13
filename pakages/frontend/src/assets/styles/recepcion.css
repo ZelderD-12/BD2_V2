@@ -1,17 +1,15 @@
-* {
+/* ========== RESET SOLO PARA RECEPCION ========== */
+.recepcion-page,
+.recepcion-page * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
 }
 
-body {
+.recepcion-page {
     font-family: 'Poppins', sans-serif;
     background: linear-gradient(135deg, #F8F9FA 0%, #E9ECEF 100%);
     min-height: 100vh;
-}
-
-/* El header ocupa ~55px y el nav ~45px fijos */
-.recepcion-page {
     padding: 120px 20px 40px;
 }
 
@@ -43,7 +41,7 @@ body {
     margin-bottom: 15px;
 }
 
-.btn-pantalla {
+.recepcion-page .btn-pantalla {
     display: inline-flex;
     align-items: center;
     gap: 8px;
@@ -55,30 +53,33 @@ body {
     font-size: 0.9rem;
     transition: all 0.3s;
     white-space: nowrap;
+    border: none;
+    cursor: pointer;
+    font-family: 'Poppins', sans-serif;
 }
 
-.btn-pantalla:hover {
+.recepcion-page .btn-pantalla:hover {
     transform: translateY(-2px);
     box-shadow: 0 5px 15px rgba(0, 196, 154, 0.4);
 }
 
 /* ========== GRID PRINCIPAL ========== */
-.panel-grid {
+.recepcion-page .panel-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 25px;
     align-items: start;
 }
 
-.panel-left,
-.panel-right {
+.recepcion-page .panel-left,
+.recepcion-page .panel-right {
     display: flex;
     flex-direction: column;
     gap: 25px;
 }
 
 /* ========== CARDS ========== */
-.panel-card {
+.recepcion-page .panel-card {
     background: white;
     border-radius: 15px;
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
@@ -86,11 +87,11 @@ body {
     transition: all 0.3s;
 }
 
-.panel-card:hover {
+.recepcion-page .panel-card:hover {
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
 }
 
-.card-header {
+.recepcion-page .card-header {
     background: linear-gradient(135deg, #0077B6 0%, #00B4D8 100%);
     color: white;
     padding: 18px 22px;
@@ -99,25 +100,25 @@ body {
     gap: 12px;
 }
 
-.card-header.verde {
+.recepcion-page .card-header.verde {
     background: linear-gradient(135deg, #00C49A 0%, #009B77 100%);
 }
 
-.card-header.naranja {
+.recepcion-page .card-header.naranja {
     background: linear-gradient(135deg, #FF8C00 0%, #FFA500 100%);
 }
 
-.card-header i {
+.recepcion-page .card-header i {
     font-size: 1.3rem;
 }
 
-.card-header h2 {
+.recepcion-page .card-header h2 {
     font-size: 1.1rem;
     margin: 0;
     flex: 1;
 }
 
-.badge-contador {
+.recepcion-page .badge-contador {
     background: rgba(255,255,255,0.3);
     color: white;
     padding: 3px 12px;
@@ -126,16 +127,16 @@ body {
     font-weight: 600;
 }
 
-.card-body {
+.recepcion-page .card-body {
     padding: 25px;
 }
 
 /* ========== FORMULARIO ========== */
-.form-group {
+.recepcion-page .form-group {
     margin-bottom: 18px;
 }
 
-.form-group label {
+.recepcion-page .form-group label {
     display: block;
     margin-bottom: 7px;
     color: #212529;
@@ -143,14 +144,14 @@ body {
     font-size: 0.88rem;
 }
 
-.form-group label i {
+.recepcion-page .form-group label i {
     color: #00C49A;
     margin-right: 6px;
 }
 
-.form-group input,
-.form-group select,
-.form-group textarea {
+.recepcion-page .form-group input,
+.recepcion-page .form-group select,
+.recepcion-page .form-group textarea {
     width: 100%;
     padding: 11px 14px;
     border: 2px solid #E9ECEF;
@@ -161,21 +162,21 @@ body {
     background: white;
 }
 
-.form-group input:focus,
-.form-group select:focus,
-.form-group textarea:focus {
+.recepcion-page .form-group input:focus,
+.recepcion-page .form-group select:focus,
+.recepcion-page .form-group textarea:focus {
     outline: none;
     border-color: #00C49A;
     box-shadow: 0 0 0 3px rgba(0, 196, 154, 0.1);
 }
 
-.form-group textarea {
+.recepcion-page .form-group textarea {
     resize: vertical;
     min-height: 70px;
 }
 
 /* ========== SECCION ESPECIAL ========== */
-.seccion-especial {
+.recepcion-page .seccion-especial {
     background: #fff8e1;
     border: 2px solid #FFA500;
     border-radius: 10px;
@@ -183,7 +184,7 @@ body {
     margin-bottom: 18px;
 }
 
-.alerta-especial {
+.recepcion-page .alerta-especial {
     color: #e65100;
     font-size: 0.85rem;
     font-weight: 600;
@@ -193,16 +194,16 @@ body {
     gap: 8px;
 }
 
-.seccion-especial .form-group {
+.recepcion-page .seccion-especial .form-group {
     margin-bottom: 12px;
 }
 
-.seccion-especial .form-group:last-child {
+.recepcion-page .seccion-especial .form-group:last-child {
     margin-bottom: 0;
 }
 
 /* ========== BOTONES PRINCIPALES ========== */
-.btn-generar {
+.recepcion-page .btn-generar {
     width: 100%;
     background: linear-gradient(135deg, #0077B6 0%, #00B4D8 100%);
     color: white;
@@ -217,28 +218,28 @@ body {
     margin-top: 5px;
 }
 
-.btn-generar:hover {
+.recepcion-page .btn-generar:hover {
     transform: translateY(-2px);
     box-shadow: 0 5px 15px rgba(0, 119, 182, 0.4);
 }
 
-.btn-generar:disabled {
+.recepcion-page .btn-generar:disabled {
     opacity: 0.6;
     cursor: not-allowed;
     transform: none;
 }
 
-.llamar-body {
+.recepcion-page .llamar-body {
     text-align: center;
 }
 
-.llamar-desc {
+.recepcion-page .llamar-desc {
     color: #6C757D;
     font-size: 0.9rem;
     margin-bottom: 20px;
 }
 
-.btn-llamar {
+.recepcion-page .btn-llamar {
     width: 100%;
     background: linear-gradient(135deg, #00C49A 0%, #009B77 100%);
     color: white;
@@ -253,35 +254,35 @@ body {
     letter-spacing: 0.5px;
 }
 
-.btn-llamar:hover {
+.recepcion-page .btn-llamar:hover {
     transform: translateY(-3px);
     box-shadow: 0 8px 25px rgba(0, 196, 154, 0.5);
 }
 
-.btn-llamar:disabled {
+.recepcion-page .btn-llamar:disabled {
     opacity: 0.6;
     cursor: not-allowed;
     transform: none;
 }
 
 /* ========== TICKET ACTUAL ========== */
-.ticket-actual-vacio {
+.recepcion-page .ticket-actual-vacio {
     text-align: center;
     padding: 30px;
     color: #CED4DA;
 }
 
-.ticket-actual-vacio i {
+.recepcion-page .ticket-actual-vacio i {
     font-size: 3rem;
     margin-bottom: 10px;
     display: block;
 }
 
-.ticket-actual-vacio p {
+.recepcion-page .ticket-actual-vacio p {
     font-size: 0.95rem;
 }
 
-.ticket-info-card {
+.recepcion-page .ticket-info-card {
     background: linear-gradient(135deg, #FFF8E1 0%, #FFF3CD 100%);
     border: 2px solid #FFA500;
     border-radius: 12px;
@@ -289,7 +290,7 @@ body {
     margin-bottom: 18px;
 }
 
-.ticket-codigo-grande {
+.recepcion-page .ticket-codigo-grande {
     font-size: 2.8rem;
     font-weight: 700;
     color: #e65100;
@@ -298,28 +299,28 @@ body {
     margin-bottom: 10px;
 }
 
-.ticket-detalle {
+.recepcion-page .ticket-detalle {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 8px;
 }
 
-.ticket-detalle p {
+.recepcion-page .ticket-detalle p {
     font-size: 0.85rem;
     color: #6C757D;
 }
 
-.ticket-detalle p i {
+.recepcion-page .ticket-detalle p i {
     color: #00C49A;
     margin-right: 5px;
     width: 16px;
 }
 
-.ticket-detalle strong {
+.recepcion-page .ticket-detalle strong {
     color: #212529;
 }
 
-.prioridad-badge {
+.recepcion-page .prioridad-badge {
     display: inline-block;
     padding: 4px 14px;
     border-radius: 20px;
@@ -329,6 +330,7 @@ body {
     letter-spacing: 0.5px;
 }
 
+/* Clases de prioridad - aplican en todo el documento pero están prefijadas */
 .prior-ESPECIAL    { background: #dc3545; color: white; }
 .prior-EMBARAZO    { background: #6f42c1; color: white; }
 .prior-DISCAPACIDAD{ background: #fd7e14; color: white; }
@@ -336,13 +338,13 @@ body {
 .prior-NORMAL      { background: #6C757D; color: white; }
 
 /* ========== ACCIONES DEL TICKET ========== */
-.acciones-ticket {
+.recepcion-page .acciones-ticket {
     display: flex;
     gap: 10px;
     flex-wrap: wrap;
 }
 
-.btn-accion {
+.recepcion-page .btn-accion {
     flex: 1;
     min-width: 100px;
     padding: 10px 14px;
@@ -359,38 +361,38 @@ body {
     gap: 6px;
 }
 
-.btn-en-atencion {
+.recepcion-page .btn-en-atencion {
     background: #0077B6;
     color: white;
 }
 
-.btn-en-atencion:hover {
+.recepcion-page .btn-en-atencion:hover {
     background: #005f8c;
     transform: translateY(-2px);
 }
 
-.btn-finalizar {
+.recepcion-page .btn-finalizar {
     background: #28a745;
     color: white;
 }
 
-.btn-finalizar:hover {
+.recepcion-page .btn-finalizar:hover {
     background: #218838;
     transform: translateY(-2px);
 }
 
-.btn-no-show {
+.recepcion-page .btn-no-show {
     background: #dc3545;
     color: white;
 }
 
-.btn-no-show:hover {
+.recepcion-page .btn-no-show:hover {
     background: #c82333;
     transform: translateY(-2px);
 }
 
 /* ========== COLA DE ESPERA ========== */
-.cola-item {
+.recepcion-page .cola-item {
     display: flex;
     align-items: center;
     gap: 14px;
@@ -402,122 +404,125 @@ body {
     transition: all 0.3s;
 }
 
-.cola-item:hover {
+.recepcion-page .cola-item:hover {
     background: #E9ECEF;
 }
 
-.cola-item.prior-ESPECIAL     { border-left-color: #dc3545; }
-.cola-item.prior-EMBARAZO     { border-left-color: #6f42c1; }
-.cola-item.prior-DISCAPACIDAD { border-left-color: #fd7e14; }
-.cola-item.prior-ANCIANO      { border-left-color: #0077B6; }
-.cola-item.prior-NORMAL       { border-left-color: #6C757D; }
+.recepcion-page .cola-item.prior-ESPECIAL     { border-left-color: #dc3545; }
+.recepcion-page .cola-item.prior-EMBARAZO     { border-left-color: #6f42c1; }
+.recepcion-page .cola-item.prior-DISCAPACIDAD { border-left-color: #fd7e14; }
+.recepcion-page .cola-item.prior-ANCIANO      { border-left-color: #0077B6; }
+.recepcion-page .cola-item.prior-NORMAL       { border-left-color: #6C757D; }
 
-.cola-posicion {
+.recepcion-page .cola-posicion {
     font-size: 1.3rem;
     font-weight: 700;
     color: #CED4DA;
     min-width: 30px;
 }
 
-.cola-codigo {
+.recepcion-page .cola-codigo {
     font-size: 1.1rem;
     font-weight: 700;
     color: #0077B6;
     min-width: 80px;
 }
 
-.cola-datos {
+.recepcion-page .cola-datos {
     flex: 1;
 }
 
-.cola-datos p {
+.recepcion-page .cola-datos p {
     margin: 0;
     font-size: 0.82rem;
     color: #6C757D;
 }
 
-.cola-vacia {
+.recepcion-page .cola-vacia {
     text-align: center;
     padding: 30px;
     color: #CED4DA;
 }
 
-.cola-vacia i {
+.recepcion-page .cola-vacia i {
     font-size: 2.5rem;
     display: block;
     margin-bottom: 10px;
 }
 
 /* ========== MENSAJES ========== */
-.mensaje {
+.recepcion-page .mensaje {
     margin-top: 12px;
     padding: 11px 14px;
     border-radius: 10px;
     font-size: 0.88rem;
-    display: none;
 }
 
-.mensaje.success {
-    display: block;
+.recepcion-page .mensaje.success {
     background: #d4edda;
     color: #155724;
     border-left: 4px solid #28a745;
 }
 
-.mensaje.error {
-    display: block;
+.recepcion-page .mensaje.error {
     background: #f8d7da;
     color: #721c24;
     border-left: 4px solid #dc3545;
 }
 
-.mensaje.info {
-    display: block;
+.recepcion-page .mensaje.info {
     background: #d1ecf1;
     color: #0c5460;
     border-left: 4px solid #17a2b8;
 }
 
 /* ========== LOADING ========== */
-.loading-spinner {
+.recepcion-page .loading-spinner {
     text-align: center;
     padding: 30px;
     color: #6C757D;
     font-size: 0.9rem;
 }
 
-.loading-spinner i {
+.recepcion-page .loading-spinner i {
     font-size: 1.5rem;
     margin-bottom: 8px;
     display: block;
 }
 
+/* ========== KEYFRAMES ========== */
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
+}
+
 /* ========== RESPONSIVE ========== */
 @media (max-width: 900px) {
-    .panel-grid {
+    .recepcion-page .panel-grid {
         grid-template-columns: 1fr;
     }
 
-    .recepcion-header {
+    .recepcion-page .recepcion-header {
         flex-direction: column;
         text-align: center;
     }
 
-    .header-title h1 {
+    .recepcion-page .header-title h1 {
         font-size: 1.6rem;
     }
 
-    .ticket-detalle {
+    .recepcion-page .ticket-detalle {
         grid-template-columns: 1fr;
     }
 }
 
 @media (max-width: 480px) {
-    .acciones-ticket {
+    .recepcion-page .acciones-ticket {
         flex-direction: column;
     }
 
-    .ticket-codigo-grande {
+    .recepcion-page .ticket-codigo-grande {
         font-size: 2rem;
     }
 }

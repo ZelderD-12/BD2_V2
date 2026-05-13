@@ -65,10 +65,7 @@ export default function RecepcionPage() {
   const getAuthHeaders = () => {
     const userId = localStorage.getItem('user_id') || '';
     const token = btoa(userId + ':');
-    return {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    };
+    return { "Content-Type": "application/json", Authorization: `Bearer ${token}` };
   };
 
   const generarUUID = () => "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, c => {
@@ -88,8 +85,6 @@ export default function RecepcionPage() {
       if (data.success) {
         setCola(data.data || []);
         setContadorCola(data.data?.length || 0);
-        
-        // Llamado automático: si hay tickets con minutos_para_cita <= 0 y no hay ticket actual
         const listos = (data.data || []).filter((t: Ticket) => t.minutos_para_cita != null && t.minutos_para_cita <= 0 && t.minutos_para_cita >= -5);
         if (listos.length > 0 && !ticketActual) {
           await seleccionarTicket(listos[0]);
@@ -125,12 +120,10 @@ export default function RecepcionPage() {
     finally { setGenerando(false); }
   };
 
-  // Seleccionar ticket manualmente de la cola
   const seleccionarTicket = async (ticket: Ticket) => {
     try {
       const res = await fetch(`${API_BASE}/api/tickets/${ticket.id_ticket}/cambiar-estado`, {
-        method: "POST", headers: getAuthHeaders(),
-        body: JSON.stringify({ nuevo_estado: "LLAMADO" })
+        method: "POST", headers: getAuthHeaders(), body: JSON.stringify({ nuevo_estado: "LLAMADO" })
       });
       const data = await res.json();
       if (data.success) {
@@ -138,17 +131,28 @@ export default function RecepcionPage() {
         setTimerActivo(true);
         cargarColaConGracia();
         setMensajeAccion({ texto: `Ticket ${ticket.codigo_ticket} llamado`, tipo: "success" });
-      } else {
-        setMensajeAccion({ texto: data.error || "Error al llamar", tipo: "error" });
-      }
-    } catch {
-      setMensajeAccion({ texto: "Error de conexión", tipo: "error" });
-    }
+      } else { setMensajeAccion({ texto: data.error || "Error", tipo: "error" }); }
+    } catch { setMensajeAccion({ texto: "Error de conexión", tipo: "error" }); }
   };
 
-  // Cancelar ticket desde la cola
+  const regresarAEspera = async () => {
+    if (!ticketActual) return;
+    try {
+      const res = await fetch(`${API_BASE}/api/tickets/${ticketActual.id_ticket}/cambiar-estado`, {
+        method: "POST", headers: getAuthHeaders(),
+        body: JSON.stringify({ nuevo_estado: "EN_ESPERA", motivo: "Error de selección - regresa a cola" })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setMensajeAccion({ texto: `Ticket regresado a cola de espera`, tipo: "info" });
+        setTicketActual(null); setTimerActivo(false); setTiempoLlamado(0);
+        cargarColaConGracia();
+      } else { setMensajeAccion({ texto: data.error || "Error", tipo: "error" }); }
+    } catch { setMensajeAccion({ texto: "Error de conexión", tipo: "error" }); }
+  };
+
   const cancelarTicket = async (ticket: Ticket, e: React.MouseEvent) => {
-    e.stopPropagation(); // Evitar que se active seleccionarTicket
+    e.stopPropagation();
     if (!confirm(`¿Cancelar ticket ${ticket.codigo_ticket}?`)) return;
     try {
       const res = await fetch(`${API_BASE}/api/tickets/${ticket.id_ticket}/cambiar-estado`, {
@@ -156,15 +160,9 @@ export default function RecepcionPage() {
         body: JSON.stringify({ nuevo_estado: "NO_SHOW", motivo: "Cancelado por recepción" })
       });
       const data = await res.json();
-      if (data.success) {
-        setMensajeAccion({ texto: `Ticket ${ticket.codigo_ticket} cancelado`, tipo: "success" });
-        cargarColaConGracia();
-      } else {
-        setMensajeAccion({ texto: data.error || "Error", tipo: "error" });
-      }
-    } catch {
-      setMensajeAccion({ texto: "Error de conexión", tipo: "error" });
-    }
+      if (data.success) { setMensajeAccion({ texto: `Ticket cancelado`, tipo: "success" }); cargarColaConGracia(); }
+      else { setMensajeAccion({ texto: data.error || "Error", tipo: "error" }); }
+    } catch { setMensajeAccion({ texto: "Error de conexión", tipo: "error" }); }
   };
 
   const llamarSiguiente = async () => {
@@ -177,11 +175,10 @@ export default function RecepcionPage() {
       });
       const data = await res.json();
       if (res.status === 200) {
-        setMensajeLlamar({ texto: `Llamando ticket ${data.data.codigo_ticket}`, tipo: "success" });
+        setMensajeLlamar({ texto: `Llamando ${data.data.codigo_ticket}`, tipo: "success" });
         setTicketActual({ ...data.data, estado: "LLAMADO" });
-        setTimerActivo(true);
-        cargarColaConGracia();
-      } else if (res.status === 404) { setMensajeLlamar({ texto: "No hay pacientes en cola", tipo: "info" }); }
+        setTimerActivo(true); cargarColaConGracia();
+      } else if (res.status === 404) { setMensajeLlamar({ texto: "No hay pacientes", tipo: "info" }); }
       else { setMensajeLlamar({ texto: data.error || "Error", tipo: "error" }); }
     } catch { setMensajeLlamar({ texto: "Error de conexión", tipo: "error" }); }
     finally { setLlamando(false); }
@@ -294,6 +291,7 @@ export default function RecepcionPage() {
                       {ticketActual.estado === "LLAMADO" && (<>
                         <button className="btn-accion btn-en-atencion" onClick={() => cambiarEstado("EN_ATENCION")}><i className="fas fa-user-check"></i> En Atención</button>
                         <button className="btn-accion btn-no-show" onClick={() => { if (confirm("¿Marcar como No Show?")) cambiarEstado("NO_SHOW", "Paciente no se presentó"); }}><i className="fas fa-user-slash"></i> No Show</button>
+                        <button className="btn-accion" style={{ background: '#6C757D', color: 'white' }} onClick={regresarAEspera}><i className="fas fa-undo"></i> Volver a cola</button>
                       </>)}
                       {ticketActual.estado === "EN_ATENCION" && (
                         <button className="btn-accion btn-finalizar" onClick={() => { if (confirm("¿Finalizar atención?")) cambiarEstado("FINALIZADO"); }}><i className="fas fa-check-circle"></i> Finalizar</button>
@@ -326,11 +324,8 @@ export default function RecepcionPage() {
                           </p>
                         )}
                       </div>
-                      <button 
-                        className="btn-accion btn-no-show" 
-                        style={{ fontSize: '0.7rem', padding: '4px 10px', minWidth: 'auto' }}
-                        onClick={(e) => cancelarTicket(t, e)}
-                        title="Cancelar ticket">
+                      <button className="btn-accion btn-no-show" style={{ fontSize: '0.7rem', padding: '4px 10px', minWidth: 'auto' }}
+                        onClick={(e) => cancelarTicket(t, e)} title="Cancelar ticket">
                         <i className="fas fa-times"></i>
                       </button>
                     </div>
