@@ -46,7 +46,7 @@
   .paciente-info-card {
     background: white;
     border-radius: 20px;
-    padding: 1.5rem;
+    padding: 2rem;
     margin-bottom: 2rem;
     box-shadow: 0 5px 20px rgba(0,0,0,0.1);
   }
@@ -70,27 +70,32 @@
     margin: 0;
   }
   
-  .paciente-details {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 1rem;
-  }
-  
-  .info-row {
-    display: flex;
-    gap: 0.5rem;
-  }
-  
-  .info-row span {
-    color: #6C757D;
-    min-width: 80px;
-  }
-  
-  .info-row i {
-    margin-right: 0.5rem;
-    color: #00C49A;
-    width: 20px;
-  }
+.paciente-details {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1.25rem;
+}
+
+.info-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  word-break: break-word;
+}
+
+.info-row span {
+  color: #6C757D;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.info-row i {
+  color: #00C49A;
+  width: 18px;
+  text-align: center;
+}
   
   .section-title {
     color: white;
@@ -114,69 +119,117 @@
     overflow: hidden;
     transition: transform 0.3s, box-shadow 0.3s;
   }
+
+  .historial-card-body p:last-child {
+    margin-bottom: 0;
+  }
   
   .historial-card:hover {
     transform: translateY(-5px);
     box-shadow: 0 10px 30px rgba(0,0,0,0.2);
   }
   
-  .historial-card-header {
-    display: flex;
-    justify-content: space-between;
-    padding: 1rem;
-    background: #f8f9fa;
-    border-bottom: 1px solid #e0e0e0;
-  }
-  
-  .servicio-badge {
-    background: #00C49A;
-    color: white;
-    padding: 0.25rem 0.75rem;
-    border-radius: 20px;
-    font-size: 0.8rem;
-  }
-  
-  .fecha-badge {
-    color: #6C757D;
-    font-size: 0.8rem;
-  }
-  
-  .historial-card-body {
-    padding: 1rem;
-  }
-  
-  .historial-card-body p {
-    margin: 0.5rem 0;
-    font-size: 0.9rem;
-    color: #333;
-  }
+.historial-card-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 1rem 1.5rem;
+  background: #f8f9fa;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.servicio-badge {
+  background: #00C49A;
+  color: white;
+  padding: 0.3rem 0.85rem;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  white-space: nowrap;
+}
+
+.fecha-badge {
+  color: #6C757D;
+  font-size: 0.82rem;
+  text-align: center;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.historial-card-body {
+  padding: 1.25rem 1.5rem;
+}
+
+.historial-card-body p {
+  margin: 0.75rem 0;
+  font-size: 0.9rem;
+  color: #333;
+  line-height: 1.6;
+}
   
   .historial-card-body i {
     width: 25px;
     color: #00C49A;
     margin-right: 0.5rem;
   }
-  
-  .historial-card-footer {
-    padding: 1rem;
-    border-top: 1px solid #e0e0e0;
+
+  .signos-vitales-list {
+    margin: 0.5rem 0;
+    font-size: 0.9rem;
+    color: #333;
+  }
+
+  .signos-grid-mini {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 0.4rem;
+    margin-left: 1.8rem;
+  }
+
+  .signo-item {
+    background: #e8f5e9;
+    padding: 0.25rem 0.6rem;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    color: #2e7d32;
+  }
+
+  .signo-item strong {
+    color: #1b5e20;
   }
   
-  .btn-detalle {
-    width: 100%;
-    background: #0077B6;
-    color: white;
-    border: none;
-    padding: 0.75rem;
-    border-radius: 10px;
-    cursor: pointer;
-    font-weight: 600;
-    transition: background 0.3s;
-  }
-  
-  .btn-detalle:hover {
-    background: #00B4D8;
-  }
+.historial-card-footer {
+  padding: 1rem 1.5rem 1.25rem;
+  border-top: 1px solid #e0e0e0;
+}
+
+.btn-detalle {
+  width: 100%;
+  background: #0077B6;
+  color: white;
+  border: none;
+  padding: 0.85rem;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.95rem;
+  transition: background 0.3s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.btn-detalle:hover {
+  background: #00B4D8;
+}
   
   .modal-overlay {
     position: fixed;

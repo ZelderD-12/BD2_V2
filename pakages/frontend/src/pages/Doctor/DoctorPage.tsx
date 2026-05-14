@@ -98,7 +98,7 @@ export default function DoctorPage() {
   }
 
   const finalizarAtencion = (cita: CitaMedico) => {
-    console.log("Navegando a atención con cita:", cita.id_cita)
+    sessionStorage.setItem('atencion_activa', cita.id_cita.toString())
     navigate(`/atencion/${cita.id_cita}`)
   }
 

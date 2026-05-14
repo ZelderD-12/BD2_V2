@@ -102,6 +102,33 @@ export default function HistorialClinico() {
     }
   }
 
+  const signosVitalesList = (signosJson: string) => {
+    if (!signosJson) return null
+    try {
+      return JSON.parse(signosJson)
+    } catch {
+      return null
+    }
+  }
+
+  const LABEL_SIGNOS: Record<string, string> = {
+    peso: 'Peso',
+    talla: 'Talla',
+    presion_arterial: 'Presión Arterial',
+    temperatura: 'Temperatura',
+    frecuencia_cardiaca: 'Frecuencia Cardíaca',
+    glucosa: 'Glucosa'
+  }
+
+  const UNIDAD_SIGNOS: Record<string, string> = {
+    peso: 'kg',
+    talla: 'cm',
+    presion_arterial: 'mmHg',
+    temperatura: '°C',
+    frecuencia_cardiaca: 'lpm',
+    glucosa: 'mg/dL'
+  }
+
   if (!isLoggedIn || (userRolId !== 3 && userRolId !== 5 && userRolId !== 6)) return null
 
   return (
@@ -190,7 +217,7 @@ export default function HistorialClinico() {
                         {item.servicio}
                       </span>
                       <span className="fecha-badge">
-                        <i className="fas fa-calendar"></i>
+                        <i className="fas fa-calendar-alt"></i>
                         {formatearFecha(item.fecha_atencion)}
                       </span>
                     </div>
@@ -210,12 +237,24 @@ export default function HistorialClinico() {
                           <strong>Síntomas:</strong> {item.sintomas}
                         </p>
                       )}
-                      {item.signos_vitales && (
-                        <p>
-                          <i className="fas fa-heartbeat"></i>
-                          <strong>Signos Vitales:</strong> {item.signos_vitales}
-                        </p>
-                      )}
+                      {(() => {
+                        const sv = signosVitalesList(item.signos_vitales)
+                        if (!sv) return null
+                        const entries = Object.entries(LABEL_SIGNOS).filter(([key]) => sv[key] !== null && sv[key] !== '')
+                        return (
+                          <div className="signos-vitales-list">
+                            <i className="fas fa-heartbeat"></i>
+                            <strong>Signos Vitales:</strong>
+                            <div className="signos-grid-mini">
+                              {entries.map(([key, label]) => (
+                                <span key={key} className="signo-item">
+                                  {label}: <strong>{sv[key]}</strong> {UNIDAD_SIGNOS[key]}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        )
+                      })()}
                     </div>
 
                     <div className="historial-card-footer">
@@ -265,7 +304,23 @@ export default function HistorialClinico() {
                 <div className="detail-grid">
                   <div><strong>Diagnóstico:</strong> {selectedCita.diagnostico || "No especificado"}</div>
                   <div><strong>Síntomas:</strong> {selectedCita.sintomas || "No especificados"}</div>
-                  <div><strong>Signos Vitales:</strong> {selectedCita.signos_vitales || "No registrados"}</div>
+                  <div>
+                    <strong>Signos Vitales:</strong>
+                    {(() => {
+                      const sv = signosVitalesList(selectedCita.signos_vitales)
+                      if (!sv) return " No registrados"
+                      const entries = Object.entries(LABEL_SIGNOS).filter(([key]) => sv[key] !== null && sv[key] !== '')
+                      return (
+                        <div className="signos-grid-mini" style={{ marginTop: '0.3rem', marginLeft: 0 }}>
+                          {entries.map(([key, label]) => (
+                            <span key={key} className="signo-item">
+                              {label}: <strong>{sv[key]}</strong> {UNIDAD_SIGNOS[key]}
+                            </span>
+                          ))}
+                        </div>
+                      )
+                    })()}
+                  </div>
                 </div>
               </div>
 

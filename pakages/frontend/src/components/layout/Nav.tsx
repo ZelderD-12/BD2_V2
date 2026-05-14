@@ -1,17 +1,30 @@
-import { Link, useLocation } from 'react-router-dom'
+import { useState } from 'react'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 
 export default function Nav() {
   const { isLoggedIn, tienePermiso, userRolId } = useAuth()
   const location = useLocation()
+  const navigate = useNavigate()
 
   // Citas: visible sin login (redirige a login) y para paciente (rol 2) al iniciar sesión
   const mostrarCitas = !isLoggedIn || userRolId === 2
 
+  // Consulta activa del doctor (persiste aunque navegue a otras rutas)
+  const [atencionActiva, setAtencionActiva] = useState(sessionStorage.getItem('atencion_activa'))
+
+  const cancelarConsulta = () => {
+    sessionStorage.removeItem('atencion_activa')
+    setAtencionActiva(null)
+    if (location.pathname.startsWith('/atencion/')) {
+      navigate('/doctor')
+    }
+  }
+
   return (
     <nav className="navbar-simple">
-      <div className="nav-simple-container">
-        <ul className="nav-simple-menu">
+      <div className="nav-simple-container nav-flex">
+        <ul className="nav-simple-menu nav-left">
           <li>
             <Link to="/" className={`nav-simple-link ${location.pathname === '/' ? 'active' : ''}`}>
               Inicio
@@ -22,7 +35,6 @@ export default function Nav() {
               Servicios
             </Link>
           </li>
-          <li><a href="#contacto" className="nav-simple-link">Contacto</a></li>
           
           {/* Citas: público o paciente (rol 2) */}
           {mostrarCitas && (
@@ -45,6 +57,19 @@ export default function Nav() {
             </li>
           )}
 
+          {/* Consulta Actual + botón cancelar */}
+          {isLoggedIn && userRolId === 3 && atencionActiva && (
+            <li className="nav-consulta-activa">
+              <Link to={`/atencion/${atencionActiva}`} className={`nav-simple-link ${location.pathname.startsWith('/atencion/') ? 'active' : ''}`}>
+                <i className="fas fa-stethoscope"></i>
+                Consulta Actual
+              </Link>
+              <button className="nav-cancelar-consulta" onClick={cancelarConsulta} title="Cancelar consulta actual">
+                <i className="fas fa-times"></i>
+              </button>
+            </li>
+          )}
+
           {/* Panel Recepción - SOLO para roles 5 y 6 */}
           {tienePermiso('VER_RECEPCION') && (
             <li>
@@ -53,6 +78,15 @@ export default function Nav() {
               </Link>
             </li>
           )}
+        </ul>
+
+        <ul className="nav-simple-menu nav-right">
+          <li>
+            <Link to="/contacto" className={`nav-simple-link nav-link-contacto ${location.pathname === '/contacto' ? 'active' : ''}`}>
+              <i className="fas fa-address-card"></i>
+              Contacto de los desarrolladores
+            </Link>
+          </li>
         </ul>
       </div>
     </nav>

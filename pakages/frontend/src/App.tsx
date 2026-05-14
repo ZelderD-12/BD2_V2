@@ -8,6 +8,7 @@ import DoctorPage from './pages/Doctor/DoctorPage'
 import RecepcionPage from './pages/Recepcion/RecepcionPage'
 import RegisterPage from './pages/Register/RegisterPage'
 import ServiciosPage from './pages/Servicios/ServiciosPage'
+import ContactoPage from './pages/Contacto/ContactoPage'
 import PantallaPage from './pages/PantallaPublica/PantallaPage'
 import HistorialClinico from "./pages/Historial/HistorialClinico"
 import AtencionMedica from "./pages/Atencion/AtencionMedica"
@@ -25,6 +26,7 @@ export default function App() {
             <Route path="citas" element={<CitasPage />} />
             <Route path="doctor" element={<DoctorPage />} />
             <Route path="servicios" element={<ServiciosPage />} />
+            <Route path="contacto" element={<ContactoPage />} />
             <Route path="recepcion" element={<RecepcionPage />} />  
             <Route path="/historial/:id_paciente" element={<HistorialClinico />} />
             <Route path="/atencion/:id_cita" element={<AtencionMedica />} />

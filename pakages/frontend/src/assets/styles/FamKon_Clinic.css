@@ -154,6 +154,71 @@ body {
     border-bottom: 2px solid var(--verde-claro);
 }
 
+.nav-flex {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.nav-left,
+.nav-right {
+    display: flex;
+    list-style: none;
+    gap: 2rem;
+    padding: 0;
+    margin: 0;
+}
+
+.nav-left li,
+.nav-right li {
+    padding: 12px 0;
+    display: flex;
+    align-items: center;
+}
+
+.nav-link-contacto {
+    background: rgba(255,255,255,0.12);
+    padding: 6px 14px !important;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    gap: 0.4rem;
+}
+
+.nav-link-contacto:hover {
+    background: rgba(255,255,255,0.25) !important;
+}
+
+.nav-link-contacto.active {
+    background: rgba(0,196,154,0.25) !important;
+}
+
+.nav-consulta-activa {
+    display: flex !important;
+    align-items: center !important;
+    gap: 4px;
+}
+
+.nav-cancelar-consulta {
+    background: rgba(255,255,255,0.15);
+    border: none;
+    color: white;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    transition: background 0.2s;
+    padding: 0;
+    line-height: 1;
+}
+
+.nav-cancelar-consulta:hover {
+    background: rgba(255,80,80,0.7);
+}
+
 /* ========== HERO SECTION ========== */
 .hero {
     background: linear-gradient(135deg, rgba(0,119,182,0.4) 0%, rgba(0,180,216,0.4) 100%), url('/images/fondoclinica.jpg');
@@ -415,13 +480,75 @@ body {
     border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
 
+.footer-dev {
+    font-size: 0.8rem;
+    opacity: 0.7;
+    margin-top: 0.3rem;
+}
+
+.footer-umg {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-top: 0.5rem;
+}
+
+.umg-logo-wrapper {
+    width: 48px;
+    height: 48px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.umg-logo-wrapper img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.umg-texto {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+}
+
+.umg-title {
+    font-weight: 600;
+    font-size: 0.85rem;
+    margin: 0;
+    color: white;
+}
+
+.umg-project {
+    font-size: 0.75rem;
+    margin: 0;
+    opacity: 0.7;
+}
+
 /* ========== RESPONSIVE ========== */
 @media (max-width: 768px) {
-    .nav-simple-menu {
+    .nav-flex {
+        flex-direction: column;
+        gap: 0;
+    }
+
+    .nav-left,
+    .nav-right {
         flex-wrap: wrap;
-        gap: 1rem;
-        padding: 10px 0;
+        gap: 0.75rem;
+        padding: 6px 0;
         justify-content: center;
+    }
+
+    .nav-right {
+        padding-top: 0;
+    }
+
+    .nav-left li,
+    .nav-right li {
+        padding: 4px 0;
     }
     
     .hero-content h1 {

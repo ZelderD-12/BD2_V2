@@ -11,7 +11,7 @@ export default function RegisterPage() {
 
   const [form, setForm] = useState({
     nombres: '', apellidos: '', dpi: '', telefono: '', direccion: '',
-    rol: '2', sexo: '', fecha_nacimiento: '', email: '',
+    sexo: '', fecha_nacimiento: '', email: '',
     antecedetes_medicos: '', password: '', confirmPassword: '', contacto_emergencia: ''
   })
 
@@ -43,7 +43,7 @@ export default function RegisterPage() {
         dpi: form.dpi,
         telefono: form.telefono,
         direccion: form.direccion || null,
-        rol: parseInt(form.rol),
+        rol: 2,
         sexo: form.sexo,
         fecha_nacimiento: form.fecha_nacimiento,
         email: form.email,
@@ -108,32 +108,14 @@ export default function RegisterPage() {
               <input type="text" id="direccion" value={form.direccion} onChange={handleChange} />
             </div>
 
-            <div style={{ display: 'flex', gap: 10 }}>
-              <div className="form-group" style={{ flex: 1 }}>
-                <label>Sexo *</label>
-                <select id="sexo" value={form.sexo} onChange={handleChange} required>
-                  <option value="">Seleccionar</option>
-                  <option value="M">Masculino</option>
-                  <option value="F">Femenino</option>
-                  <option value="O">Otro</option>
-                </select>
-              </div>
-              <div className="form-group" style={{ flex: 1 }}>
-                <label>Tipo *</label>
-                <select id="rol" value={form.rol} onChange={handleChange} required>
-                  <option value="">Seleccionar</option>
-                  <option value="1">Anónimo</option>
-                  <option value="2">Paciente</option>
-                  <option value="3">Doctor</option>
-                  <option value="4">Enfermería</option>
-                  <option value="5">Recepción/Secretaría</option>
-                  <option value="6">Recepción</option>
-                  <option value="7">Farmacia/Laboratorio</option>
-                  <option value="8">Finanzas/Contabilidad</option>
-                  <option value="9">Técnico</option>
-                  <option value="10">Auditor</option>
-                </select>
-              </div>
+            <div className="form-group">
+              <label>Sexo *</label>
+              <select id="sexo" value={form.sexo} onChange={handleChange} required>
+                <option value="">Seleccionar</option>
+                <option value="M">Masculino</option>
+                <option value="F">Femenino</option>
+                <option value="O">Otro</option>
+              </select>
             </div>
 
             <div style={{ display: 'flex', gap: 10 }}>

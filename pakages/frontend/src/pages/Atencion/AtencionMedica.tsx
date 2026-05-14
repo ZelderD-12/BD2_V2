@@ -76,6 +76,7 @@ export default function AtencionMedica() {
 
   useEffect(() => {
     if (id_cita) {
+      sessionStorage.setItem('atencion_activa', id_cita)
       cargarCita()
       cargarMedicamentos()
     }
@@ -222,6 +223,7 @@ export default function AtencionMedica() {
       const res = await api.finalizarAtencion(finalizarData)
 
       if (res.success) {
+        sessionStorage.removeItem('atencion_activa')
         alert(`Atención finalizada correctamente\nNúmero de receta: ${orden_receta_final || "Sin receta"}`)
         navigate("/doctor")
       } else {
