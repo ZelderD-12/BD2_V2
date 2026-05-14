@@ -35,6 +35,7 @@ import {
     finalizarAtencion,
     crearRecetaConMedicamentos
 } from './services/historialClinico';
+
 const app = new Elysia();
 
 app.use(cors({
@@ -61,26 +62,26 @@ app.get('/api/db-test', async ({ set }) => {
     }
 });
 
-app.post('/api/receta/crear-con-medicamentos', async ({ body, set }) => {
-    const { id_cita, medicamentos_json } = body as any;
-    
+// ========== SEDES ==========
+app.get('/api/sedes', async ({ set }) => {
     try {
-      const pool = await getConnection();
-      const result = await pool.request()
-        .input('id_cita', sql.SmallInt, id_cita)
-        .input('medicamentos_json', sql.VarChar(sql.MAX), medicamentos_json)
-        .output('Orden_Receta', sql.VarChar(30))
-        .execute('dbo.SP_Receta_CrearConMedicamentos');
-      
-      return {
-        success: true,
-        data: { orden_receta: result.output.Orden_Receta }
-      };
+        const pool = await getConnection();
+        const result = await pool.request()
+            .query('SELECT id_sede, nombre, ubicacion, capacidad_slots FROM dbo.Sede WHERE activo = 1 ORDER BY id_sede');
+        
+        console.log("Sedes encontradas:", result.recordset);
+        
+        return { 
+            success: true, 
+            data: result.recordset,
+            count: result.recordset.length
+        };
     } catch (error: any) {
-      set.status = 500;
-      return { success: false, error: error.message };
+        console.error("Error al obtener sedes:", error);
+        set.status = 500;
+        return { success: false, error: error.message };
     }
-  });
+});
 
 // Usuarios
 app.post('/Login', login);
@@ -94,7 +95,21 @@ app.get('/api/citas/paciente/:id', obtenerCitasPaciente);
 app.get('/api/citas/medico/:id', obtenerCitasMedico);
 app.get('/api/citas/servicios', obtenerServicios);
 app.get('/api/citas/medicos', obtenerMedicos);
-app.post('/api/citas/:id/confirmar', confirmarCitaService);
+
+// Endpoint alternativo para confirmar cita (id_cita en body)
+// Endpoint para confirmar cita (id_cita en body)
+app.post('/api/citas/confirmar', async ({ body, set }) => {
+  const { id_cita, id_paciente } = body as { id_cita: number; id_paciente: number };
+  
+  const mockContext = {
+      params: { id: String(id_cita) },
+      body: { id_paciente },
+      set
+  } as any;
+  
+  return confirmarCitaService(mockContext);
+});
+
 app.put('/api/citas/:id/modificar', modificarCitaService);
 app.post('/api/citas/:id/cancelar', cancelarCitaService);
 
@@ -109,7 +124,6 @@ app.post('/api/tickets/:id/cambiar-estado', cambiarEstadoTicketManual);
 
 app.get('/api/medico/:id_usuario_m/citas', obtenerTodasCitasMedico);
 app.get('/api/medico/:id_usuario_m/citas/atencion', obtenerCitasMedicoEnAtencion);
-
 
 // ========== HISTORIAL CLÍNICO ==========
 app.get('/api/historial/paciente/:id_paciente', obtenerHistorialPaciente);
@@ -126,6 +140,7 @@ app.get('/api/medicamentos', obtenerMedicamentos);
 
 // ========== ATENCIÓN ==========
 app.post('/api/atencion/finalizar', finalizarAtencion);
+
 const port = 8080;
 app.listen(port);
 console.log('\n🚀 API corriendo en http://localhost:' + port);

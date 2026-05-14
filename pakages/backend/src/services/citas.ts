@@ -40,16 +40,23 @@ interface DatabaseError {
 }
 
 // =============================================
-// 1. RESERVAR CITA
+// 1. RESERVAR CITA (con id_sede)
 // =============================================
 export const reservarCitaService = async ({ body, set }: Context) => {
-    const { id_paciente, id_medico, id_servicio, fecha_inicio, motivo_consulta } = body as ReservarCitaBody;
+    const { id_paciente, id_medico, id_servicio, id_sede, fecha_inicio, motivo_consulta } = body as {
+        id_paciente: number;
+        id_medico: number;
+        id_servicio: number;
+        id_sede: number;
+        fecha_inicio: string;
+        motivo_consulta?: string;
+    };
 
-    if (!id_paciente || !id_medico || !id_servicio || !fecha_inicio) {
+    if (!id_paciente || !id_medico || !id_servicio || !id_sede || !fecha_inicio) {
         set.status = 422;
         return {
             success: false,
-            error: 'Campos requeridos',
+            error: 'Campos requeridos: id_paciente, id_medico, id_servicio, id_sede, fecha_inicio',
             code: 'MISSING_FIELDS'
         };
     }
@@ -62,6 +69,7 @@ export const reservarCitaService = async ({ body, set }: Context) => {
             .input('id_paciente', sql.SmallInt, id_paciente)
             .input('id_medico', sql.SmallInt, id_medico)
             .input('id_servicio', sql.SmallInt, id_servicio)
+            .input('id_sede', sql.SmallInt, id_sede)
             .input('fecha_inicio', sql.DateTime2, fecha)
             .input('motivo_consulta', sql.VarChar(300), motivo_consulta || null)
             .output('id_cita_out', sql.SmallInt)
@@ -83,13 +91,23 @@ export const reservarCitaService = async ({ body, set }: Context) => {
                     id_paciente,
                     id_medico,
                     id_servicio,
+                    id_sede,
                     fecha_inicio,
                     estado: 'Pendiente'
                 }
             };
         }
 
-        set.status = returnValue === 404 ? 404 : returnValue === 409 ? 409 : 422;
+        if (returnValue === 409) {
+            set.status = 409;
+            return {
+                success: false,
+                error: 'No hay cupo disponible para este horario',
+                code: 'SIN_CUPO'
+            };
+        }
+
+        set.status = returnValue === 404 ? 404 : 422;
 
         return {
             success: false,
@@ -385,7 +403,7 @@ export const obtenerCitasMedicoEnAtencion = async ({ params, set }: Context) => 
 
         const result = await pool.request()
             .input('id_usuario_m', sql.SmallInt, parseInt(id_usuario_m))
-            .execute('dbo.sp_ObtenerCitasEnAtencion');  // Usa el SP que ya tienes
+            .execute('dbo.sp_ObtenerCitasEnAtencion');  // Este SP debe tener antecedentes
 
         return {
             success: true,

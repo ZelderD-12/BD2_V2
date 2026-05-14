@@ -6,6 +6,7 @@ import "../../assets/styles/citas.css";
 
 interface Cita {
   id_cita: number;
+  id_paciente: number;
   servicio: string;
   medico: string;
   fecha_inicio: string;
@@ -25,6 +26,13 @@ interface Medico {
   nombre_completo: string;
   email: string;
   telefono: string;
+}
+
+interface Sede {
+  id_sede: number;
+  nombre: string;
+  ubicacion: string;
+  capacidad_slots: number;
 }
 
 const horariosDisponibles = [
@@ -65,8 +73,10 @@ export default function CitasPage() {
 
   const [servicios, setServicios] = useState<Servicio[]>([]);
   const [medicos, setMedicos] = useState<Medico[]>([]);
+  const [sedes, setSedes] = useState<Sede[]>([]);
 
   const [form, setForm] = useState({
+    id_sede: "",
     id_servicio: "",
     id_medico: "",
     fecha: "",
@@ -83,6 +93,7 @@ export default function CitasPage() {
     cargarCitas();
     cargarServicios();
     cargarMedicos();
+    cargarSedes();
   }, [isLoggedIn]);
 
   const cargarCitas = async () => {
@@ -107,7 +118,6 @@ export default function CitasPage() {
   const cargarServicios = async () => {
     try {
       const res = await api.getServicios();
-
       if (res.success) {
         setServicios(res.data || []);
       }
@@ -119,12 +129,28 @@ export default function CitasPage() {
   const cargarMedicos = async () => {
     try {
       const res = await api.getMedicos();
-
       if (res.success) {
         setMedicos(res.data || []);
       }
     } catch (error) {
       console.error(error);
+    }
+  };
+
+  const cargarSedes = async () => {
+    try {
+      console.log("Cargando sedes...");
+      const res = await api.getSedes();
+      console.log("Respuesta sedes:", res);
+
+      if (res.success) {
+        console.log("Sedes encontradas:", res.data);
+        setSedes(res.data || []);
+      } else {
+        console.log("Error en sedes:", res.error);
+      }
+    } catch (error) {
+      console.error("Error cargar sedes:", error);
     }
   };
 
@@ -142,12 +168,17 @@ export default function CitasPage() {
   const reservarCita = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!form.id_servicio || !form.id_medico || !form.fecha || !form.hora) {
+    if (
+      !form.id_sede ||
+      !form.id_servicio ||
+      !form.id_medico ||
+      !form.fecha ||
+      !form.hora
+    ) {
       setMensaje({
         texto: "Completa todos los campos",
         tipo: "error",
       });
-
       return;
     }
 
@@ -158,6 +189,7 @@ export default function CitasPage() {
         id_paciente: getUserId(),
         id_medico: parseInt(form.id_medico),
         id_servicio: parseInt(form.id_servicio),
+        id_sede: parseInt(form.id_sede),
         fecha_inicio: fechaHora,
         motivo_consulta: form.motivo_consulta,
       });
@@ -180,7 +212,6 @@ export default function CitasPage() {
       }
     } catch (error) {
       console.error(error);
-
       setMensaje({
         texto: "Error de conexión",
         tipo: "error",
@@ -226,7 +257,6 @@ export default function CitasPage() {
       }
     } catch (error) {
       console.error(error);
-
       setMensaje({
         texto: "Error de conexión",
         tipo: "error",
@@ -237,32 +267,18 @@ export default function CitasPage() {
   // ==========================
   // CONFIRMAR
   // ==========================
-  const handleConfirmarCita = async (idCita: number) => {
-    if (!confirm("¿Confirmar esta cita?")) return;
-
+  const handleConfirmarCita = async (id_cita: number, id_paciente: number) => {
     try {
-      const res = await api.confirmarCita(idCita, getUserId());
-
+      const res = await api.confirmarCita(id_cita, id_paciente);
       if (res.success) {
-        setMensaje({
-          texto: "✅ Cita confirmada",
-          tipo: "success",
-        });
-
+        alert("Cita confirmada exitosamente");
         cargarCitas();
       } else {
-        setMensaje({
-          texto: res.error || "Error al confirmar",
-          tipo: "error",
-        });
+        alert("Error: " + (res.error || res.mensaje));
       }
     } catch (error) {
-      console.error(error);
-
-      setMensaje({
-        texto: "Error de conexión",
-        tipo: "error",
-      });
+      console.error("Error al confirmar cita:", error);
+      alert("Error al confirmar la cita");
     }
   };
 
@@ -296,7 +312,6 @@ export default function CitasPage() {
       }
     } catch (error) {
       console.error(error);
-
       setMensaje({
         texto: "Error de conexión",
         tipo: "error",
@@ -312,6 +327,7 @@ export default function CitasPage() {
     const hora = cita.fecha_inicio.split("T")[1]?.substring(0, 5);
 
     setForm({
+      id_sede: "",
       id_servicio: "",
       id_medico: "",
       fecha,
@@ -329,6 +345,7 @@ export default function CitasPage() {
   // ==========================
   const abrirCrear = () => {
     setForm({
+      id_sede: "",
       id_servicio: "",
       id_medico: "",
       fecha: "",
@@ -353,6 +370,7 @@ export default function CitasPage() {
     setModalOpen(false);
 
     setForm({
+      id_sede: "",
       id_servicio: "",
       id_medico: "",
       fecha: "",
@@ -368,7 +386,6 @@ export default function CitasPage() {
 
   const tomorrow = new Date();
   tomorrow.setDate(tomorrow.getDate() + 1);
-
   const minDate = tomorrow.toISOString().split("T")[0];
 
   const getEstadoBadgeClass = (estado: string) => {
@@ -378,7 +395,6 @@ export default function CitasPage() {
       Cancelada: "estado-CANCELADA",
       Completada: "estado-ATENDIDA",
     };
-
     return map[estado] || "estado-PENDIENTE";
   };
 
@@ -426,10 +442,8 @@ export default function CitasPage() {
                   <i
                     className={`fas ${modalModo === "crear" ? "fa-calendar-plus" : "fa-edit"}`}
                   ></i>
-
                   {modalModo === "crear" ? "Agendar Cita" : "Modificar Cita"}
                 </h2>
-
                 <span className="close-modal" onClick={cerrarModal}>
                   &times;
                 </span>
@@ -441,13 +455,38 @@ export default function CitasPage() {
                     modalModo === "crear" ? reservarCita : modificarCita
                   }
                 >
+                  {/* SEDE - NUEVO CAMPO */}
+                  <div className="form-group-cita">
+                    <label>
+                      <i className="fas fa-building"></i>
+                      Sede
+                    </label>
+                    <select
+                      value={form.id_sede}
+                      onChange={(e) =>
+                        setForm({
+                          ...form,
+                          id_sede: e.target.value,
+                        })
+                      }
+                      required
+                    >
+                      <option value="">Selecciona sede</option>
+                      {sedes.map((s) => (
+                        <option key={s.id_sede} value={s.id_sede}>
+                          {s.nombre} - {s.ubicacion} (Capacidad:{" "}
+                          {s.capacidad_slots})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
                   {/* SERVICIO */}
                   <div className="form-group-cita">
                     <label>
                       <i className="fas fa-stethoscope"></i>
                       Servicio
                     </label>
-
                     <select
                       value={form.id_servicio}
                       onChange={(e) =>
@@ -456,9 +495,9 @@ export default function CitasPage() {
                           id_servicio: e.target.value,
                         })
                       }
+                      required
                     >
                       <option value="">Selecciona servicio</option>
-
                       {servicios.map((s) => (
                         <option key={s.id_servicio} value={s.id_servicio}>
                           {s.servicio}
@@ -473,7 +512,6 @@ export default function CitasPage() {
                       <i className="fas fa-user-md"></i>
                       Médico
                     </label>
-
                     <select
                       value={form.id_medico}
                       onChange={(e) =>
@@ -485,7 +523,6 @@ export default function CitasPage() {
                       required
                     >
                       <option value="">Selecciona médico</option>
-
                       {medicos.map((m) => (
                         <option key={m.id_medico} value={m.id_medico}>
                           {m.nombre_completo}
@@ -501,7 +538,6 @@ export default function CitasPage() {
                         <i className="fas fa-calendar-day"></i>
                         Fecha
                       </label>
-
                       <input
                         type="date"
                         min={minDate}
@@ -521,7 +557,6 @@ export default function CitasPage() {
                         <i className="fas fa-clock"></i>
                         Hora
                       </label>
-
                       <select
                         value={form.hora}
                         onChange={(e) =>
@@ -533,7 +568,6 @@ export default function CitasPage() {
                         required
                       >
                         <option value="">Selecciona hora</option>
-
                         {horariosDisponibles.map((h) => (
                           <option key={h} value={h}>
                             {h}
@@ -549,7 +583,6 @@ export default function CitasPage() {
                       <i className="fas fa-comment"></i>
                       Motivo
                     </label>
-
                     <textarea
                       value={form.motivo_consulta}
                       onChange={(e) =>
@@ -571,7 +604,6 @@ export default function CitasPage() {
                     }
                   >
                     <i className="fas fa-save"></i>
-
                     {modalModo === "crear"
                       ? "Reservar Cita"
                       : "Guardar Cambios"}
@@ -598,11 +630,8 @@ export default function CitasPage() {
           ) : citas.length === 0 ? (
             <div className="empty-state">
               <i className="fas fa-calendar-alt"></i>
-
               <h3>No tienes citas</h3>
-
               <p>Agenda tu primera cita médica</p>
-
               <button className="btn-nueva-cita" onClick={abrirCrear}>
                 Agendar Cita
               </button>
@@ -620,7 +649,6 @@ export default function CitasPage() {
                     <i className="fas fa-stethoscope"></i>
                     {cita.servicio}
                   </span>
-
                   <span
                     className={`estado-badge ${getEstadoBadgeClass(cita.estado)}`}
                   >
@@ -631,40 +659,34 @@ export default function CitasPage() {
                 <div className="cita-info">
                   <p>
                     <i className="fas fa-calendar-day"></i>
-
                     {new Date(cita.fecha_inicio).toLocaleDateString()}
                   </p>
-
                   <p>
                     <i className="fas fa-clock"></i>
-
                     {new Date(cita.fecha_inicio).toLocaleTimeString([], {
                       hour: "2-digit",
                       minute: "2-digit",
                     })}
                   </p>
-
                   <p>
                     <i className="fas fa-user-md"></i>
-
                     {cita.medico}
                   </p>
                 </div>
 
                 <div className="cita-acciones">
-                  {/* ======================
-                      PENDIENTE
-                  ====================== */}
+                  {/* PENDIENTE */}
                   {cita.estado === "Pendiente" && (
                     <>
                       <button
-                        className="btn-accion-cita btn-confirmar"
-                        onClick={() => handleConfirmarCita(cita.id_cita)}
+                        className="btn-confirmar"
+                        onClick={() =>
+                          handleConfirmarCita(cita.id_cita, cita.id_paciente)
+                        }
                       >
-                        <i className="fas fa-check"></i>
-                        Confirmar
+                        <i className="fas fa-check-circle"></i>
+                        Confirmar Cita
                       </button>
-
                       <button
                         className="btn-accion-cita btn-modificar"
                         onClick={() => abrirModificar(cita)}
@@ -672,7 +694,6 @@ export default function CitasPage() {
                         <i className="fas fa-edit"></i>
                         Modificar
                       </button>
-
                       <button
                         className="btn-accion-cita btn-cancelar"
                         onClick={() => handleCancelarCita(cita.id_cita)}
@@ -683,19 +704,15 @@ export default function CitasPage() {
                     </>
                   )}
 
-                  {/* ======================
-                      CONFIRMADA
-                  ====================== */}
+                  {/* CONFIRMADA */}
                   {cita.estado === "Confirmada" && (
                     <div className="cita-confirmada-box">
                       <div className="cita-confirmada-info">
                         <i className="fas fa-check-circle"></i>
                         Cita confirmada
                       </div>
-
                       <div className="ticket-cita">
                         <span className="ticket-label">Número de cita</span>
-
                         <span className="ticket-id">#{cita.id_cita}</span>
                       </div>
                     </div>

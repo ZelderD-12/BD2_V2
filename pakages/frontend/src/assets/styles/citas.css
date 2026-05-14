@@ -751,6 +751,140 @@
     font-family: monospace;
 }
 
+/* ========== BOTONES DE ACCIÓN ========== */
+.cita-acciones {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+    flex-wrap: wrap;
+  }
+  
+  .btn-confirmar {
+    background: linear-gradient(135deg, #00C49A, #009B77);
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.85rem;
+    transition: all 0.3s ease;
+    flex: 1;
+    min-width: 100px;
+  }
+  
+  .btn-confirmar:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 196, 154, 0.3);
+  }
+  
+  .btn-confirmar:active {
+    transform: translateY(0);
+  }
+  
+  .btn-confirmar:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+  }
+  
+  .btn-accion-cita {
+    padding: 8px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.85rem;
+    transition: all 0.3s ease;
+    flex: 1;
+    min-width: 100px;
+    border: none;
+  }
+  
+  .btn-modificar {
+    background: #0077B6;
+    color: white;
+  }
+  
+  .btn-modificar:hover {
+    background: #00B4D8;
+    transform: translateY(-2px);
+  }
+  
+  .btn-cancelar {
+    background: #dc3545;
+    color: white;
+  }
+  
+  .btn-cancelar:hover {
+    background: #c82333;
+    transform: translateY(-2px);
+  }
+  
+  .btn-expirada {
+    background: #6c757d;
+    color: white;
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+  
+  .btn-expirada:hover {
+    transform: none;
+  }
+  
+  /* Cita confirmada - mostrar información */
+  .cita-confirmada-box {
+    width: 100%;
+    background: #e8f5e9;
+    border-radius: 8px;
+    padding: 10px;
+    text-align: center;
+  }
+  
+  .cita-confirmada-info {
+    color: #2e7d32;
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+  
+  .cita-confirmada-info i {
+    margin-right: 8px;
+  }
+  
+  .ticket-cita {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: white;
+    padding: 8px 12px;
+    border-radius: 6px;
+  }
+  
+  .ticket-label {
+    font-size: 0.75rem;
+    color: #666;
+  }
+  
+  .ticket-id {
+    font-weight: 700;
+    color: #0077B6;
+    font-size: 1rem;
+  }
+  
+  /* Cita expirada */
+  .cita-expirada {
+    opacity: 0.7;
+    background: #f8f9fa;
+  }
+  
+  .cita-expirada .btn-confirmar,
+  .cita-expirada .btn-modificar,
+  .cita-expirada .btn-cancelar {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+
 
 /* Responsive */
 @media (max-width: 768px) {

@@ -14,6 +14,7 @@ interface CitaInfo {
   motivo_consulta: string
   codigo_ticket: string
   id_ticket: number
+  antecedentes_medicos?: string
 }
 
 interface Medicamento {
@@ -39,6 +40,7 @@ export default function AtencionMedica() {
   const [saving, setSaving] = useState(false)
   const [medicamentosList, setMedicamentosList] = useState<Medicamento[]>([])
   const [ordenReceta, setOrdenReceta] = useState<string | null>(null)
+  const [showAntecedentes, setShowAntecedentes] = useState(false)
   
   // Formulario de atención
   const [formData, setFormData] = useState({
@@ -84,8 +86,12 @@ export default function AtencionMedica() {
       const idUsuarioM = user?.id || parseInt(localStorage.getItem("user_id") || "0")
       const res = await api.getCitasMedicoEnAtencion(idUsuarioM)
       
+      console.log("Citas en atención:", res)
+      
       if (res.success && res.data) {
         const citaEncontrada = res.data.find((c: any) => c.id_cita === parseInt(id_cita!))
+        console.log("Cita encontrada:", citaEncontrada)
+        
         if (citaEncontrada) {
           setCita(citaEncontrada)
         }
@@ -135,7 +141,6 @@ export default function AtencionMedica() {
       }
     ])
 
-    // Limpiar campos
     setSelectedMedicamento("")
     setDosis("")
     setFrecuencia("")
@@ -146,6 +151,19 @@ export default function AtencionMedica() {
     setMedicamentos(medicamentos.filter((_, i) => i !== index))
   }
 
+  const formatearAntecedentes = (antecedentes: string | undefined) => {
+    if (!antecedentes) return "No registrados"
+    try {
+      const parsed = JSON.parse(antecedentes)
+      if (Array.isArray(parsed)) {
+        return parsed.join(", ")
+      }
+      return antecedentes
+    } catch {
+      return antecedentes
+    }
+  }
+
   const finalizarAtencion = async () => {
     if (!formData.diagnostico.trim()) {
       alert("Por favor ingrese un diagnóstico")
@@ -154,7 +172,6 @@ export default function AtencionMedica() {
 
     setSaving(true)
 
-    // Construir signos vitales como JSON
     const signosVitales = JSON.stringify({
       peso: formData.peso || null,
       talla: formData.talla || null,
@@ -167,11 +184,9 @@ export default function AtencionMedica() {
     try {
       let orden_receta_final = null
 
-      // Si hay medicamentos, crear la receta con el JSON completo
       if (medicamentos.length > 0) {
-        // Construir JSON de medicamentos
         const medicamentosJson = medicamentos.map(med => ({
-          id: med.id_medicamento,
+          id_medicamento: med.id_medicamento,
           nombre: med.nombre,
           dosis: med.dosis,
           frecuencia: med.frecuencia,
@@ -180,7 +195,6 @@ export default function AtencionMedica() {
 
         console.log("Medicamentos JSON:", JSON.stringify(medicamentosJson))
 
-        // Crear receta con todos los medicamentos de una vez
         const resReceta = await api.crearRecetaConMedicamentos(
           parseInt(id_cita!),
           JSON.stringify(medicamentosJson)
@@ -194,7 +208,6 @@ export default function AtencionMedica() {
         }
       }
 
-      // Finalizar la atención
       const finalizarData = {
         id_cita: parseInt(id_cita!),
         id_medico: user?.id,
@@ -280,6 +293,22 @@ export default function AtencionMedica() {
             <h3><i className="fas fa-stethoscope"></i> Servicio</h3>
             <p><strong>{cita.servicio}</strong></p>
           </div>
+        </div>
+
+        {/* ✅ ANTECEDENTES MÉDICOS */}
+        <div className="antecedentes-card">
+          <div className="antecedentes-header" onClick={() => setShowAntecedentes(!showAntecedentes)}>
+            <h3>
+              <i className="fas fa-notes-medical"></i>
+              Antecedentes Médicos del Paciente
+            </h3>
+            <i className={`fas fa-chevron-${showAntecedentes ? 'up' : 'down'}`}></i>
+          </div>
+          {showAntecedentes && (
+            <div className="antecedentes-content">
+              <p>{formatearAntecedentes(cita.antecedentes_medicos)}</p>
+            </div>
+          )}
         </div>
 
         <div className="atencion-grid">

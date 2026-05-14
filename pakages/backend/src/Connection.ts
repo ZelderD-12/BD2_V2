@@ -11,19 +11,35 @@ const dbConfig = {
         trustServerCertificate: true
     },
     connectionTimeout: 30000,
-    requestTimeout: 30000
+    requestTimeout: 30000,
+    // Deshabilitar logs detallados
+    debug: false
 };
 
 let pool: ConnectionPool | null = null;
+
+// Silenciar logs internos de mssql
+const originalError = console.error;
+console.error = (...args) => {
+    const message = args.join(' ');
+    // Filtrar los logs de tipo de datos
+    if (message.includes('type: [sql.SmallInt]') ||
+        message.includes('scale: undefined') ||
+        message.includes('precision: undefined') ||
+        message.includes('nullable: true') ||
+        message.includes('caseSensitive: false') ||
+        message.includes('identity: false') ||
+        message.includes('readOnly: false')) {
+        return;
+    }
+    originalError(...args);
+};
 
 export async function getConnection(): Promise<ConnectionPool> {
     if (pool && pool.connected) {
         return pool;
     }
-    console.log('Conectando a SQL Server...');
-    console.log('Server:', dbConfig.server, 'DB:', dbConfig.database, 'Port:', dbConfig.port);
     pool = await sql.connect(dbConfig);
-    console.log(' Conectado a SQL Server');
     return pool;
 }
 
