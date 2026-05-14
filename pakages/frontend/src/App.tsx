@@ -4,6 +4,7 @@ import Layout from './components/layout/Layout'
 import HomePage from './pages/Home/HomePage'
 import LoginPage from './pages/Login/LoginPage'
 import CitasPage from './pages/Citas/CitasPage'  
+import DoctorPage from './pages/Doctor/DoctorPage'
 import RecepcionPage from './pages/Recepcion/RecepcionPage'
 import RegisterPage from './pages/Register/RegisterPage'
 import ServiciosPage from './pages/Servicios/ServiciosPage'
@@ -20,6 +21,7 @@ export default function App() {
           <Route path="/" element={<Layout />}>
             <Route index element={<HomePage />} />
             <Route path="citas" element={<CitasPage />} />
+            <Route path="doctor" element={<DoctorPage />} />
             <Route path="servicios" element={<ServiciosPage />} />
             <Route path="recepcion" element={<RecepcionPage />} />  
           </Route>

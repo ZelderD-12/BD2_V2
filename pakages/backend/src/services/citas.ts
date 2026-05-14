@@ -2,20 +2,51 @@ import { sql, getConnection } from '../Connection';
 import type { Context } from 'elysia';
 
 // =============================================
+// TIPOS Y INTERFACES
+// =============================================
+
+interface ReservarCitaBody {
+    id_paciente: number;
+    id_medico: number;
+    id_servicio: number;
+    fecha_inicio: string;
+    motivo_consulta?: string;
+}
+
+interface ConfirmarCitaBody {
+    id_paciente: number;
+}
+
+interface ModificarCitaBody {
+    id_paciente: number;
+    nuevo_id_servicio?: number;
+    nueva_fecha_inicio?: string;
+    motivo_consulta?: string;
+}
+
+interface CancelarCitaBody {
+    id_paciente: number;
+    motivo_cancelacion?: string;
+}
+
+interface ParamsWithId {
+    id: string;
+}
+
+interface DatabaseError {
+    message: string;
+    code?: string;
+    number?: number;
+}
+
+// =============================================
 // 1. RESERVAR CITA
 // =============================================
 export const reservarCitaService = async ({ body, set }: Context) => {
-    const { id_paciente, id_medico, id_servicio, fecha_inicio, motivo_consulta } = body as {
-        id_paciente: number;
-        id_medico: number;
-        id_servicio: number;
-        fecha_inicio: string;
-        motivo_consulta?: string;
-    };
+    const { id_paciente, id_medico, id_servicio, fecha_inicio, motivo_consulta } = body as ReservarCitaBody;
 
     if (!id_paciente || !id_medico || !id_servicio || !fecha_inicio) {
         set.status = 422;
-
         return {
             success: false,
             error: 'Campos requeridos',
@@ -38,12 +69,11 @@ export const reservarCitaService = async ({ body, set }: Context) => {
             .execute('dbo.sp_ReservarCita');
 
         const returnValue = result.returnValue;
-        const mensaje = result.output.mensaje_out;
-        const id_cita = result.output.id_cita_out;
+        const mensaje: string = result.output.mensaje_out;
+        const id_cita: number = result.output.id_cita_out;
 
         if (returnValue === 0) {
             set.status = 201;
-
             return {
                 success: true,
                 mensaje: 'Cita creada exitosamente',
@@ -59,12 +89,7 @@ export const reservarCitaService = async ({ body, set }: Context) => {
             };
         }
 
-        set.status =
-            returnValue === 404
-                ? 404
-                : returnValue === 409
-                    ? 409
-                    : 422;
+        set.status = returnValue === 404 ? 404 : returnValue === 409 ? 409 : 422;
 
         return {
             success: false,
@@ -72,14 +97,15 @@ export const reservarCitaService = async ({ body, set }: Context) => {
             code: mensaje
         };
 
-    } catch (error: any) {
-        console.error('Error reservar cita:', error);
+    } catch (error: unknown) {
+        const err = error as DatabaseError;
+        console.error('Error reservar cita:', err);
 
         set.status = 500;
 
         return {
             success: false,
-            error: error.message,
+            error: err.message || 'Error interno del servidor',
             code: 'SERVER_ERROR'
         };
     }
@@ -89,7 +115,7 @@ export const reservarCitaService = async ({ body, set }: Context) => {
 // 2. VER CITAS DE UN PACIENTE
 // =============================================
 export const obtenerCitasPaciente = async ({ params, set }: Context) => {
-    const { id } = params as { id: string };
+    const { id } = params as ParamsWithId;
 
     try {
         const pool = await getConnection();
@@ -103,14 +129,15 @@ export const obtenerCitasPaciente = async ({ params, set }: Context) => {
             data: result.recordset
         };
 
-    } catch (error: any) {
-        console.error('Error obtener citas:', error);
+    } catch (error: unknown) {
+        const err = error as DatabaseError;
+        console.error('Error obtener citas:', err);
 
         set.status = 500;
 
         return {
             success: false,
-            error: error.message
+            error: err.message || 'Error interno del servidor'
         };
     }
 };
@@ -122,7 +149,6 @@ export const obtenerServicios = async ({ set }: Context) => {
     try {
         const pool = await getConnection();
 
-        // ✅ YA NO USA QUERY DIRECTA
         const result = await pool.request()
             .execute('dbo.sp_ObtenerServicios');
 
@@ -131,14 +157,15 @@ export const obtenerServicios = async ({ set }: Context) => {
             data: result.recordset
         };
 
-    } catch (error: any) {
-        console.error('Error obtener servicios:', error);
+    } catch (error: unknown) {
+        const err = error as DatabaseError;
+        console.error('Error obtener servicios:', err);
 
         set.status = 500;
 
         return {
             success: false,
-            error: error.message
+            error: err.message || 'Error interno del servidor'
         };
     }
 };
@@ -158,14 +185,15 @@ export const obtenerMedicos = async ({ set }: Context) => {
             data: result.recordset
         };
 
-    } catch (error: any) {
-        console.error('Error obtener médicos:', error);
+    } catch (error: unknown) {
+        const err = error as DatabaseError;
+        console.error('Error obtener médicos:', err);
 
         set.status = 500;
 
         return {
             success: false,
-            error: error.message
+            error: err.message || 'Error interno del servidor'
         };
     }
 };
@@ -174,11 +202,8 @@ export const obtenerMedicos = async ({ set }: Context) => {
 // 5. CONFIRMAR CITA
 // =============================================
 export const confirmarCitaService = async ({ params, body, set }: Context) => {
-    const { id } = params as { id: string };
-
-    const { id_paciente } = body as {
-        id_paciente: number;
-    };
+    const { id } = params as ParamsWithId;
+    const { id_paciente } = body as ConfirmarCitaBody;
 
     try {
         const pool = await getConnection();
@@ -190,7 +215,7 @@ export const confirmarCitaService = async ({ params, body, set }: Context) => {
             .execute('dbo.sp_ConfirmarCita');
 
         const returnValue = result.returnValue;
-        const mensaje = result.output.mensaje_out;
+        const mensaje: string = result.output.mensaje_out;
 
         if (returnValue === 0) {
             return {
@@ -200,24 +225,22 @@ export const confirmarCitaService = async ({ params, body, set }: Context) => {
             };
         }
 
-        set.status =
-            returnValue === 404
-                ? 404
-                : 409;
+        set.status = returnValue === 404 ? 404 : 409;
 
         return {
             success: false,
             error: mensaje
         };
 
-    } catch (error: any) {
-        console.error('Error confirmar cita:', error);
+    } catch (error: unknown) {
+        const err = error as DatabaseError;
+        console.error('Error confirmar cita:', err);
 
         set.status = 500;
 
         return {
             success: false,
-            error: error.message
+            error: err.message || 'Error interno del servidor'
         };
     }
 };
@@ -226,26 +249,13 @@ export const confirmarCitaService = async ({ params, body, set }: Context) => {
 // 6. MODIFICAR CITA
 // =============================================
 export const modificarCitaService = async ({ params, body, set }: Context) => {
-    const { id } = params as { id: string };
-
-    const {
-        id_paciente,
-        nuevo_id_servicio,
-        nueva_fecha_inicio,
-        motivo_consulta
-    } = body as {
-        id_paciente: number;
-        nuevo_id_servicio?: number;
-        nueva_fecha_inicio?: string;
-        motivo_consulta?: string;
-    };
+    const { id } = params as ParamsWithId;
+    const { id_paciente, nuevo_id_servicio, nueva_fecha_inicio, motivo_consulta } = body as ModificarCitaBody;
 
     try {
         const pool = await getConnection();
 
-        const fecha = nueva_fecha_inicio
-            ? new Date(nueva_fecha_inicio)
-            : null;
+        const fecha = nueva_fecha_inicio ? new Date(nueva_fecha_inicio) : null;
 
         const result = await pool.request()
             .input('id_cita', sql.SmallInt, parseInt(id))
@@ -257,7 +267,7 @@ export const modificarCitaService = async ({ params, body, set }: Context) => {
             .execute('dbo.sp_ModificarCita');
 
         const returnValue = result.returnValue;
-        const mensaje = result.output.mensaje_out;
+        const mensaje: string = result.output.mensaje_out;
 
         if (returnValue === 0) {
             return {
@@ -267,43 +277,76 @@ export const modificarCitaService = async ({ params, body, set }: Context) => {
             };
         }
 
-        set.status =
-            returnValue === 404
-                ? 404
-                : returnValue === 409
-                    ? 409
-                    : 422;
+        set.status = returnValue === 404 ? 404 : returnValue === 409 ? 409 : 422;
 
         return {
             success: false,
             error: mensaje
         };
 
-    } catch (error: any) {
-        console.error('Error modificar cita:', error);
+    } catch (error: unknown) {
+        const err = error as DatabaseError;
+        console.error('Error modificar cita:', err);
 
         set.status = 500;
 
         return {
             success: false,
-            error: error.message
+            error: err.message || 'Error interno del servidor'
         };
     }
 };
 
 // =============================================
-// 7. CANCELAR CITA
+// 7. VER CITAS DE UN MEDICO
+// =============================================
+export const obtenerCitasMedico = async ({ params, set }: Context) => {
+    const { id } = params as ParamsWithId;
+
+    try {
+        const pool = await getConnection();
+
+        const result = await pool.request()
+            .input('id_medico', sql.SmallInt, parseInt(id))
+            .query(`
+                SELECT 
+                    c.id_cita,
+                    s.servicio,
+                    u.nombres + ' ' + u.apellidos AS paciente,
+                    c.fecha_inicio,
+                    c.estado,
+                    c.motivo_consulta
+                FROM dbo.Cita c
+                JOIN dbo.Servicio s ON c.id_servicio = s.id_servicio
+                JOIN dbo.Usuario u ON c.id_paciente = u.id_usuario
+                WHERE c.id_medico = @id_medico
+                ORDER BY c.fecha_inicio DESC
+            `);
+
+        return {
+            success: true,
+            data: result.recordset
+        };
+
+    } catch (error: unknown) {
+        const err = error as DatabaseError;
+        console.error('Error obtener citas del medico:', err);
+
+        set.status = 500;
+
+        return {
+            success: false,
+            error: err.message || 'Error interno del servidor'
+        };
+    }
+};
+
+// =============================================
+// 8. CANCELAR CITA
 // =============================================
 export const cancelarCitaService = async ({ params, body, set }: Context) => {
-    const { id } = params as { id: string };
-
-    const {
-        id_paciente,
-        motivo_cancelacion
-    } = body as {
-        id_paciente: number;
-        motivo_cancelacion?: string;
-    };
+    const { id } = params as ParamsWithId;
+    const { id_paciente, motivo_cancelacion } = body as CancelarCitaBody;
 
     try {
         const pool = await getConnection();
@@ -316,7 +359,7 @@ export const cancelarCitaService = async ({ params, body, set }: Context) => {
             .execute('dbo.sp_CancelarCita');
 
         const returnValue = result.returnValue;
-        const mensaje = result.output.mensaje_out;
+        const mensaje: string = result.output.mensaje_out;
 
         if (returnValue === 0) {
             return {
@@ -326,26 +369,22 @@ export const cancelarCitaService = async ({ params, body, set }: Context) => {
             };
         }
 
-        set.status =
-            returnValue === 404
-                ? 404
-                : returnValue === 409
-                    ? 409
-                    : 422;
+        set.status = returnValue === 404 ? 404 : returnValue === 409 ? 409 : 422;
 
         return {
             success: false,
             error: mensaje
         };
 
-    } catch (error: any) {
-        console.error('Error cancelar cita:', error);
+    } catch (error: unknown) {
+        const err = error as DatabaseError;
+        console.error('Error cancelar cita:', err);
 
         set.status = 500;
 
         return {
             success: false,
-            error: error.message
+            error: err.message || 'Error interno del servidor'
         };
     }
 };

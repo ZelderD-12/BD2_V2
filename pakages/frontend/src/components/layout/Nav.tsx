@@ -36,6 +36,15 @@ export default function Nav() {
             </li>
           )}
           
+          {/* Panel Doctor - SOLO para rol 3 */}
+          {isLoggedIn && userRolId === 3 && (
+            <li>
+              <Link to="/doctor" className={`nav-simple-link ${location.pathname === '/doctor' ? 'active' : ''}`}>
+                Mis Consultas
+              </Link>
+            </li>
+          )}
+
           {/* Panel Recepción - SOLO para roles 5 y 6 */}
           {tienePermiso('VER_RECEPCION') && (
             <li>

@@ -5,6 +5,7 @@ import { login, crearUsuario, actualizarUsuario, obtenerUsuario } from './Contro
 import {
     reservarCitaService,
     obtenerCitasPaciente,
+    obtenerCitasMedico,
     obtenerServicios,
     obtenerMedicos,
     confirmarCitaService,
@@ -56,6 +57,7 @@ app.get('/Usuario/:id', obtenerUsuario);
 // Citas
 app.post('/api/reservar/cita', reservarCitaService);
 app.get('/api/citas/paciente/:id', obtenerCitasPaciente);
+app.get('/api/citas/medico/:id', obtenerCitasMedico);
 app.get('/api/citas/servicios', obtenerServicios);
 app.get('/api/citas/medicos', obtenerMedicos);
 app.post('/api/citas/:id/confirmar', confirmarCitaService);

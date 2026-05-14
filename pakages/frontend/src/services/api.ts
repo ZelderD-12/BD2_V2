@@ -60,6 +60,11 @@ export const api = {
     return res.json()
   },
 
+  async getCitasMedico(idMedico: number) {
+    const res = await fetch(`${API_URL}/api/citas/medico/${idMedico}`)
+    return res.json()
+  },
+
   async reservarCita(data: {
     id_paciente: number;
     id_medico: number;
