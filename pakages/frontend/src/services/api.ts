@@ -10,12 +10,60 @@ export const api = {
     });
     return res.json();
   },
+
+  // Logout y Sesiones
+  async logout() {
+    const token = localStorage.getItem("auth_token");
+    const res = await fetch(`${API_URL}/api/logout`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return res.json();
+  },
+
+  async renovarSesion() {
+    const token = localStorage.getItem("auth_token");
+    const res = await fetch(`${API_URL}/api/sesion/renovar`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return res.json();
+  },
+
+  async getUsuariosActivos() {
+    const res = await fetch(`${API_URL}/api/sesion/activos`);
+    return res.json();
+  },
+
+  async getUsuariosInactivos(dias: number = 7) {
+    const res = await fetch(`${API_URL}/api/sesion/inactivos?dias=${dias}`);
+    return res.json();
+  },
+
+  async limpiarSesionesExpiradas() {
+    const token = localStorage.getItem("auth_token");
+    const res = await fetch(`${API_URL}/api/sesion/limpiar`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return res.json();
+  },
+
   // ========== SEDES ==========
   async getSedes() {
     try {
       const res = await fetch(`${API_URL}/api/sedes`);
       const data = await res.json();
-      console.log("Respuesta de sedes:", data); // Para depurar
+      console.log("Respuesta de sedes:", data);
       return data;
     } catch (error) {
       console.error("Error en getSedes:", error);

@@ -4,6 +4,10 @@ import { useAuth } from '../../context/AuthContext'
 export default function Header() {
   const { isLoggedIn, userNombre, logout } = useAuth()
 
+  const handleLogout = async () => {
+    await logout()
+  }
+
   return (
     <header className="header-simple">
       <div className="header-simple-container">
@@ -21,7 +25,7 @@ export default function Header() {
               <span id="userNameHeader" style={{ color: 'var(--celeste-oscuro)', fontWeight: 500 }}>
                 👤 {userNombre}
               </span>
-              <button onClick={logout} className="btn-logout-header">
+              <button onClick={handleLogout} className="btn-logout-header">
                 Cerrar Sesión
               </button>
             </div>

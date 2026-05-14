@@ -36,6 +36,7 @@ import {
     crearRecetaConMedicamentos
 } from './services/historialClinico';
 
+import { logout, renovarSesion, obtenerUsuariosActivos, obtenerUsuariosInactivos, limpiarSesionesExpiradas } from './Controlles/usuarios/logout';
 const app = new Elysia();
 
 app.use(cors({
@@ -82,6 +83,13 @@ app.get('/api/sedes', async ({ set }) => {
         return { success: false, error: error.message };
     }
 });
+
+// ========== LOGOUT / SESIONES ==========
+app.post('/api/logout', logout);
+app.post('/api/sesion/renovar', renovarSesion);
+app.get('/api/sesion/activos', obtenerUsuariosActivos);
+app.get('/api/sesion/inactivos', obtenerUsuariosInactivos);
+app.post('/api/sesion/limpiar', limpiarSesionesExpiradas);
 
 // Usuarios
 app.post('/Login', login);

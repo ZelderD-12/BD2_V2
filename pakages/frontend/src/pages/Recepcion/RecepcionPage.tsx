@@ -17,18 +17,27 @@ interface Ticket {
   minutos_para_cita?: number;
 }
 
+// CORREGIDO: Mapeo correcto de estados numéricos
 function estadoDeTicket(t: Ticket): string {
   const e = t.estado ?? t.estado_ticket;
   if (typeof e === "number") {
-    const map = ["EN_ESPERA", "LLAMADO", "EN_ATENCION", "FINALIZADO", "NO_SHOW"];
-    return map[e - 1] || String(e);
+    const map: Record<number, string> = {
+      1: "EN_ESPERA",
+      2: "LLAMADO",
+      3: "EN_ATENCION",
+      4: "FINALIZADO",
+      5: "NO_SHOW"
+    };
+    return map[e] || String(e);
   }
   return String(e || "EN_ESPERA").toUpperCase();
 }
 
+// CORREGIDO: Solo mostrar tickets en ESPERA o LLAMADO
+// Los tickets EN_ATENCION NO aparecen en cola
 function ticketActivoEnCola(t: Ticket): boolean {
   const e = estadoDeTicket(t);
-  return e !== "FINALIZADO" && e !== "NO_SHOW";
+  return e === "EN_ESPERA" || e === "LLAMADO";
 }
 
 export default function RecepcionPage() {
@@ -153,7 +162,9 @@ export default function RecepcionPage() {
       const byId = new Map<number, Ticket>();
       for (const t of dataActuales.data || []) {
         const row = t as Ticket;
-        byId.set(row.id_ticket, { ...row, estado: estadoDeTicket(row) });
+        if (ticketActivoEnCola(row)) {
+          byId.set(row.id_ticket, { ...row, estado: estadoDeTicket(row) });
+        }
       }
       if (dataPublica.success) {
         const llamado = dataPublica.data?.llamado_actual as Ticket | null;
@@ -171,6 +182,8 @@ export default function RecepcionPage() {
       const activos = [...byId.values()].filter(ticketActivoEnCola);
       setCola(activos);
       setContadorCola(activos.length);
+      
+      // Actualizar selección solo si el ticket sigue activo
       setColaSeleccion((prev) => {
         if (!prev) return null;
         return activos.find((x) => x.id_ticket === prev.id_ticket) ?? null;
@@ -178,7 +191,11 @@ export default function RecepcionPage() {
     } catch (error) { console.error("Error cargando cola:", error); }
   }, [idSede, idServicio]);
 
-  useEffect(() => { cargarColaConGracia(); const i = setInterval(cargarColaConGracia, 5000); return () => clearInterval(i); }, [cargarColaConGracia]);
+  useEffect(() => { 
+    cargarColaConGracia(); 
+    const i = setInterval(cargarColaConGracia, 5000); 
+    return () => clearInterval(i); 
+  }, [cargarColaConGracia]);
 
   useEffect(() => {
     if (!colaSeleccion) return;
@@ -198,7 +215,10 @@ export default function RecepcionPage() {
 
   const generarTicket = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!nombres || !apellidos || !idSede) { setMensajeTicket({ texto: "Completa nombre, apellidos y sede", tipo: "error" }); return; }
+    if (!nombres || !apellidos || !idSede) { 
+      setMensajeTicket({ texto: "Completa nombre, apellidos y sede", tipo: "error" }); 
+      return; 
+    }
     setGenerando(true);
     const body: any = { nombres: nombres.trim(), apellidos: apellidos.trim(), id_sede: parseInt(idSede), prioridad };
     if (idCita.trim() !== "") body.id_cita = parseInt(idCita);
@@ -207,10 +227,16 @@ export default function RecepcionPage() {
       const data = await res.json();
       if (res.ok || data.success) {
         setMensajeTicket({ texto: "Ticket " + (data.data?.codigo_ticket || "") + " generado", tipo: "success" });
-        setNombres(""); setApellidos(""); setPrioridad("NORMAL"); setIdCita(""); cargarColaConGracia();
-      } else { setMensajeTicket({ texto: data.error || "Error", tipo: "error" }); }
-    } catch { setMensajeTicket({ texto: "Error de conexion", tipo: "error" }); }
-    finally { setGenerando(false); }
+        setNombres(""); setApellidos(""); setPrioridad("NORMAL"); setIdCita(""); 
+        cargarColaConGracia();
+      } else { 
+        setMensajeTicket({ texto: data.error || "Error", tipo: "error" }); 
+      }
+    } catch { 
+      setMensajeTicket({ texto: "Error de conexion", tipo: "error" }); 
+    } finally { 
+      setGenerando(false); 
+    }
   };
 
   const cambiarEstadoPorId = async (id_ticket: number, nuevoEstado: string, motivo?: string, snapshot?: Ticket | null) => {
@@ -221,21 +247,56 @@ export default function RecepcionPage() {
       const data = await res.json();
       if (data.success) {
         setMensajeAccion({ texto: "Ticket actualizado a " + nuevoEstado, tipo: "success" });
+        
+        // Si el ticket se finaliza o es NO_SHOW, limpiar ticketActual si es el mismo
         if (nuevoEstado === "FINALIZADO" || nuevoEstado === "NO_SHOW") {
-          if (ticketActual?.id_ticket === id_ticket) { setTicketActual(null); setTimerActivo(false); setTiempoLlamado(0); }
-          if (colaSeleccion?.id_ticket === id_ticket) { setColaSeleccion(null); setDetallePaciente(null); }
+          if (ticketActual?.id_ticket === id_ticket) { 
+            setTicketActual(null); 
+            setTimerActivo(false); 
+            setTiempoLlamado(0); 
+          }
+          if (colaSeleccion?.id_ticket === id_ticket) { 
+            setColaSeleccion(null); 
+            setDetallePaciente(null); 
+          }
         }
+        
+        // Si el ticket se pone en atención, limpiar ticketActual y recargar cola
+        if (nuevoEstado === "EN_ATENCION") {
+          if (ticketActual?.id_ticket === id_ticket) {
+            setTicketActual(null);
+            setTimerActivo(false);
+            setTiempoLlamado(0);
+          }
+          if (colaSeleccion?.id_ticket === id_ticket) {
+            setColaSeleccion(null);
+            setDetallePaciente(null);
+          }
+        }
+        
         if (nuevoEstado === "LLAMADO") {
           const enCola = snapshot ?? colaSeleccion ?? cola.find((c) => c.id_ticket === id_ticket);
-          if (enCola) { setTicketActual({ ...enCola, estado: "LLAMADO" }); setTimerActivo(true); }
+          if (enCola) { 
+            setTicketActual({ ...enCola, estado: "LLAMADO" }); 
+            setTimerActivo(true); 
+          }
         }
-        if (nuevoEstado === "EN_ESPERA" && ticketActual?.id_ticket === id_ticket) { setTicketActual(null); setTimerActivo(false); setTiempoLlamado(0); }
+        
+        if (nuevoEstado === "EN_ESPERA" && ticketActual?.id_ticket === id_ticket) { 
+          setTicketActual(null); 
+          setTimerActivo(false); 
+          setTiempoLlamado(0); 
+        }
+        
         cargarColaConGracia();
         return true;
       }
       setMensajeAccion({ texto: data.error || "Error", tipo: "error" });
       return false;
-    } catch { setMensajeAccion({ texto: "Error de conexion", tipo: "error" }); return false; }
+    } catch { 
+      setMensajeAccion({ texto: "Error de conexion", tipo: "error" }); 
+      return false; 
+    }
   };
 
   const llamarTicketSeleccion = async () => {
@@ -250,7 +311,10 @@ export default function RecepcionPage() {
   };
 
   const llamarSiguiente = async () => {
-    if (!idSede || !idServicio) { setMensajeLlamar({ texto: "Selecciona sede y servicio", tipo: "error" }); return; }
+    if (!idSede || !idServicio) { 
+      setMensajeLlamar({ texto: "Selecciona sede y servicio", tipo: "error" }); 
+      return; 
+    }
     setLlamando(true);
     try {
       const res = await fetch(`${API_BASE}/api/tickets/siguiente`, {
@@ -259,10 +323,17 @@ export default function RecepcionPage() {
       const data = await res.json();
       if (res.ok && data.success) {
         setMensajeLlamar({ texto: "Llamando " + data.data.codigo_ticket, tipo: "success" });
-        setTicketActual({ ...data.data, estado: "LLAMADO" }); setTimerActivo(true); cargarColaConGracia();
-      } else { setMensajeLlamar({ texto: data.error || "No hay pacientes", tipo: "info" }); }
-    } catch { setMensajeLlamar({ texto: "Error de conexion", tipo: "error" }); }
-    finally { setLlamando(false); }
+        setTicketActual({ ...data.data, estado: "LLAMADO" }); 
+        setTimerActivo(true); 
+        cargarColaConGracia();
+      } else { 
+        setMensajeLlamar({ texto: data.error || "No hay pacientes", tipo: "info" }); 
+      }
+    } catch { 
+      setMensajeLlamar({ texto: "Error de conexion", tipo: "error" }); 
+    } finally { 
+      setLlamando(false); 
+    }
   };
 
   const cambiarEstado = async (nuevoEstado: string, motivo?: string) => {

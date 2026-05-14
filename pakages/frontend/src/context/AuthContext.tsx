@@ -1,5 +1,6 @@
 import { createContext, useState, useContext } from 'react'
 import type { ReactNode } from 'react'
+import { api } from '../services/api' 
 
 export interface Usuario {
   id: number
@@ -32,7 +33,7 @@ interface AuthContextType {
   userRol: string | null
   userRolId: number | null
   login: (token: string, user: Usuario) => void
-  logout: () => void
+  logout: () => Promise<void>  // ← Cambiado a Promise
   isLoggedIn: boolean
   tienePermiso: (permiso: Permiso) => boolean
 }
@@ -57,10 +58,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(userData)
   }
 
-  const logout = () => {
-    localStorage.clear()
-    setToken(null)
-    setUser(null)
+  const logout = async () => {
+    try {
+      // Llamar al endpoint de logout en el backend
+      await api.logout()
+    } catch (error) {
+      console.error('Error en logout:', error)
+    } finally {
+      // Limpiar localStorage y estado
+      localStorage.clear()
+      setToken(null)
+      setUser(null)
+    }
   }
 
   const checkPermiso = (permiso: Permiso) => tienePermiso(userRolId, permiso)
