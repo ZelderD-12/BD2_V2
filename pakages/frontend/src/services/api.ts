@@ -54,7 +54,6 @@ export const api = {
   },
 
   // ========== CITAS ==========
-  
   async getCitasPaciente(idPaciente: number) {
     const res = await fetch(`${API_URL}/api/citas/paciente/${idPaciente}`)
     return res.json()
@@ -62,6 +61,11 @@ export const api = {
 
   async getCitasMedico(idMedico: number) {
     const res = await fetch(`${API_URL}/api/citas/medico/${idMedico}`)
+    return res.json()
+  },
+
+  async getCitasMedicoEnAtencion(idUsuarioM: number) {
+    const res = await fetch(`${API_URL}/api/medico/${idUsuarioM}/citas/atencion`)
     return res.json()
   },
 
@@ -113,7 +117,6 @@ export const api = {
   },
 
   // ========== TICKETS (RECEPCIÓN) ==========
-  
   async generarTicket(data: any) {
     const token = localStorage.getItem('auth_token')
     const res = await fetch(`${API_URL}/api/tickets/generar`, {
@@ -155,6 +158,81 @@ export const api = {
 
   async getCola(idSede: number, idServicio: number) {
     const res = await fetch(`${API_URL}/api/pantalla/cola?id_sede=${idSede}&id_servicio=${idServicio}`)
+    return res.json()
+  },
+
+  // ========== HISTORIAL CLÍNICO ==========
+  async getHistorialPaciente(idPaciente: number) {
+    const res = await fetch(`${API_URL}/api/historial/paciente/${idPaciente}`)
+    return res.json()
+  },
+
+  async getHistorialCompletoPaciente(idPaciente: number, idMedico?: number) {
+    let url = `${API_URL}/api/historial/completo/${idPaciente}`
+    if (idMedico) url += `?id_medico=${idMedico}`
+    const res = await fetch(url)
+    return res.json()
+  },
+
+  async getHistorialPorCita(idCita: number) {
+    const res = await fetch(`${API_URL}/api/historial/cita/${idCita}`)
+    return res.json()
+  },
+
+  async guardarHistorialClinico(data: any) {
+    const res = await fetch(`${API_URL}/api/historial/guardar`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    })
+    return res.json()
+  },
+
+  // ========== RECETAS ==========
+  async getMedicamentos() {
+    const res = await fetch(`${API_URL}/api/medicamentos`)
+    return res.json()
+  },
+
+  async crearReceta(id_cita: number, id_medicamento: number, observaciones?: string) {
+    const res = await fetch(`${API_URL}/api/receta/crear`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id_cita, id_medicamento, observaciones })
+    })
+    return res.json()
+  },
+
+  async crearRecetaConMedicamentos(id_cita: number, medicamentos_json: string) {
+    const res = await fetch(`${API_URL}/api/receta/crear-con-medicamentos`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id_cita, medicamentos_json })
+    })
+    return res.json()
+  },
+
+  async agregarMedicamentoReceta(orden_receta: string, id_medicamento: number, observaciones?: string) {
+    const res = await fetch(`${API_URL}/api/receta/agregar`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ orden_receta, id_medicamento, observaciones })
+    })
+    return res.json()
+  },
+
+  async consultarReceta(orden_receta: string) {
+    const res = await fetch(`${API_URL}/api/receta/${orden_receta}`)
+    return res.json()
+  },
+
+  // ========== ATENCIÓN ==========
+  async finalizarAtencion(data: any) {
+    const res = await fetch(`${API_URL}/api/atencion/finalizar`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    })
     return res.json()
   }
 }

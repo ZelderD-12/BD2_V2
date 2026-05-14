@@ -176,3 +176,93 @@
 .empty-state p {
   color: #999;
 }
+
+
+/* En doctor.css */
+.doctor-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 15px;
+}
+
+.btn-refresh {
+  background: #0077B6;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.3s;
+}
+
+.btn-refresh:hover {
+  background: #00B4D8;
+}
+
+.btn-refresh:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.estado-ATENCION {
+  background: #ff9800;
+  color: white;
+}
+
+.tiempo-atencion {
+  background: #e3f2fd;
+  color: #0077B6;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.doctor-cita-footer {
+  display: flex;
+  gap: 10px;
+  margin-top: 15px;
+  padding-top: 15px;
+  border-top: 1px solid #eee;
+}
+
+.btn-historial {
+  flex: 1;
+  background: #6c757d;
+  color: white;
+  border: none;
+  padding: 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.3s;
+}
+
+.btn-historial:hover {
+  background: #5a6268;
+}
+
+.btn-finalizar {
+  flex: 1;
+  background: #28a745;
+  color: white;
+  border: none;
+  padding: 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.3s;
+}
+
+.btn-finalizar:hover {
+  background: #218838;
+}
+
+.empty-state i {
+  font-size: 4rem;
+  color: #0077B6;
+  margin-bottom: 15px;
+}

@@ -8,9 +8,16 @@ interface CitaMedico {
   id_cita: number
   servicio: string
   paciente: string
+  id_paciente: number
+  telefono_paciente: string
   fecha_inicio: string
-  estado: string
+  fecha_fin: string
+  estado_cita: string
   motivo_consulta: string
+  id_ticket: number
+  codigo_ticket: string
+  estado_ticket: string
+  minutos_en_atencion?: number
 }
 
 export default function DoctorPage() {
@@ -19,6 +26,7 @@ export default function DoctorPage() {
 
   const [citas, setCitas] = useState<CitaMedico[]>([])
   const [loading, setLoading] = useState(true)
+  const [refreshing, setRefreshing] = useState(false)
 
   useEffect(() => {
     if (!isLoggedIn) {
@@ -33,22 +41,35 @@ export default function DoctorPage() {
 
   useEffect(() => {
     if (!isLoggedIn || userRolId !== 3) return
-    cargarCitas()
+    cargarCitasEnAtencion()
+    
+    // Auto-refresh cada 30 segundos
+    const interval = setInterval(() => {
+      cargarCitasEnAtencion(true)
+    }, 30000)
+    
+    return () => clearInterval(interval)
   }, [isLoggedIn, userRolId])
 
-  const cargarCitas = async () => {
+  const cargarCitasEnAtencion = async (silent = false) => {
+    if (!silent) setLoading(true)
+    else setRefreshing(true)
+    
     try {
-      const idMedico = user?.id || parseInt(localStorage.getItem("user_id") || "0")
-      if (!idMedico) return
+      const idUsuarioM = user?.id || parseInt(localStorage.getItem("user_id") || "0")
+      console.log("ID Usuario Médico:", idUsuarioM)
 
-      const res = await api.getCitasMedico(idMedico)
+      const res = await api.getCitasMedicoEnAtencion(idUsuarioM)
+      console.log("Respuesta:", res)
+
       if (res.success) {
         setCitas(res.data || [])
       }
     } catch (error) {
-      console.error(error)
+      console.error("Error:", error)
     } finally {
       setLoading(false)
+      setRefreshing(false)
     }
   }
 
@@ -72,6 +93,15 @@ export default function DoctorPage() {
     return map[estado] || "fa-question-circle"
   }
 
+  const verHistorialClinico = (idPaciente: number) => {
+    navigate(`/historial/${idPaciente}`)
+  }
+
+  const finalizarAtencion = (cita: CitaMedico) => {
+    console.log("Navegando a atención con cita:", cita.id_cita)
+    navigate(`/atencion/${cita.id_cita}`)
+  }
+
   if (!isLoggedIn || userRolId !== 3) return null
 
   return (
@@ -85,23 +115,31 @@ export default function DoctorPage() {
           <div>
             <h1>
               <i className="fas fa-user-md"></i>
-              Mis Consultas
+              Pacientes en Atención
             </h1>
-            <p>Consulta de citas asignadas</p>
+            <p>Pacientes que están siendo atendidos actualmente</p>
           </div>
+          <button 
+            className="btn-refresh" 
+            onClick={() => cargarCitasEnAtencion()}
+            disabled={refreshing}
+          >
+            <i className={`fas fa-sync-alt ${refreshing ? 'fa-spin' : ''}`}></i>
+            Actualizar
+          </button>
         </div>
 
         <div className="doctor-citas-grid">
           {loading ? (
             <div className="loading-spinner">
               <i className="fas fa-spinner fa-spin"></i>
-              Cargando citas...
+              Cargando pacientes en atención...
             </div>
           ) : citas.length === 0 ? (
             <div className="empty-state">
-              <i className="fas fa-calendar-alt"></i>
-              <h3>No hay citas asignadas</h3>
-              <p>No tienes citas programadas actualmente</p>
+              <i className="fas fa-user-clock"></i>
+              <h3>No hay pacientes en atención</h3>
+              <p>Espera a que te asignen un paciente</p>
             </div>
           ) : (
             citas.map((cita) => (
@@ -111,16 +149,26 @@ export default function DoctorPage() {
                     <i className="fas fa-stethoscope"></i>
                     {cita.servicio}
                   </span>
-                  <span className={`estado-badge ${getEstadoBadgeClass(cita.estado)}`}>
-                    <i className={`fas ${getEstadoIcon(cita.estado)}`}></i>
-                    {cita.estado}
+                  <span className="estado-badge estado-ATENCION">
+                    <i className="fas fa-user-check"></i>
+                    {cita.estado_ticket || "En Atención"}
                   </span>
+                  {cita.minutos_en_atencion !== undefined && (
+                    <span className="tiempo-atencion">
+                      <i className="fas fa-hourglass-half"></i>
+                      {cita.minutos_en_atencion} min
+                    </span>
+                  )}
                 </div>
 
                 <div className="doctor-cita-body">
                   <p>
                     <i className="fas fa-user"></i>
                     <strong>Paciente:</strong> {cita.paciente}
+                  </p>
+                  <p>
+                    <i className="fas fa-phone"></i>
+                    <strong>Teléfono:</strong> {cita.telefono_paciente || "No registrado"}
                   </p>
                   <p>
                     <i className="fas fa-calendar-day"></i>
@@ -141,6 +189,29 @@ export default function DoctorPage() {
                       <strong>Motivo:</strong> {cita.motivo_consulta}
                     </p>
                   )}
+                  {cita.codigo_ticket && (
+                    <p className="doctor-cita-ticket">
+                      <i className="fas fa-ticket-alt"></i>
+                      <strong>Ticket:</strong> {cita.codigo_ticket}
+                    </p>
+                  )}
+                </div>
+
+                <div className="doctor-cita-footer">
+                  <button 
+                    className="btn-historial"
+                    onClick={() => verHistorialClinico(cita.id_paciente)}
+                  >
+                    <i className="fas fa-notes-medical"></i>
+                    Ver Historial Clínico
+                  </button>
+                  <button 
+                    className="btn-finalizar"
+                    onClick={() => finalizarAtencion(cita)}
+                  >
+                    <i className="fas fa-check-circle"></i>
+                    Finalizar Atención
+                  </button>
                 </div>
               </div>
             ))

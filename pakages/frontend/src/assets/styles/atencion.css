@@ -1,0 +1,321 @@
+.atencion-page {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #0077B6 0%, #00B4D8 100%);
+    padding: 2rem;
+  }
+  
+  .atencion-container {
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+  
+  .atencion-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+  
+  .atencion-header h1 {
+    color: white;
+    font-size: 1.8rem;
+    margin: 0;
+  }
+  
+  .atencion-header p {
+    color: rgba(255,255,255,0.8);
+    margin: 0;
+  }
+  
+  .ticket-info {
+    background: white;
+    padding: 0.75rem 1.5rem;
+    border-radius: 30px;
+    font-weight: 600;
+    color: #0077B6;
+  }
+  
+  .ticket-info i {
+    margin-right: 0.5rem;
+  }
+  
+  .btn-back {
+    background: white;
+    color: #0077B6;
+    padding: 0.75rem 1.5rem;
+    border-radius: 30px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.3s;
+  }
+  
+  .btn-back:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+  }
+  
+  .paciente-info {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+  }
+  
+  .info-card {
+    background: white;
+    border-radius: 15px;
+    padding: 1.5rem;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+  }
+  
+  .info-card h3 {
+    color: #0077B6;
+    margin-bottom: 1rem;
+    font-size: 1.1rem;
+    border-bottom: 2px solid #00C49A;
+    padding-bottom: 0.5rem;
+  }
+  
+  .info-card p {
+    margin: 0.5rem 0;
+    color: #333;
+  }
+  
+  .atencion-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    margin-bottom: 2rem;
+  }
+  
+  .clinical-data, .receta-data {
+    background: white;
+    border-radius: 20px;
+    padding: 1.5rem;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+  }
+  
+  .clinical-data h2, .receta-data h2 {
+    color: #0077B6;
+    font-size: 1.3rem;
+    margin-bottom: 1.5rem;
+    border-bottom: 2px solid #00C49A;
+    padding-bottom: 0.5rem;
+  }
+  
+  .signos-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+    margin-bottom: 2rem;
+  }
+  
+  .input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .input-group.full-width {
+    grid-column: span 2;
+  }
+  
+  .input-group label {
+    font-weight: 600;
+    color: #333;
+    font-size: 0.9rem;
+  }
+  
+  .input-group input,
+  .input-group select,
+  .input-group textarea {
+    padding: 0.75rem;
+    border: 2px solid #E9ECEF;
+    border-radius: 10px;
+    font-family: 'Poppins', sans-serif;
+    transition: all 0.3s;
+  }
+  
+  .input-group input:focus,
+  .input-group select:focus,
+  .input-group textarea:focus {
+    outline: none;
+    border-color: #00C49A;
+    box-shadow: 0 0 0 3px rgba(0,196,154,0.1);
+  }
+  
+  .diagnostico-section,
+  .seguimiento-section {
+    margin-bottom: 2rem;
+  }
+  
+  .orden-receta {
+    background: #e8f5e9;
+    padding: 1rem;
+    border-radius: 10px;
+    margin-bottom: 1.5rem;
+    text-align: center;
+    font-size: 1.1rem;
+  }
+  
+  .orden-receta i {
+    color: #28a745;
+    margin-right: 0.5rem;
+  }
+  
+  .agregar-medicamento {
+    background: #f8f9fa;
+    padding: 1rem;
+    border-radius: 15px;
+    margin-bottom: 1.5rem;
+  }
+  
+  .btn-agregar {
+    width: 100%;
+    background: #00C49A;
+    color: white;
+    border: none;
+    padding: 0.75rem;
+    border-radius: 10px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 1rem;
+    transition: all 0.3s;
+  }
+  
+  .btn-agregar:hover {
+    background: #009B77;
+    transform: translateY(-2px);
+  }
+  
+  .medicamentos-list {
+    margin-top: 1.5rem;
+  }
+  
+  .medicamentos-list h3 {
+    color: #333;
+    margin-bottom: 1rem;
+    font-size: 1rem;
+  }
+  
+  .medicamento-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #f8f9fa;
+    padding: 0.75rem;
+    border-radius: 10px;
+    margin-bottom: 0.5rem;
+  }
+  
+  .med-info strong {
+    color: #0077B6;
+  }
+  
+  .med-info p {
+    font-size: 0.8rem;
+    color: #666;
+    margin-top: 0.25rem;
+  }
+  
+  .btn-eliminar {
+    background: #dc3545;
+    color: white;
+    border: none;
+    padding: 0.5rem 0.75rem;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s;
+  }
+  
+  .btn-eliminar:hover {
+    background: #c82333;
+  }
+  
+  .receta-info {
+    background: #e3f2fd;
+    padding: 1rem;
+    border-radius: 10px;
+    margin-top: 1rem;
+    text-align: center;
+  }
+  
+  .receta-info i {
+    font-size: 2rem;
+    color: #0077B6;
+    margin-bottom: 0.5rem;
+  }
+  
+  .receta-info .small {
+    font-size: 0.8rem;
+    color: #666;
+    margin-top: 0.5rem;
+  }
+  
+  .atencion-footer {
+    display: flex;
+    justify-content: flex-end;
+  }
+  
+  .btn-finalizar {
+    background: #28a745;
+    color: white;
+    border: none;
+    padding: 1rem 2rem;
+    border-radius: 12px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+  }
+  
+  .btn-finalizar:hover {
+    background: #218838;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+  }
+  
+  .btn-finalizar:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+  }
+  
+  .loading-spinner {
+    text-align: center;
+    padding: 3rem;
+    color: white;
+  }
+  
+  .empty-state {
+    text-align: center;
+    padding: 3rem;
+    background: white;
+    border-radius: 20px;
+  }
+  
+  .empty-state i {
+    font-size: 4rem;
+    color: #ffc107;
+    margin-bottom: 1rem;
+  }
+  
+  @media (max-width: 1000px) {
+    .atencion-grid {
+      grid-template-columns: 1fr;
+    }
+    
+    .paciente-info {
+      grid-template-columns: 1fr;
+    }
+    
+    .signos-grid {
+      grid-template-columns: 1fr;
+    }
+    
+    .input-group.full-width {
+      grid-column: span 1;
+    }
+  }

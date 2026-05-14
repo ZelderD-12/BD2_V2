@@ -1,0 +1,316 @@
+.historial-page {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #0077B6 0%, #00B4D8 100%);
+    padding: 2rem;
+  }
+  
+  .historial-container {
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  
+  .historial-header {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+  }
+  
+  .historial-header h1 {
+    color: white;
+    font-size: 2rem;
+    margin: 0;
+  }
+  
+  .historial-header p {
+    color: rgba(255,255,255,0.8);
+    margin: 0;
+  }
+  
+  .btn-back {
+    background: white;
+    color: #0077B6;
+    padding: 0.75rem 1.5rem;
+    border-radius: 30px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.3s;
+  }
+  
+  .btn-back:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+  }
+  
+  .paciente-info-card {
+    background: white;
+    border-radius: 20px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+  }
+  
+  .paciente-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid #00C49A;
+  }
+  
+  .paciente-header i {
+    font-size: 2.5rem;
+    color: #00C49A;
+  }
+  
+  .paciente-header h2 {
+    color: #0077B6;
+    margin: 0;
+  }
+  
+  .paciente-details {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1rem;
+  }
+  
+  .info-row {
+    display: flex;
+    gap: 0.5rem;
+  }
+  
+  .info-row span {
+    color: #6C757D;
+    min-width: 80px;
+  }
+  
+  .info-row i {
+    margin-right: 0.5rem;
+    color: #00C49A;
+    width: 20px;
+  }
+  
+  .section-title {
+    color: white;
+    font-size: 1.5rem;
+    margin: 2rem 0 1rem;
+  }
+  
+  .section-title i {
+    margin-right: 0.5rem;
+  }
+  
+  .historial-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+    gap: 1.5rem;
+  }
+  
+  .historial-card {
+    background: white;
+    border-radius: 15px;
+    overflow: hidden;
+    transition: transform 0.3s, box-shadow 0.3s;
+  }
+  
+  .historial-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+  }
+  
+  .historial-card-header {
+    display: flex;
+    justify-content: space-between;
+    padding: 1rem;
+    background: #f8f9fa;
+    border-bottom: 1px solid #e0e0e0;
+  }
+  
+  .servicio-badge {
+    background: #00C49A;
+    color: white;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+  }
+  
+  .fecha-badge {
+    color: #6C757D;
+    font-size: 0.8rem;
+  }
+  
+  .historial-card-body {
+    padding: 1rem;
+  }
+  
+  .historial-card-body p {
+    margin: 0.5rem 0;
+    font-size: 0.9rem;
+    color: #333;
+  }
+  
+  .historial-card-body i {
+    width: 25px;
+    color: #00C49A;
+    margin-right: 0.5rem;
+  }
+  
+  .historial-card-footer {
+    padding: 1rem;
+    border-top: 1px solid #e0e0e0;
+  }
+  
+  .btn-detalle {
+    width: 100%;
+    background: #0077B6;
+    color: white;
+    border: none;
+    padding: 0.75rem;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: background 0.3s;
+  }
+  
+  .btn-detalle:hover {
+    background: #00B4D8;
+  }
+  
+  .modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+  }
+  
+  .modal-content {
+    background: white;
+    border-radius: 20px;
+    max-width: 800px;
+    width: 90%;
+    max-height: 85vh;
+    overflow-y: auto;
+  }
+  
+  .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem;
+    border-bottom: 1px solid #e0e0e0;
+  }
+  
+  .modal-header h2 {
+    margin: 0;
+    color: #0077B6;
+  }
+  
+  .modal-close {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: #6C757D;
+  }
+  
+  .modal-body {
+    padding: 1.5rem;
+  }
+  
+  .detail-section {
+    margin-bottom: 2rem;
+  }
+  
+  .detail-section h3 {
+    color: #0077B6;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid #00C49A;
+  }
+  
+  .detail-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1rem;
+  }
+  
+  .medicamentos-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  
+  .medicamentos-table th,
+  .medicamentos-table td {
+    padding: 0.75rem;
+    text-align: left;
+    border-bottom: 1px solid #e0e0e0;
+  }
+  
+  .medicamentos-table th {
+    background: #f8f9fa;
+    color: #0077B6;
+  }
+  
+  .notas-doctor {
+    background: #f8f9fa;
+    padding: 1rem;
+    border-radius: 10px;
+    line-height: 1.5;
+  }
+  
+  .modal-footer {
+    padding: 1.5rem;
+    border-top: 1px solid #e0e0e0;
+    text-align: right;
+  }
+  
+  .btn-cerrar {
+    background: #6C757D;
+    color: white;
+    border: none;
+    padding: 0.75rem 2rem;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: 600;
+  }
+  
+  .loading-spinner {
+    text-align: center;
+    padding: 3rem;
+    color: white;
+  }
+  
+  .empty-state {
+    text-align: center;
+    padding: 3rem;
+    background: white;
+    border-radius: 20px;
+  }
+  
+  .empty-state i {
+    font-size: 4rem;
+    color: #00C49A;
+    margin-bottom: 1rem;
+  }
+  
+  @media (max-width: 768px) {
+    .historial-page {
+      padding: 1rem;
+    }
+    
+    .historial-grid {
+      grid-template-columns: 1fr;
+    }
+    
+    .paciente-details {
+      grid-template-columns: 1fr;
+    }
+  }

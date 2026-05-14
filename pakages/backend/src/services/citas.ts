@@ -301,31 +301,19 @@ export const modificarCitaService = async ({ params, body, set }: Context) => {
 // 7. VER CITAS DE UN MEDICO
 // =============================================
 export const obtenerCitasMedico = async ({ params, set }: Context) => {
-    const { id } = params as ParamsWithId;
+    const { id_usuario_m } = params as { id_usuario_m: string };
 
     try {
         const pool = await getConnection();
 
         const result = await pool.request()
-            .input('id_medico', sql.SmallInt, parseInt(id))
-            .query(`
-                SELECT 
-                    c.id_cita,
-                    s.servicio,
-                    u.nombres + ' ' + u.apellidos AS paciente,
-                    c.fecha_inicio,
-                    c.estado,
-                    c.motivo_consulta
-                FROM dbo.Cita c
-                JOIN dbo.Servicio s ON c.id_servicio = s.id_servicio
-                JOIN dbo.Usuario u ON c.id_paciente = u.id_usuario
-                WHERE c.id_medico = @id_medico
-                ORDER BY c.fecha_inicio DESC
-            `);
+            .input('id_usuario_m', sql.SmallInt, parseInt(id_usuario_m))
+            .execute('dbo.sp_ObtenerCitasPorMedico');
 
         return {
             success: true,
-            data: result.recordset
+            data: result.recordset,
+            count: result.recordset.length
         };
 
     } catch (error: unknown) {
@@ -379,6 +367,65 @@ export const cancelarCitaService = async ({ params, body, set }: Context) => {
     } catch (error: unknown) {
         const err = error as DatabaseError;
         console.error('Error cancelar cita:', err);
+
+        set.status = 500;
+
+        return {
+            success: false,
+            error: err.message || 'Error interno del servidor'
+        };
+    }
+};
+
+export const obtenerCitasMedicoEnAtencion = async ({ params, set }: Context) => {
+    const { id_usuario_m } = params as { id_usuario_m: string };
+
+    try {
+        const pool = await getConnection();
+
+        const result = await pool.request()
+            .input('id_usuario_m', sql.SmallInt, parseInt(id_usuario_m))
+            .execute('dbo.sp_ObtenerCitasEnAtencion');  // Usa el SP que ya tienes
+
+        return {
+            success: true,
+            data: result.recordset,
+            count: result.recordset.length
+        };
+
+    } catch (error: unknown) {
+        const err = error as DatabaseError;
+        console.error('Error obtener citas en atencion:', err);
+
+        set.status = 500;
+
+        return {
+            success: false,
+            error: err.message || 'Error interno del servidor'
+        };
+    }
+};
+
+
+export const obtenerTodasCitasMedico = async ({ params, set }: Context) => {
+    const { id_usuario_m } = params as { id_usuario_m: string };
+
+    try {
+        const pool = await getConnection();
+
+        const result = await pool.request()
+            .input('id_usuario_m', sql.SmallInt, parseInt(id_usuario_m))
+            .execute('dbo.sp_ObtenerTodasCitasPorMedico');
+
+        return {
+            success: true,
+            data: result.recordset,
+            count: result.recordset.length
+        };
+
+    } catch (error: unknown) {
+        const err = error as DatabaseError;
+        console.error('Error obtener todas las citas del medico:', err);
 
         set.status = 500;
 

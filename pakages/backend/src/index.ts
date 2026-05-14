@@ -10,7 +10,9 @@ import {
     obtenerMedicos,
     confirmarCitaService,
     modificarCitaService,
-    cancelarCitaService
+    cancelarCitaService,
+    obtenerCitasMedicoEnAtencion,
+    obtenerTodasCitasMedico,
 } from './services/citas';
 import {
     generarTicketService,
@@ -21,7 +23,18 @@ import {
     cambiarEstadoTicketManual,
     obtenerPacientePorTicketService
 } from './services/tickets';
-
+import {
+    obtenerHistorialPaciente,
+    obtenerHistorialCompletoPaciente,
+    obtenerHistorialPorCita,
+    guardarHistorialClinico,
+    crearReceta,
+    agregarMedicamentoReceta,
+    consultarReceta,
+    obtenerMedicamentos,
+    finalizarAtencion,
+    crearRecetaConMedicamentos
+} from './services/historialClinico';
 const app = new Elysia();
 
 app.use(cors({
@@ -48,6 +61,27 @@ app.get('/api/db-test', async ({ set }) => {
     }
 });
 
+app.post('/api/receta/crear-con-medicamentos', async ({ body, set }) => {
+    const { id_cita, medicamentos_json } = body as any;
+    
+    try {
+      const pool = await getConnection();
+      const result = await pool.request()
+        .input('id_cita', sql.SmallInt, id_cita)
+        .input('medicamentos_json', sql.VarChar(sql.MAX), medicamentos_json)
+        .output('Orden_Receta', sql.VarChar(30))
+        .execute('dbo.SP_Receta_CrearConMedicamentos');
+      
+      return {
+        success: true,
+        data: { orden_receta: result.output.Orden_Receta }
+      };
+    } catch (error: any) {
+      set.status = 500;
+      return { success: false, error: error.message };
+    }
+  });
+
 // Usuarios
 app.post('/Login', login);
 app.post('/Usuario/crear', crearUsuario);
@@ -73,6 +107,25 @@ app.get('/api/tickets/cola-actuales', obtenerTicketsColaActuales);
 app.get('/api/tickets/paciente-por-codigo', obtenerPacientePorTicketService);
 app.post('/api/tickets/:id/cambiar-estado', cambiarEstadoTicketManual);
 
+app.get('/api/medico/:id_usuario_m/citas', obtenerTodasCitasMedico);
+app.get('/api/medico/:id_usuario_m/citas/atencion', obtenerCitasMedicoEnAtencion);
+
+
+// ========== HISTORIAL CLÍNICO ==========
+app.get('/api/historial/paciente/:id_paciente', obtenerHistorialPaciente);
+app.get('/api/historial/completo/:id_paciente', obtenerHistorialCompletoPaciente);
+app.get('/api/historial/cita/:id_cita', obtenerHistorialPorCita);
+app.post('/api/historial/guardar', guardarHistorialClinico);
+
+// ========== RECETAS ==========
+app.post('/api/receta/crear-con-medicamentos', crearRecetaConMedicamentos);
+app.post('/api/receta/crear', crearReceta);
+app.post('/api/receta/agregar', agregarMedicamentoReceta);
+app.get('/api/receta/:orden_receta', consultarReceta);
+app.get('/api/medicamentos', obtenerMedicamentos);
+
+// ========== ATENCIÓN ==========
+app.post('/api/atencion/finalizar', finalizarAtencion);
 const port = 8080;
 app.listen(port);
 console.log('\n🚀 API corriendo en http://localhost:' + port);
