@@ -7,7 +7,7 @@ export async function obtenerUsuario({ params, set }: Context) {
         const pool = await getConnection();
         const result = await pool.request()
             .input('id_usuario', sql.Int, parseInt(id))
-            .query('SELECT * FROM dbo.Usuario WHERE id_usuario = @id_usuario');
+            .execute('sp_ObtenerUsuario');
         if (result.recordset.length === 0) {
             set.status = 404;
             return { success: false, message: 'No encontrado' };

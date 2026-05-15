@@ -39,7 +39,7 @@ export const generarTicketService = async ({ body, set, request }: Context) => {
         if (id_cita && id_servicio) {
             const chk = await pool.request()
                 .input('id_cita', sql.Int, id_cita)
-                .query('SELECT id_servicio FROM dbo.Cita WHERE id_cita = @id_cita');
+                .execute('sp_ObtenerServicioCita');
             const fila = chk.recordset?.[0] as { id_servicio?: number } | undefined;
             if (fila && Number(fila.id_servicio) !== Number(id_servicio)) {
                 set.status = 422;

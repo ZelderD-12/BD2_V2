@@ -55,7 +55,7 @@ app.get('/health', () => ({ status: 'OK', timestamp: new Date().toISOString() })
 app.get('/api/db-test', async ({ set }) => {
     try {
         const pool = await getConnection();
-        const result = await pool.request().query('SELECT @@SERVERNAME as server, DB_NAME() as db, GETDATE() as time');
+        const result = await pool.request().execute('sp_HealthCheck');
         return { success: true, data: result.recordset[0] };
     } catch (error: any) {
         set.status = 500;
@@ -68,7 +68,7 @@ app.get('/api/sedes', async ({ set }) => {
     try {
         const pool = await getConnection();
         const result = await pool.request()
-            .query('SELECT id_sede, nombre, ubicacion, capacidad_slots FROM dbo.Sede WHERE activo = 1 ORDER BY id_sede');
+            .execute('sp_ObtenerSedes');
         
         console.log("Sedes encontradas:", result.recordset);
         

@@ -182,7 +182,7 @@ export default function HistorialClinico() {
                 </div>
                 <div className="info-row">
                   <span><i className="fas fa-venus-mars"></i> Sexo:</span>
-                  <strong>{paciente.sexo === "M" ? "Masculino" : paciente.sexo === "F" ? "Femenino" : "Otro"}</strong>
+                  <strong>{paciente.sexo === "M" ? "Masculino" : "Femenino"}</strong>
                 </div>
                 <div className="info-row">
                   <span><i className="fas fa-calendar"></i> Edad:</span>

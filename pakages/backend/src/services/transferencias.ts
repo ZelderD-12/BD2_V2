@@ -194,10 +194,7 @@ export const pagarConTransferencia = async ({ body, set, request }: Context) => 
         const userResult = await pool.request()
             .input('email', sql.VarChar(100), email || null)
             .input('telefono', sql.VarChar(15), telefono || null)
-            .query(`
-                SELECT id_usuario FROM dbo.ususarios 
-                WHERE (email = @email OR telefono = @telefono)
-            `);
+            .execute('sp_ObtenerUsuarioPorEmailTelefono');
 
         if (!userResult.recordset || userResult.recordset.length === 0) {
             set.status = 404;
@@ -273,10 +270,7 @@ export const consultarSaldo = async ({ body, set, request }: Context) => {
         const userResult = await pool.request()
             .input('email', sql.VarChar(100), email || null)
             .input('telefono', sql.VarChar(15), telefono || null)
-            .query(`
-                SELECT id_usuario FROM dbo.ususarios 
-                WHERE (email = @email OR telefono = @telefono)
-            `);
+            .execute('sp_ObtenerUsuarioPorEmailTelefono');
 
         if (!userResult.recordset || userResult.recordset.length === 0) {
             set.status = 404;
@@ -343,10 +337,7 @@ export const obtenerHistorial = async ({ query, set, request }: Context) => {
         const userResult = await pool.request()
             .input('email', sql.VarChar(100), email || null)
             .input('telefono', sql.VarChar(15), telefono || null)
-            .query(`
-                SELECT id_usuario FROM dbo.ususarios 
-                WHERE (email = @email OR telefono = @telefono)
-            `);
+            .execute('sp_ObtenerUsuarioPorEmailTelefono');
 
         if (!userResult.recordset || userResult.recordset.length === 0) {
             set.status = 404;
@@ -430,10 +421,7 @@ export const obtenerDetallePago = async ({ params, query, set, request }: Contex
         const userResult = await pool.request()
             .input('email', sql.VarChar(100), email || null)
             .input('telefono', sql.VarChar(15), telefono || null)
-            .query(`
-                SELECT id_usuario FROM dbo.ususarios 
-                WHERE (email = @email OR telefono = @telefono)
-            `);
+            .execute('sp_ObtenerUsuarioPorEmailTelefono');
 
         if (!userResult.recordset || userResult.recordset.length === 0) {
             set.status = 404;

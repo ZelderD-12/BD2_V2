@@ -449,17 +449,22 @@
     color: var(--texto-principal);
 }
 
-.dark-mode .login-card input {
+.dark-mode .login-card input,
+.dark-mode .login-card select,
+.dark-mode .login-card textarea {
     background: var(--bg-principal);
     color: var(--texto-principal);
     border-color: var(--borde);
 }
 
-.dark-mode .login-card input:focus {
+.dark-mode .login-card input:focus,
+.dark-mode .login-card select:focus,
+.dark-mode .login-card textarea:focus {
     border-color: var(--verde);
 }
 
-.dark-mode .login-card input::placeholder {
+.dark-mode .login-card input::placeholder,
+.dark-mode .login-card textarea::placeholder {
     color: var(--texto-secundario);
 }
 

@@ -18,7 +18,7 @@ export const obtenerMedicamentos = async ({ set }: Context) => {
     try {
         const pool = await getConnection();
         const result = await pool.request()
-            .query('SELECT id_medicamento, nombre FROM dbo.Medicamento ORDER BY nombre');
+            .execute('dbo.SP_Medicamentos_Obtener');
         return {
             success: true,
             data: result.recordset,
@@ -135,7 +135,7 @@ export const agregarMedicamentoReceta = async ({ body, set }: Context) => {
 };
 
 // =============================================
-// 9. FINALIZAR ATENCIÓN (con actualización de ticket)
+// 4. FINALIZAR ATENCIÓN (con actualización de ticket)
 // =============================================
 export const finalizarAtencion = async ({ body, set }: Context) => {
     const {
@@ -169,17 +169,9 @@ export const finalizarAtencion = async ({ body, set }: Context) => {
     try {
         const pool = await getConnection();
 
-        // 1. Obtener id_paciente
-        const citaResult = await pool.request()
-            .input('id_cita', sql.SmallInt, id_cita)
-            .query('SELECT id_paciente FROM Cita WHERE id_cita = @id_cita');
-        
-        const id_paciente = citaResult.recordset[0]?.id_paciente;
-
-        // 2. Guardar historial clínico
+        // Ejecutar SP que maneja toda la lógica de finalización
         await pool.request()
             .input('id_cita', sql.SmallInt, id_cita)
-            .input('id_paciente', sql.SmallInt, id_paciente)
             .input('id_medico', sql.SmallInt, id_medico)
             .input('diagnostico', sql.VarChar(500), diagnostico)
             .input('sintomas', sql.VarChar(500), sintomas || null)
@@ -187,41 +179,7 @@ export const finalizarAtencion = async ({ body, set }: Context) => {
             .input('notas_doctor', sql.VarChar(sql.MAX), notas_doctor || null)
             .input('proxima_cita', sql.Date, proxima_cita || null)
             .input('orden_receta', sql.VarChar(30), orden_receta || null)
-            .query(`
-                IF EXISTS (SELECT 1 FROM HistorialClinico WHERE id_cita = @id_cita)
-                BEGIN
-                    UPDATE HistorialClinico SET
-                        diagnostico = @diagnostico,
-                        sintomas = @sintomas,
-                        signos_vitales = @signos_vitales,
-                        notas_doctor = @notas_doctor,
-                        proxima_cita = @proxima_cita,
-                        orden_receta = @orden_receta,
-                        modificado_por = @id_medico,
-                        fecha_modificacion = GETDATE()
-                    WHERE id_cita = @id_cita
-                END
-                ELSE
-                BEGIN
-                    INSERT INTO HistorialClinico (id_cita, id_paciente, id_medico, fecha_atencion, diagnostico, sintomas, signos_vitales, notas_doctor, proxima_cita, orden_receta, creado_por, fecha_creacion)
-                    VALUES (@id_cita, @id_paciente, @id_medico, GETDATE(), @diagnostico, @sintomas, @signos_vitales, @notas_doctor, @proxima_cita, @orden_receta, @id_medico, GETDATE())
-                END
-            `);
-
-        // 3. Actualizar estado de la cita a Completada (4)
-        await pool.request()
-            .input('id_cita', sql.SmallInt, id_cita)
-            .query('UPDATE Cita SET id_estado_cita = 4 WHERE id_cita = @id_cita');
-
-        // 4. Actualizar ticket a Finalizado (4)
-        await pool.request()
-            .input('id_cita', sql.SmallInt, id_cita)
-            .query(`
-                UPDATE Ticket 
-                SET id_estado_ticket = 4, 
-                    fecha_fin = GETDATE()
-                WHERE id_cita = @id_cita
-            `);
+            .execute('dbo.SP_Atencion_Finalizar');
 
         return {
             success: true,
@@ -244,15 +202,6 @@ export const finalizarAtencion = async ({ body, set }: Context) => {
     }
 };
 
-// Función auxiliar para obtener id_paciente
-async function getPacienteId(id_cita: number): Promise<number> {
-    const pool = await getConnection();
-    const result = await pool.request()
-        .input('id_cita', sql.SmallInt, id_cita)
-        .query('SELECT id_paciente FROM Cita WHERE id_cita = @id_cita');
-    return result.recordset[0]?.id_paciente || 0;
-}
-
 // =============================================
 // 5. OBTENER HISTORIAL POR PACIENTE
 // =============================================
@@ -263,19 +212,7 @@ export const obtenerHistorialPaciente = async ({ params, set }: Context) => {
         const pool = await getConnection();
         const result = await pool.request()
             .input('id_paciente', sql.SmallInt, parseInt(id_paciente))
-            .query(`
-                SELECT 
-                    h.*,
-                    c.fecha_inicio,
-                    s.Nombre_Servicio as servicio,
-                    m.nombres + ' ' + m.apellidos as medico
-                FROM HistorialClinico h
-                INNER JOIN Cita c ON h.id_cita = c.id_cita
-                INNER JOIN Servicio s ON c.id_servicio = s.id_servicio
-                INNER JOIN Usuario m ON h.id_medico = m.id_usuario
-                WHERE h.id_paciente = @id_paciente
-                ORDER BY h.fecha_atencion DESC
-            `);
+            .execute('dbo.SP_Historial_ObtenerPorPaciente');
 
         return {
             success: true,
@@ -306,38 +243,12 @@ export const obtenerHistorialCompletoPaciente = async ({ params, set }: Context)
         // Información del paciente
         const pacienteResult = await pool.request()
             .input('id_paciente', sql.SmallInt, parseInt(id_paciente))
-            .query(`
-                SELECT id_usuario, nombres, apellidos, dpi, telefono, direccion, email, sexo, fecha_nacimiento,
-                       DATEDIFF(YEAR, fecha_nacimiento, GETDATE()) as edad
-                FROM Usuario
-                WHERE id_usuario = @id_paciente AND rol = 2
-            `);
+            .execute('dbo.SP_Paciente_ObtenerInfo');
 
         // Historial
         const historialResult = await pool.request()
             .input('id_paciente', sql.SmallInt, parseInt(id_paciente))
-            .query(`
-                SELECT 
-                    h.id_historial,
-                    h.id_cita,
-                    h.fecha_atencion,
-                    h.diagnostico,
-                    h.sintomas,
-                    h.signos_vitales,
-                    h.notas_doctor,
-                    h.proxima_cita,
-                    h.orden_receta,
-                    c.fecha_inicio as fecha_cita,
-                    c.motivo_consulta,
-                    s.Nombre_Servicio as servicio,
-                    m.nombres + ' ' + m.apellidos as medico_atendio
-                FROM HistorialClinico h
-                INNER JOIN Cita c ON h.id_cita = c.id_cita
-                INNER JOIN Servicio s ON c.id_servicio = s.id_servicio
-                INNER JOIN Usuario m ON h.id_medico = m.id_usuario
-                WHERE h.id_paciente = @id_paciente
-                ORDER BY h.fecha_atencion DESC
-            `);
+            .execute('dbo.SP_Historial_ObtenerCompletoPorPaciente');
 
         return {
             success: true,
@@ -368,20 +279,7 @@ export const obtenerHistorialPorCita = async ({ params, set }: Context) => {
         const pool = await getConnection();
         const result = await pool.request()
             .input('id_cita', sql.SmallInt, parseInt(id_cita))
-            .query(`
-                SELECT 
-                    h.*,
-                    c.fecha_inicio,
-                    s.Nombre_Servicio as servicio,
-                    m.nombres + ' ' + m.apellidos as medico,
-                    p.nombres + ' ' + p.apellidos as paciente
-                FROM HistorialClinico h
-                INNER JOIN Cita c ON h.id_cita = c.id_cita
-                INNER JOIN Servicio s ON c.id_servicio = s.id_servicio
-                INNER JOIN Usuario m ON h.id_medico = m.id_usuario
-                INNER JOIN Usuario p ON h.id_paciente = p.id_usuario
-                WHERE h.id_cita = @id_cita
-            `);
+            .execute('dbo.SP_Historial_ObtenerPorCita');
 
         return {
             success: true,
@@ -418,26 +316,7 @@ export const guardarHistorialClinico = async ({ body, set }: Context) => {
             .input('notas_doctor', sql.VarChar(sql.MAX), data.notas_doctor || null)
             .input('proxima_cita', sql.Date, data.proxima_cita || null)
             .input('orden_receta', sql.VarChar(30), data.orden_receta || null)
-            .query(`
-                IF EXISTS (SELECT 1 FROM HistorialClinico WHERE id_cita = @id_cita)
-                BEGIN
-                    UPDATE HistorialClinico SET
-                        diagnostico = @diagnostico,
-                        sintomas = @sintomas,
-                        signos_vitales = @signos_vitales,
-                        notas_doctor = @notas_doctor,
-                        proxima_cita = @proxima_cita,
-                        orden_receta = @orden_receta,
-                        modificado_por = @id_medico,
-                        fecha_modificacion = GETDATE()
-                    WHERE id_cita = @id_cita
-                END
-                ELSE
-                BEGIN
-                    INSERT INTO HistorialClinico (id_cita, id_paciente, id_medico, fecha_atencion, diagnostico, sintomas, signos_vitales, notas_doctor, proxima_cita, orden_receta, creado_por, fecha_creacion)
-                    VALUES (@id_cita, @id_paciente, @id_medico, GETDATE(), @diagnostico, @sintomas, @signos_vitales, @notas_doctor, @proxima_cita, @orden_receta, @id_medico, GETDATE())
-                END
-            `);
+            .execute('dbo.SP_Historial_Guardar');
 
         return {
             success: true,
@@ -474,25 +353,7 @@ export const consultarReceta = async ({ params, set }: Context) => {
 
         const result = await pool.request()
             .input('Orden_Receta', sql.VarChar(30), orden_receta)
-            .query(`
-                SELECT 
-                    r.id_receta,
-                    r.Orden_Receta,
-                    r.id_cita,
-                    r.id_medico,
-                    r.id_paciente,
-                    r.id_medicamento,
-                    r.observaciones,
-                    m.nombre AS medicamento_nombre,
-                    u_paciente.nombres + ' ' + u_paciente.apellidos AS paciente,
-                    u_medico.nombres + ' ' + u_medico.apellidos AS medico
-                FROM dbo.Receta r
-                INNER JOIN dbo.Medicamento m ON r.id_medicamento = m.id_medicamento
-                INNER JOIN dbo.Usuario u_paciente ON r.id_paciente = u_paciente.id_usuario
-                INNER JOIN dbo.Usuario u_medico ON r.id_medico = u_medico.id_usuario
-                WHERE r.Orden_Receta = @Orden_Receta
-                ORDER BY r.id_receta ASC
-            `);
+            .execute('dbo.SP_Receta_Consultar');
 
         if (result.recordset.length === 0) {
             set.status = 404;
@@ -521,7 +382,7 @@ export const consultarReceta = async ({ params, set }: Context) => {
 };
 
 // =============================================
-// CREAR RECETA CON MEDICAMENTOS EN JSON
+// 10. CREAR RECETA CON MEDICAMENTOS EN JSON
 // =============================================
 export const crearRecetaConMedicamentos = async ({ body, set }: Context) => {
     const { id_cita, medicamentos_json } = body as {
