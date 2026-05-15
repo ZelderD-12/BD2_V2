@@ -1,8 +1,10 @@
 import { Link } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
+import { useTheme } from '../../context/ThemeContext'
 
 export default function Header() {
   const { isLoggedIn, userNombre, logout } = useAuth()
+  const { darkMode, toggleTheme } = useTheme()
 
   const handleLogout = async () => {
     await logout()
@@ -16,6 +18,13 @@ export default function Header() {
           <span>FamKon Clinic</span>
         </div>
         <div className="header-user-area">
+          <button
+            className="theme-toggle"
+            onClick={toggleTheme}
+            title={darkMode ? 'Modo claro' : 'Modo oscuro'}
+          >
+            <i className={`fas ${darkMode ? 'fa-sun' : 'fa-moon'}`}></i>
+          </button>
           {!isLoggedIn ? (
             <Link to="/login" className="btn-login-header">
               <i className="fas fa-sign-in-alt"></i> Iniciar Sesión

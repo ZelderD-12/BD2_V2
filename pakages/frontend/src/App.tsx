@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { AuthProvider } from './context/AuthContext'
+import { ThemeProvider } from './context/ThemeContext'
 import Layout from './components/layout/Layout'
 import HomePage from './pages/Home/HomePage'
 import LoginPage from './pages/Login/LoginPage'
@@ -15,8 +16,9 @@ import AtencionMedica from "./pages/Atencion/AtencionMedica"
 
 export default function App() {
   return (
-    <AuthProvider>
-      <BrowserRouter>
+    <ThemeProvider>
+      <AuthProvider>
+        <BrowserRouter>
         <Routes>
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
@@ -34,5 +36,6 @@ export default function App() {
         </Routes>
       </BrowserRouter>
     </AuthProvider>
+    </ThemeProvider>
   )
 }

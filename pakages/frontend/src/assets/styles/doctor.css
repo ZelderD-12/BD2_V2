@@ -271,3 +271,91 @@
   color: #0077B6;
   margin-bottom: 15px;
 }
+
+/* ========== DARK MODE ========== */
+.dark-mode .doctor-page {
+  background: var(--bg-principal);
+}
+
+.dark-mode .doctor-header h1 {
+  color: var(--celeste-oscuro);
+}
+
+.dark-mode .doctor-header p {
+  color: #a0a0b8;
+}
+
+.dark-mode .doctor-cita-card {
+  background: var(--bg-card);
+  border-color: var(--borde);
+}
+
+.dark-mode .doctor-cita-header {
+  background: #16213e;
+  border-bottom-color: #2a2a4a;
+}
+
+.dark-mode .doctor-cita-servicio {
+  color: #4dc9f6;
+}
+
+.dark-mode .doctor-cita-body p {
+  color: #e8e8e8;
+}
+
+.dark-mode .doctor-cita-body strong {
+  color: #e8e8e8;
+}
+
+.dark-mode .doctor-cita-body i {
+  color: var(--verde);
+}
+
+.dark-mode .doctor-cita-motivo {
+  background: #16213e;
+  color: #e8e8e8;
+}
+
+.dark-mode .doctor-cita-ticket {
+  color: #e8e8e8;
+}
+
+.dark-mode .doctor-cita-footer {
+  background: var(--bg-card);
+  border-top-color: #2a2a4a;
+}
+
+.dark-mode .tiempo-atencion {
+  color: var(--verde);
+  background: #1a2e1a;
+}
+
+.dark-mode .btn-historial {
+  background: var(--celeste-oscuro);
+  color: white;
+}
+
+.dark-mode .btn-historial:hover {
+  background: #3a9fd4;
+}
+
+.dark-mode .btn-finalizar {
+  background: #1a5a2a;
+  color: white;
+}
+
+.dark-mode .btn-finalizar:hover {
+  background: #28a745;
+}
+
+.dark-mode .empty-state {
+  background: var(--bg-card);
+}
+
+.dark-mode .empty-state h3 {
+  color: #e8e8e8;
+}
+
+.dark-mode .empty-state p {
+  color: #a0a0b8;
+}

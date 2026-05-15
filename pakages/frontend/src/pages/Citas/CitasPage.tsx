@@ -640,7 +640,7 @@ export default function CitasPage() {
             citas.map((cita) => (
               <div
                 key={cita.id_cita}
-                className={`cita-card ${
+                className={`cita-card estado-${cita.estado.toLowerCase()} ${
                   citaExpirada(cita.fecha_inicio) ? "cita-expirada" : ""
                 }`}
               >

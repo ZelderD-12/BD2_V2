@@ -354,6 +354,125 @@
     margin-bottom: 1rem;
   }
   
+  /* ========== DARK MODE ========== */
+  .dark-mode .historial-page {
+    background: linear-gradient(135deg, #0a1628 0%, #1a2a4a 100%);
+  }
+
+  .dark-mode .historial-header h1 {
+    color: var(--celeste-oscuro);
+  }
+
+  .dark-mode .historial-header p {
+    color: var(--texto-secundario);
+  }
+
+  .dark-mode .historial-card {
+    background: var(--bg-card);
+    color: var(--texto-principal);
+  }
+
+  .dark-mode .historial-card h3,
+  .dark-mode .historial-card h4 {
+    color: var(--texto-principal);
+  }
+
+  .dark-mode .historial-card {
+    background: var(--bg-card);
+  }
+
+  .dark-mode .historial-card p,
+  .dark-mode .historial-card-body p {
+    color: #e8e8e8;
+  }
+
+  .dark-mode .historial-card-header {
+    background: var(--blanco-humo);
+    border-bottom-color: var(--borde);
+  }
+
+  .dark-mode .historial-card-body i {
+    color: var(--verde);
+  }
+
+  .dark-mode .fecha-badge {
+    color: #c0c0c0;
+  }
+
+  .dark-mode .signos-vitales-list {
+    color: #e8e8e8;
+  }
+
+  .dark-mode .signo-item {
+    background: #1a2e1a;
+    color: #6ee7b7;
+  }
+
+  .dark-mode .signo-item strong {
+    color: #a8e6cf;
+  }
+
+  .dark-mode .historial-card-footer {
+    border-top-color: var(--borde);
+  }
+
+  .dark-mode .historial-card-footer p {
+    color: #e8e8e8;
+  }
+
+  .dark-mode .paciente-info-card {
+    background: var(--bg-card);
+  }
+
+  .dark-mode .paciente-header h2 {
+    color: #e8e8e8;
+  }
+
+  .dark-mode .paciente-header {
+    border-bottom-color: var(--verde);
+  }
+
+  .dark-mode .info-row span {
+    color: #a0a0b8;
+  }
+
+  .dark-mode .info-row strong {
+    color: #e8e8e8;
+  }
+
+  .dark-mode .section-title {
+    color: var(--celeste-oscuro);
+  }
+
+  .dark-mode .receta-card {
+    background: var(--bg-card);
+  }
+
+  .dark-mode .receta-header h4 {
+    color: #e8e8e8;
+  }
+
+  .dark-mode .medicamento-item {
+    background: var(--blanco-humo);
+    color: #e8e8e8;
+  }
+
+  .dark-mode .medicamento-item span {
+    color: #a0a0b8;
+  }
+
+  .dark-mode .empty-state {
+    background: var(--bg-card);
+  }
+
+  .dark-mode .empty-state h3 {
+    color: var(--texto-principal);
+  }
+
+  .dark-mode .empty-state p {
+    color: var(--texto-secundario);
+  }
+
   @media (max-width: 768px) {
     .historial-page {
       padding: 1rem;

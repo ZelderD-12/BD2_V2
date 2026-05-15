@@ -426,3 +426,53 @@
         padding: 15px;
     }
 }
+
+/* ========== DARK MODE ========== */
+.dark-mode .login-page {
+    background: linear-gradient(135deg, #0a1628 0%, #1a2a4a 100%);
+}
+
+.dark-mode .login-card {
+    background: var(--bg-card);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+}
+
+.dark-mode .login-card h2 {
+    color: var(--texto-principal);
+}
+
+.dark-mode .login-card p {
+    color: var(--texto-secundario);
+}
+
+.dark-mode .login-card label {
+    color: var(--texto-principal);
+}
+
+.dark-mode .login-card input {
+    background: var(--bg-principal);
+    color: var(--texto-principal);
+    border-color: var(--borde);
+}
+
+.dark-mode .login-card input:focus {
+    border-color: var(--verde);
+}
+
+.dark-mode .login-card input::placeholder {
+    color: var(--texto-secundario);
+}
+
+.dark-mode .login-card .form-group i {
+    color: var(--celeste-oscuro);
+}
+
+.dark-mode .login-card .login-subtitle,
+.dark-mode .login-card .register-link a,
+.dark-mode .login-card .register-link span {
+    color: var(--texto-secundario);
+}
+
+.dark-mode .login-card .btn-login {
+    background: linear-gradient(135deg, var(--celeste-oscuro), var(--celeste));
+}

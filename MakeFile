@@ -65,11 +65,25 @@ db-import-downloads:
 	@docker exec -it $(DB_CONTAINER) $(SQLCMD) -S localhost -U $(DB_USER) -P $(DB_PASSWORD) -C -Q "RESTORE DATABASE [$(DB_NAME)] FROM DISK = N'/var/opt/mssql/backup/restore.bak' WITH REPLACE, RECOVERY"
 	@echo ✅ Base de datos restaurada exitosamente
 
-# Docker
+# Docker - levanta SQL Server + Backend en contenedores
 docker-up:
-	@docker-compose up -d
+	@docker-compose up -d --build
+	@echo ⏳ Esperando que el backend inicie...
+	@timeout /t 5 /nobreak >nul
+	@echo ✅ Backend en http://localhost:${BACKEND_PORT:-8080}
+	@echo ✅ SQL Server en localhost:${SQLSERVER_PORT:-1436}
+
+# Docker + frontend local (flujo completo)
+docker-dev: docker-up
+	@echo 🚀 Iniciando frontend local...
+	@bun run --filter frontend dev
 
 docker-down:
 	@docker-compose down
 
 docker-restart: docker-down docker-up
+
+# Frontend local (asume que el backend ya está en Docker o en línea)
+dev-frontend:
+	@echo 🚀 Iniciando frontend...
+	@bun run --filter frontend dev

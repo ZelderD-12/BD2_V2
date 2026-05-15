@@ -10,19 +10,32 @@ services:
       - "${SQLSERVER_PORT:-1436}:1433"
     volumes:
       - sqlserver_data:/var/opt/mssql
+      - ./sql/backup:/var/opt/mssql/backup
     networks:
       - clinica_network
     restart: unless-stopped
 
-  # Bun solo como imagen construida, no se ejecuta
-  bun_app:
+  # Backend (Bun)
+  backend:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: clinica_bun_app
-    command: ["echo", "Bun image ready - not running"]
+    container_name: clinica_backend
+    environment:
+      DB_HOST: sqlserver
+      DB_PORT: "1433"
+      DB_USER: sa
+      DB_PASSWORD: ${SA_PASSWORD:-ClinicaDBgrupo3#}
+      DB_NAME: ClinicaF
+      APP_PORT: "8080"
+    ports:
+      - "${BACKEND_PORT:-8080}:8080"
+    depends_on:
+      sqlserver:
+        condition: service_started
     networks:
       - clinica_network
+    restart: unless-stopped
 
 volumes:
   sqlserver_data:

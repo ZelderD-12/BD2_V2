@@ -539,6 +539,76 @@
     }
 }
 
+/* ========== DARK MODE ========== */
+.dark-mode .recepcion-page {
+    background: var(--bg-principal);
+}
+
+.dark-mode .recepcion-titulo h1 {
+    color: var(--celeste-oscuro);
+}
+
+.dark-mode .recepcion-titulo p {
+    color: var(--texto-secundario);
+}
+
+.dark-mode .recepcion-page .header-title h1 {
+    color: var(--celeste-oscuro);
+}
+
+.dark-mode .recepcion-page .header-title p {
+    color: var(--texto-secundario);
+}
+
+.dark-mode .recepcion-page .card-ticket,
+.dark-mode .recepcion-page .ticket-card,
+.dark-mode .recepcion-page .paciente-card {
+    background: var(--bg-card);
+    color: var(--texto-principal);
+    border-color: var(--borde);
+}
+
+.dark-mode .recepcion-page .card-ticket h3,
+.dark-mode .recepcion-page .card-ticket h4,
+.dark-mode .recepcion-page .ticket-card h3,
+.dark-mode .recepcion-page .paciente-card h3 {
+    color: var(--texto-principal);
+}
+
+.dark-mode .recepcion-page .card-ticket p,
+.dark-mode .recepcion-page .ticket-card p,
+.dark-mode .recepcion-page .paciente-card p {
+    color: var(--texto-secundario);
+}
+
+.dark-mode .recepcion-page .ticket-info {
+    background: var(--blanco-humo);
+    color: var(--texto-principal);
+}
+
+.dark-mode .recepcion-page .ticket-codigo-grande {
+    color: var(--celeste-oscuro);
+}
+
+.dark-mode .recepcion-page .empty-state {
+    background: var(--bg-card);
+}
+
+.dark-mode .recepcion-page .empty-state h3 {
+    color: var(--texto-principal);
+}
+
+.dark-mode .recepcion-page .empty-state p {
+    color: var(--texto-secundario);
+}
+
+.dark-mode .recepcion-page input,
+.dark-mode .recepcion-page select {
+    background: var(--bg-card);
+    color: var(--texto-principal);
+    border-color: var(--borde);
+}
+
 @media (max-width: 480px) {
     .recepcion-page .acciones-ticket {
         flex-direction: column;

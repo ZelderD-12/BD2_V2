@@ -2,8 +2,21 @@ FROM oven/bun:1.1-alpine
 
 WORKDIR /app
 
-# Solo exponer puertos
-EXPOSE 3000
+# Copiar archivos de dependencias primero (caching)
+COPY package.json bun.lock ./
+COPY pakages/backend/package.json ./pakages/backend/
+COPY pakages/frontend/package.json ./pakages/frontend/
+
+# Instalar dependencias
+RUN bun install --frozen-lockfile --production
+
+# Copiar el resto del código
+COPY . .
+
 EXPOSE 8080
 
-# Sin comando, solo la imagen
+# Healthcheck para esperar SQL Server
+COPY docker-entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+ENTRYPOINT ["/entrypoint.sh"]

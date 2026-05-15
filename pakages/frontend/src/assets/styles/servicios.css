@@ -206,6 +206,54 @@
     transform: translateY(-3px);
   }
   
+  /* ========== DARK MODE ========== */
+  .dark-mode .servicios-page {
+    background: #0f0f23;
+  }
+
+  .dark-mode .servicios-title {
+    background: linear-gradient(135deg, #4dc9f6, #00C49A);
+    -webkit-background-clip: text;
+    background-clip: text;
+  }
+
+  .dark-mode .servicios-subtitle {
+    color: #a0a0b8;
+  }
+
+  .dark-mode .servicio-card {
+    background: #1a1a2e;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+  }
+
+  .dark-mode .servicio-card:hover {
+    box-shadow: 0 10px 30px rgba(77, 201, 246, 0.15);
+  }
+
+  .dark-mode .servicio-card h3 {
+    color: #4dc9f6;
+  }
+
+  .dark-mode .servicio-card p {
+    color: #c0c0c0;
+  }
+
+  .dark-mode .servicio-card .servicio-icon {
+    background: linear-gradient(135deg, #1a2a4a, #0a1628);
+    color: #4dc9f6;
+  }
+
+  .dark-mode .servicios-back a {
+    background: #1a1a2e;
+    color: #4dc9f6;
+    border-color: #4dc9f6;
+  }
+
+  .dark-mode .servicios-back a:hover {
+    background: #4dc9f6;
+    color: #0f0f23;
+  }
+
   @keyframes popIn {
     from { transform: scale(0); }
     to { transform: scale(1); }

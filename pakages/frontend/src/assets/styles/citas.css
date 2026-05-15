@@ -887,6 +887,237 @@
 
 
 /* Responsive */
+/* ==========================================================================================
+   CITAS POR ESTADO
+========================================================================================== */
+.cita-card.estado-pendiente {
+    border-left: 4px solid #ffc107;
+    background: #fffde7;
+}
+
+.cita-card.estado-pendiente .cita-especialidad {
+    color: #b8860b;
+}
+
+.cita-card.estado-confirmada {
+    border-left: 4px solid #28a745;
+    background: #ffffff;
+    box-shadow: 0 5px 20px rgba(40, 167, 69, 0.15);
+}
+
+.cita-card.estado-cancelada {
+    border-left: 4px solid #dc3545;
+    background: #fdf2f2;
+    opacity: 0.75;
+    pointer-events: none;
+}
+
+.cita-card.estado-cancelada .btn-accion-cita,
+.cita-card.estado-cancelada .btn-confirmar {
+    display: none;
+}
+
+.cita-card.estado-completada {
+    border-left: 4px solid #6c757d;
+    background: #f8f9fa;
+    opacity: 0.7;
+    pointer-events: none;
+}
+
+.cita-card.estado-completada .btn-accion-cita,
+.cita-card.estado-completada .btn-confirmar {
+    display: none;
+}
+
+.cita-card.estado-atendida {
+    border-left: 4px solid #6c757d;
+    background: #f8f9fa;
+    opacity: 0.7;
+    pointer-events: none;
+}
+
+.cita-card.estado-atendida .btn-accion-cita,
+.cita-card.estado-atendida .btn-confirmar {
+    display: none;
+}
+
+.cita-card.estado-finalizada {
+    border-left: 4px solid #6c757d;
+    background: #f8f9fa;
+    opacity: 0.7;
+    pointer-events: none;
+}
+
+.cita-card.estado-finalizada .btn-accion-cita,
+.cita-card.estado-finalizada .btn-confirmar {
+    display: none;
+}
+
+/* ==========================================================================================
+   DARK MODE - CITAS
+========================================================================================== */
+.dark-mode .citas-page {
+    background: var(--bg-principal);
+}
+
+.dark-mode .citas-header h1 {
+    color: var(--celeste-oscuro);
+}
+
+.dark-mode .citas-header p {
+    color: var(--texto-secundario);
+}
+
+.dark-mode .cita-card {
+    background: #1e2a3a;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+}
+
+.dark-mode .cita-card:hover {
+    box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+}
+
+.dark-mode .cita-especialidad {
+    color: var(--celeste-oscuro);
+}
+
+.dark-mode .cita-info p {
+    color: var(--texto-secundario);
+}
+
+.dark-mode .cita-card.estado-pendiente {
+    background: #1e2a3a;
+    border-left-color: #ffc107;
+}
+
+.dark-mode .cita-card.estado-pendiente .cita-especialidad {
+    color: #ffd54f;
+}
+
+.dark-mode .cita-card.estado-confirmada {
+    background: #1a2e1a;
+    border-left-color: #28a745;
+}
+
+.dark-mode .cita-card.estado-cancelada {
+    background: #2a1a1a;
+    border-left-color: #dc3545;
+    opacity: 0.6;
+}
+
+.dark-mode .cita-card.estado-completada,
+.dark-mode .cita-card.estado-atendida,
+.dark-mode .cita-card.estado-finalizada {
+    background: #1a1a2a;
+    border-left-color: #4a4a6a;
+    opacity: 0.55;
+}
+
+.dark-mode .estado-PENDIENTE {
+    background: #ffc107;
+    color: #212529;
+}
+
+.dark-mode .estado-CONFIRMADA {
+    background: #28a745;
+    color: white;
+}
+
+.dark-mode .estado-CANCELADA {
+    background: #dc3545;
+    color: white;
+}
+
+.dark-mode .estado-ATENDIDA {
+    background: #4a4a6a;
+    color: #c8d6e5;
+}
+
+.dark-mode .cita-confirmada-box {
+    background: #1a2e1a;
+}
+
+.dark-mode .cita-confirmada-info {
+    color: #6ee7b7;
+}
+
+.dark-mode .ticket-cita {
+    background: #0d1b2a;
+    color: #e0e0e0;
+}
+
+.dark-mode .ticket-id {
+    color: var(--celeste-oscuro);
+}
+
+.dark-mode .ticket-label {
+    color: var(--texto-secundario);
+}
+
+.dark-mode .empty-state {
+    background: var(--bg-card);
+}
+
+.dark-mode .empty-state h3 {
+    color: var(--texto-principal);
+}
+
+.dark-mode .empty-state p {
+    color: var(--texto-secundario);
+}
+
+.dark-mode .loading-spinner {
+    color: var(--texto-secundario);
+}
+
+.dark-mode .form-group-cita label {
+    color: var(--texto-principal);
+}
+
+.dark-mode .form-group-cita input,
+.dark-mode .form-group-cita select,
+.dark-mode .form-group-cita textarea {
+    background: var(--bg-card);
+    color: var(--texto-principal);
+    border-color: var(--borde);
+}
+
+.dark-mode .form-group-cita input:focus,
+.dark-mode .form-group-cita select:focus,
+.dark-mode .form-group-cita textarea:focus {
+    border-color: var(--verde);
+}
+
+.dark-mode .modal-cita-content {
+    background: var(--bg-card);
+}
+
+.dark-mode .info-cita-actual {
+    background: var(--blanco-humo);
+}
+
+.dark-mode .info-item {
+    color: var(--texto-secundario);
+}
+
+.dark-mode .alerta-cancelacion {
+    background: #2a2a1a;
+    border-color: #ffc107;
+}
+
+.dark-mode .alerta-cancelacion p {
+    color: #ffd54f;
+}
+
+.dark-mode .confirmacion-info {
+    background: #1a2a2a;
+    border-color: #17a2b8;
+}
+
+.dark-mode .confirmacion-info p {
+    color: #90e0ef;
+}
+
 @media (max-width: 768px) {
     .citas-page {
         padding: 100px 15px 30px;

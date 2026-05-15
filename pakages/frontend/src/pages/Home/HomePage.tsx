@@ -19,10 +19,8 @@ export default function HomePage() {
             )}
           </div>
         </div>
-        <div className="hero-stats">
-          <div className="stat"><h3>+1000</h3><p>Pacientes</p></div>
-          <div className="stat"><h3>+15</h3><p>Médicos</p></div>
-          <div className="stat"><h3>+8</h3><p>Años</p></div>
+        <div className="hero-mission">
+          <p>El compromiso de <strong>FamKon Clinic</strong> es brindar atención médica de calidad, accesible y humana para el bienestar de todos nuestros pacientes.</p>
         </div>
       </section>
     </>
