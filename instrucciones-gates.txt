@@ -1,0 +1,57 @@
+╔══════════════════════════════════════════════╗
+║   PRUEBAS DE CARGA K6 — GATES G1, G2, G3   ║
+╚══════════════════════════════════════════════╝
+
+═══════════════════════════════════════════════
+   REQUISITO: El backend debe estar corriendo
+   en http://localhost:8080
+═══════════════════════════════════════════════
+
+Para iniciar el backend (si no está corriendo):
+  cd C:\Users\tobia\Desktop\Programas\Docker\BD PF
+  make dev
+
+═══════════════════════════════════════════════
+  LOS 3 COMANDOS
+═══════════════════════════════════════════════
+
+── G1: 1000 RESERVAS AL MISMO SLOT ──────────
+  k6 run k6/g1-reservas.js
+
+  Esperado: ~5 citas creadas (201), ~995 sin cupo (409)
+  Valida: Sin sobreventa, cero duplicados.
+
+── G2: 500 TICKETS PARA LA MISMA CITA ───────
+  k6 run k6/g2-tickets.js
+
+  Esperado: 1 ticket creado (201), 499 duplicados (409)
+  Valida: Solo 1 ticket activo por cita.
+
+── G3: 200 LLAMADAS SIGUIENTE CONCURRENTES ──
+  k6 run k6/g3-siguiente.js
+
+  Esperado: 200 tickets llamados únicos (200 OK)
+  Valida: Ningún ticket se llama dos veces.
+
+═══════════════════════════════════════════════
+  VARIABLES DE ENTORNO (OPCIONALES)
+═══════════════════════════════════════════════
+
+  $env:BASE_URL="http://localhost:8080"
+  $env:EMAIL="tobiasgusito@gmail.com"
+  $env:PASSWORD="123456789"
+  $env:SLOT_FECHA="2026-06-06T10:00:00.000"
+
+  Ejemplo con variable:
+  $env:SLOT_FECHA="2026-06-10T15:00:00.000"; k6 run k6/g1-reservas.js
+
+═══════════════════════════════════════════════
+  NOTAS
+═══════════════════════════════════════════════
+
+  - Cada script crea sus propios datos de prueba
+    (pacientes, citas, tickets) automáticamente.
+  - La primera ejecución puede tardar ~2-3 min
+    (crea 1000 pacientes para G1).
+  - Si ya hay datos en la BD, los scripts no
+    colisionan (usan identificadores únicos).

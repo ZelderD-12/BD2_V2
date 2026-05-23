@@ -1,0 +1,71 @@
+╔══════════════════════════════════════════════╗
+║   RESTAURAR BASE DE DATOS DESDE BACKUP      ║
+╚══════════════════════════════════════════════╝
+
+═══════════════════════════════════════════════
+  ¿QUÉ HACE?
+  Restaura automáticamente TODAS las bases de
+  datos que encuentre en la carpeta sql/backup/
+  (ClinicaF, ClinicaF_DW, etc.)
+═══════════════════════════════════════════════
+
+═══════════════════════════════════════════════
+  COMANDO ÚNICO
+═══════════════════════════════════════════════
+
+  make restaurarbd
+
+  O también:
+  make db-restore-all
+
+═══════════════════════════════════════════════
+  REQUISITOS
+═══════════════════════════════════════════════
+
+  1. Tener Docker corriendo con el contenedor
+     clinica_sqlserver activo.
+     Para iniciarlo:
+       cd C:\Users\tobia\Desktop\Programas\Docker\BD PF
+       docker compose up -d
+
+  2. Tener los archivos .bak en la carpeta:
+     sql/backup/
+     Ejemplo:
+       sql/backup/ClinicaF_2026-05-23.bak
+       sql/backup/ClinicaF_DW_2026-05-23.bak
+
+═══════════════════════════════════════════════
+  ¿QUÉ PASA SI LA BD YA EXISTE?
+═══════════════════════════════════════════════
+
+  - Si la BD está en uso (backend conectado),
+    el script la desconecta forzadamente,
+    la restaura y la vuelve a dejar operativa.
+  - No necesitas detener el backend.
+
+═══════════════════════════════════════════════
+  RESTAURACIÓN MANUAL (ALTERNATIVA)
+═══════════════════════════════════════════════
+
+  Si make no funciona, podés ejecutar directo:
+
+  1. Copiar el script al contenedor:
+     docker cp scripts/restore-all.sh clinica_sqlserver:/tmp/
+
+  2. Ejecutarlo:
+     docker exec clinica_sqlserver bash /tmp/restore-all.sh
+
+═══════════════════════════════════════════════
+  ERROR COMÚN: "make: no hay ninguna regla"
+═══════════════════════════════════════════════
+
+  Si el comando make no funciona, es porque
+  el MakeFile está desactualizado. Agregale
+  al final estas líneas:
+
+# ----- PEGAR ESTO EN MakeFile -----
+db-restore-all: restaurarbd
+restaurarbd:
+	@docker cp scripts/restore-all.sh clinica_sqlserver:/tmp/restore-all.sh
+	@docker exec clinica_sqlserver bash /tmp/restore-all.sh
+# ----------------------------------
