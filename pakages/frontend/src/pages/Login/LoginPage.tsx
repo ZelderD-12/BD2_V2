@@ -15,7 +15,7 @@ export default function LoginPage() {
 
   const getRedirectPath = (rolId: number): string => {
     // Roles 5 (Recepción/Secretaría) y 6 (Recepción) -> recepcion
-    if (rolId === 5 || rolId === 6) return '/recepcion'
+    if (rolId >= 5) return '/recepcion'
     // Doctor (3) podría ir a su panel
     // if (rolId === 3) return '/doctor'
     // Los demás van al home

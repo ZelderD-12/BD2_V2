@@ -1,0 +1,22 @@
+FROM mcr.microsoft.com/mssql/server:2022-latest
+
+# Instalar herramientas adicionales
+USER root
+
+# Copiar scripts de inicialización
+COPY sql/init/init-db.sh /usr/local/bin/init-db.sh
+COPY sql/migrate /sql/migrate
+COPY sql/scripts /sql/scripts
+COPY sql/init /sql/init
+COPY sql/backup /var/opt/mssql/backup
+
+RUN chmod +x /usr/local/bin/init-db.sh
+
+# Entrypoint personalizado: inicia SQL Server, ejecuta init, mantiene vivo
+COPY docker-entrypoint-sqlserver.sh /usr/local/bin/docker-entrypoint-sqlserver.sh
+RUN chmod +x /usr/local/bin/docker-entrypoint-sqlserver.sh
+
+EXPOSE 1433
+
+USER mssql
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint-sqlserver.sh"]

@@ -15,7 +15,7 @@ export interface Usuario {
 export type Permiso = 'VER_RECEPCION' | 'VER_CITAS' | 'CREAR_USUARIO' | 'GESTIONAR_TICKETS'
 
 const PERMISOS: Record<Permiso, number[]> = {
-  VER_RECEPCION: [5, 6],
+  VER_RECEPCION: [5, 6, 7, 8, 9, 10],
   VER_CITAS: [2, 3, 5, 6],
   CREAR_USUARIO: [5, 6],
   GESTIONAR_TICKETS: [5, 6],

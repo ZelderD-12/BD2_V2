@@ -1,6 +1,11 @@
 services:
+  # =============================================
+  # SQL SERVER 2022 Express + init automático
+  # =============================================
   sqlserver:
-    image: mcr.microsoft.com/mssql/server:2022-latest
+    build:
+      context: .
+      dockerfile: Dockerfile.sqlserver
     container_name: clinica_sqlserver
     environment:
       ACCEPT_EULA: "Y"
@@ -15,7 +20,9 @@ services:
       - clinica_network
     restart: unless-stopped
 
-  # Backend (Bun)
+  # =============================================
+  # BACKEND (Bun / Elysia)
+  # =============================================
   backend:
     build:
       context: .
@@ -32,6 +39,26 @@ services:
       - "${BACKEND_PORT:-8080}:8080"
     depends_on:
       sqlserver:
+        condition: service_started
+    networks:
+      - clinica_network
+    restart: unless-stopped
+
+  # =============================================
+  # FRONTEND (React + Vite)
+  # =============================================
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    container_name: clinica_frontend
+    environment:
+      VITE_API_URL: http://backend:8080
+      VITE_PROXY_TARGET: http://backend:8080
+    ports:
+      - "${FRONTEND_PORT:-5173}:5173"
+    depends_on:
+      backend:
         condition: service_started
     networks:
       - clinica_network

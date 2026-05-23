@@ -12,6 +12,7 @@ interface Cita {
   fecha_inicio: string;
   estado: string;
   motivo_consulta: string;
+  motivo_cancelacion?: string;
 }
 
 interface Servicio {
@@ -59,6 +60,8 @@ export default function CitasPage() {
   const navigate = useNavigate();
 
   const [citas, setCitas] = useState<Cita[]>([]);
+  const [citasHistorial, setCitasHistorial] = useState<Cita[]>([]);
+  const [verHistorial, setVerHistorial] = useState(false);
   const [loading, setLoading] = useState(true);
 
   const [modalOpen, setModalOpen] = useState(false);
@@ -96,16 +99,20 @@ export default function CitasPage() {
     cargarSedes();
   }, [isLoggedIn]);
 
-  const cargarCitas = async () => {
+  const cargarCitas = async (todas = false) => {
     try {
       const userId =
         localStorage.getItem("user_id") || localStorage.getItem("id_usuario");
 
       if (userId) {
-        const res = await api.getCitasPaciente(parseInt(userId));
+        const res = await api.getCitasPaciente(parseInt(userId), todas);
 
         if (res.success) {
-          setCitas(res.data || []);
+          if (todas) {
+            setCitasHistorial(res.data || []);
+          } else {
+            setCitas(res.data || []);
+          }
         }
       }
     } catch (error) {
@@ -113,6 +120,13 @@ export default function CitasPage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const toggleHistorial = () => {
+    setLoading(true);
+    const nueva = !verHistorial;
+    setVerHistorial(nueva);
+    cargarCitas(nueva);
   };
 
   const cargarServicios = async () => {
@@ -393,7 +407,11 @@ export default function CitasPage() {
       Pendiente: "estado-PENDIENTE",
       Confirmada: "estado-CONFIRMADA",
       Cancelada: "estado-CANCELADA",
-      Completada: "estado-ATENDIDA",
+      Reprogramada: "estado-REPROGRAMADA",
+      Solicitada: "estado-SOLICITADA",
+      No_Show: "estado-NO_SHOW",
+      Expirada: "estado-EXPIRADA",
+      Atendida: "estado-ATENDIDA",
     };
     return map[estado] || "estado-PENDIENTE";
   };
@@ -425,6 +443,13 @@ export default function CitasPage() {
           <button className="btn-nueva-cita" onClick={abrirCrear}>
             <i className="fas fa-plus-circle"></i>
             Agendar Nueva Cita
+          </button>
+          <button
+            className={`btn-historial-citas ${verHistorial ? "activo" : ""}`}
+            onClick={toggleHistorial}
+          >
+            <i className={`fas ${verHistorial ? "fa-calendar" : "fa-history"}`}></i>
+            {verHistorial ? "Ver Citas Activas" : "Historial de Citas"}
           </button>
         </div>
 
@@ -627,17 +652,19 @@ export default function CitasPage() {
               <i className="fas fa-spinner fa-spin"></i>
               Cargando citas...
             </div>
-          ) : citas.length === 0 ? (
+          ) : (verHistorial ? citasHistorial : citas).length === 0 ? (
             <div className="empty-state">
               <i className="fas fa-calendar-alt"></i>
-              <h3>No tienes citas</h3>
-              <p>Agenda tu primera cita médica</p>
-              <button className="btn-nueva-cita" onClick={abrirCrear}>
-                Agendar Cita
-              </button>
+              <h3>{verHistorial ? "No hay historial de citas" : "No tienes citas"}</h3>
+              <p>{verHistorial ? "Aún no tienes citas finalizadas o canceladas" : "Agenda tu primera cita médica"}</p>
+              {!verHistorial && (
+                <button className="btn-nueva-cita" onClick={abrirCrear}>
+                  Agendar Cita
+                </button>
+              )}
             </div>
           ) : (
-            citas.map((cita) => (
+            (verHistorial ? citasHistorial : citas).map((cita) => (
               <div
                 key={cita.id_cita}
                 className={`cita-card estado-${cita.estado.toLowerCase()} ${
@@ -675,8 +702,8 @@ export default function CitasPage() {
                 </div>
 
                 <div className="cita-acciones">
-                  {/* PENDIENTE */}
-                  {cita.estado === "Pendiente" && (
+                  {/* PENDIENTE (solo en vista activa) */}
+                  {!verHistorial && cita.estado === "Pendiente" && (
                     <>
                       <button
                         className="btn-confirmar"
@@ -704,8 +731,8 @@ export default function CitasPage() {
                     </>
                   )}
 
-                  {/* CONFIRMADA */}
-                  {cita.estado === "Confirmada" && (
+                  {/* CONFIRMADA (solo en vista activa) */}
+                  {!verHistorial && cita.estado === "Confirmada" && (
                     <div className="cita-confirmada-box">
                       <div className="cita-confirmada-info">
                         <i className="fas fa-check-circle"></i>
@@ -715,6 +742,18 @@ export default function CitasPage() {
                         <span className="ticket-label">Número de cita</span>
                         <span className="ticket-id">#{cita.id_cita}</span>
                       </div>
+                    </div>
+                  )}
+
+                  {/* HISTORIAL: citas finalizadas/canceladas (solo info) */}
+                  {verHistorial && cita.estado !== "Pendiente" && cita.estado !== "Confirmada" && (
+                    <div className="cita-historial-box">
+                      <p style={{ margin: "4px 0", color: "#666", fontSize: "0.85rem" }}>
+                        <i className="fas fa-info-circle"></i>{" "}
+                        {cita.motivo_cancelacion
+                          ? "Cancelada: " + cita.motivo_cancelacion
+                          : "Cita " + cita.estado.toLowerCase()}
+                      </p>
                     </div>
                   )}
                 </div>

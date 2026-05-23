@@ -1,0 +1,17 @@
+FROM oven/bun:1.1-alpine
+
+WORKDIR /app
+
+# Copiar dependencias primero (caching)
+COPY package.json bun.lock ./
+COPY pakages/frontend/package.json ./pakages/frontend/
+
+# Instalar dependencias
+RUN bun install
+
+# Copiar código fuente del frontend
+COPY pakages/frontend ./pakages/frontend
+
+EXPOSE 5173
+
+CMD ["bun", "run", "--filter", "frontend", "dev"]

@@ -428,3 +428,32 @@ export const crearRecetaConMedicamentos = async ({ body, set }: Context) => {
         };
     }
 };
+
+// =============================================
+// OBTENER RECETAS DE UN PACIENTE
+// GET /api/recetas/paciente/:id_paciente
+// =============================================
+export const obtenerRecetasPaciente = async ({ params, set }: Context) => {
+    const { id_paciente } = params as { id_paciente: string };
+
+    try {
+        const pool = await getConnection();
+        const result = await pool.request()
+            .input('id_paciente', sql.SmallInt, parseInt(id_paciente))
+            .execute('dbo.SP_Receta_PorPaciente');
+
+        const rows = result.recordset || [];
+
+        // Parsear medicamentos_json
+        const data = rows.map((r: any) => ({
+            ...r,
+            medicamentos: r.medicamentos_json ? JSON.parse(r.medicamentos_json) : []
+        }));
+
+        return { success: true, data };
+    } catch (error: any) {
+        console.error('Error obtener recetas paciente:', error);
+        set.status = 500;
+        return { success: false, error: error.message };
+    }
+};

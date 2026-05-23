@@ -13,6 +13,7 @@ import ContactoPage from './pages/Contacto/ContactoPage'
 import PantallaPage from './pages/PantallaPublica/PantallaPage'
 import HistorialClinico from "./pages/Historial/HistorialClinico"
 import AtencionMedica from "./pages/Atencion/AtencionMedica"
+import RecetasPage from "./pages/Recetas/RecetasPage"
 
 export default function App() {
   return (
@@ -30,6 +31,7 @@ export default function App() {
             <Route path="servicios" element={<ServiciosPage />} />
             <Route path="contacto" element={<ContactoPage />} />
             <Route path="recepcion" element={<RecepcionPage />} />  
+            <Route path="mis-recetas" element={<RecetasPage />} />
             <Route path="/historial/:id_paciente" element={<HistorialClinico />} />
             <Route path="/atencion/:id_cita" element={<AtencionMedica />} />
           </Route>

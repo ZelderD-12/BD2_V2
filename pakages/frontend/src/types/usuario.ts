@@ -32,7 +32,7 @@ export interface Usuario {
   
   // Permisos por rol
   export const PERMISOS = {
-    VER_RECEPCION: [5, 6],           // Solo recepción
+    VER_RECEPCION: [5, 6, 7, 8, 9, 10],           // Roles 5+
     VER_CITAS: [2, 3, 5, 6],         // Paciente, Doctor, Recepción
     CREAR_USUARIO: [5, 6],           // Solo recepción
     GESTIONAR_TICKETS: [5, 6],       // Solo recepción

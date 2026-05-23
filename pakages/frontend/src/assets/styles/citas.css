@@ -89,6 +89,36 @@
     box-shadow: 0 5px 20px rgba(0, 196, 154, 0.4);
 }
 
+.citas-page .btn-historial-citas {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: #6c757d;
+    color: white;
+    border: none;
+    padding: 14px 30px;
+    border-radius: 30px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+    font-family: 'Poppins', sans-serif;
+    margin-left: 10px;
+}
+
+.citas-page .btn-historial-citas:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 5px 20px rgba(108, 117, 125, 0.4);
+}
+
+.citas-page .btn-historial-citas.activo {
+    background: #0077B6;
+}
+
+.citas-page .btn-historial-citas.activo:hover {
+    box-shadow: 0 5px 20px rgba(0, 119, 182, 0.4);
+}
+
 /* Modal */
 .modal-cita {
     display: flex;
@@ -597,6 +627,26 @@
     color: white;
 }
 
+.estado-NO_SHOW {
+    background: #dc3545;
+    color: white;
+}
+
+.estado-REPROGRAMADA {
+    background: #ffc107;
+    color: #212529;
+}
+
+.estado-SOLICITADA {
+    background: #17a2b8;
+    color: white;
+}
+
+.estado-EXPIRADA {
+    background: #6c757d;
+    color: white;
+}
+
 /* =========================================
    CITAS CONFIRMADAS
 ========================================= */
@@ -686,6 +736,24 @@
 
 .btn-accion-cita.btn-cancelar:hover {
     background: #c82333;
+}
+
+.btn-accion-cita.btn-historial {
+    background: #0077B6;
+    color: white;
+}
+
+.btn-accion-cita.btn-historial:hover {
+    background: #00B4D8;
+}
+
+.cita-historial-box {
+    width: 100%;
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 12px;
+    margin-top: 10px;
+    border-left: 4px solid #6c757d;
 }
 
 .cita-confirmada-box {
@@ -953,6 +1021,29 @@
     display: none;
 }
 
+.cita-card.estado-no_show {
+    border-left: 4px solid #dc3545;
+    background: #fdf2f2;
+    opacity: 0.8;
+}
+
+.cita-card.estado-no_show .btn-accion-cita,
+.cita-card.estado-no_show .btn-confirmar {
+    display: none;
+}
+
+.cita-card.estado-expirada {
+    border-left: 4px solid #6c757d;
+    background: #f8f9fa;
+    opacity: 0.7;
+    pointer-events: none;
+}
+
+.cita-card.estado-expirada .btn-accion-cita,
+.cita-card.estado-expirada .btn-confirmar {
+    display: none;
+}
+
 /* ==========================================================================================
    DARK MODE - CITAS
 ========================================================================================== */
@@ -1005,6 +1096,12 @@
     opacity: 0.6;
 }
 
+.dark-mode .cita-card.estado-no_show {
+    background: #2a1a1a;
+    border-left-color: #dc3545;
+    opacity: 0.65;
+}
+
 .dark-mode .cita-card.estado-completada,
 .dark-mode .cita-card.estado-atendida,
 .dark-mode .cita-card.estado-finalizada {
@@ -1029,6 +1126,26 @@
 }
 
 .dark-mode .estado-ATENDIDA {
+    background: #4a4a6a;
+    color: #c8d6e5;
+}
+
+.dark-mode .estado-NO_SHOW {
+    background: #a83232;
+    color: white;
+}
+
+.dark-mode .estado-REPROGRAMADA {
+    background: #b8960f;
+    color: #212529;
+}
+
+.dark-mode .estado-SOLICITADA {
+    background: #138496;
+    color: white;
+}
+
+.dark-mode .estado-EXPIRADA {
     background: #4a4a6a;
     color: #c8d6e5;
 }

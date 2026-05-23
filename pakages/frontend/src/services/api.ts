@@ -1,4 +1,4 @@
-const API_URL = "http://localhost:8080";
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
 
 export const api = {
   // Auth
@@ -114,8 +114,9 @@ export const api = {
   },
 
   // ========== CITAS ==========
-  async getCitasPaciente(idPaciente: number) {
-    const res = await fetch(`${API_URL}/api/citas/paciente/${idPaciente}`);
+  async getCitasPaciente(idPaciente: number, mostrarTodas = false) {
+    const qs = mostrarTodas ? '?mostrar_todas=1' : '';
+    const res = await fetch(`${API_URL}/api/citas/paciente/${idPaciente}${qs}`);
     return res.json();
   },
 
@@ -149,13 +150,13 @@ export const api = {
 
   async confirmarCita(id_cita: number, id_paciente: number) {
     const token = localStorage.getItem("auth_token");
-    const res = await fetch(`${API_URL}/api/citas/confirmar`, {
+    const res = await fetch(`${API_URL}/api/reservar/cita/${id_cita}/confirmar`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify({ id_cita, id_paciente }),
+      body: JSON.stringify({ id_paciente }),
     });
     return res.json();
   },

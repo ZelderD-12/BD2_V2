@@ -8,53 +8,65 @@ type EstadoTicketSp = (typeof ESTADOS_TICKET_SP)[number];
 
 function extraerUsuario(authHeader: string | null): number | null {
     if (!authHeader || !authHeader.startsWith('Bearer ')) return null;
+    const token = authHeader.replace('Bearer ', '');
     try {
-        const decoded = Buffer.from(authHeader.replace('Bearer ', ''), 'base64').toString('utf-8');
+        // Intento 1: base64(userId + ':')
+        const decoded = Buffer.from(token, 'base64').toString('utf-8');
         const id = parseInt(decoded.split(':')[0]);
-        return isNaN(id) ? null : id;
-    } catch {
-        return null;
-    }
+        if (!isNaN(id)) return id;
+    } catch {}
+    try {
+        // Intento 2: JWT (extraer payload, buscar sub o userId)
+        const parts = token.split('.');
+        if (parts.length === 3) {
+            const payload = JSON.parse(Buffer.from(parts[1], 'base64url').toString('utf-8'));
+            const uid = payload.sub || payload.userId || payload.id;
+            if (uid) { const n = parseInt(uid); if (!isNaN(n)) return n; }
+        }
+    } catch {}
+    // Intento 3: token de sesion de sp_login_usuario (buscar en tabla Sesion)
+    return null;
+}
+
+async function obtenerUsuarioPorToken(token: string): Promise<number | null> {
+    try {
+        const pool = await getConnection();
+        const result = await pool.request()
+            .input('token_sesion', sql.VarChar(500), token)
+            .execute('dbo.sp_obtener_usuario_por_token');
+        const row = result.recordset?.[0];
+        return row?.id_usuario ? parseInt(row.id_usuario) : null;
+    } catch { return null; }
+}
+
+async function extraerUsuarioAsync(authHeader: string | null): Promise<number | null> {
+    const r = extraerUsuario(authHeader);
+    if (r) return r;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) return null;
+    return obtenerUsuarioPorToken(authHeader.replace('Bearer ', ''));
 }
 
 // =============================================
 // GENERAR TICKET
 // =============================================
 export const generarTicketService = async ({ body, set, request }: Context) => {
-    const idUsuario = extraerUsuario(request.headers.get('authorization'));
+    const idUsuario = await extraerUsuarioAsync(request.headers.get('authorization'));
     if (!idUsuario) { set.status = 401; return { success: false, error: 'No autorizado', code: 'UNAUTHORIZED' }; }
 
-    const { nombres, apellidos, id_sede, id_servicio, prioridad, id_cita } = body as {
-        nombres: string; apellidos: string; id_sede: number; id_servicio?: number; prioridad?: string; id_cita?: number;
+    const { nombres, apellidos, id_sede, prioridad, id_cita } = body as {
+        nombres?: string; apellidos?: string; id_sede?: number; prioridad?: string; id_cita?: number;
     };
-
-    if (!nombres || !apellidos || !id_sede) {
-        set.status = 422;
-        return { success: false, error: 'nombres, apellidos e id_sede son requeridos', code: 'MISSING_FIELDS' };
-    }
 
     try {
         const pool = await getConnection();
-
-        if (id_cita && id_servicio) {
-            const chk = await pool.request()
-                .input('id_cita', sql.Int, id_cita)
-                .execute('sp_ObtenerServicioCita');
-            const fila = chk.recordset?.[0] as { id_servicio?: number } | undefined;
-            if (fila && Number(fila.id_servicio) !== Number(id_servicio)) {
-                set.status = 422;
-                return { success: false, error: 'El servicio no coincide con el de la cita', code: 'SERVICIO_CITA_MISMATCH' };
-            }
-        }
-
         const result = await pool.request()
-            .input('nombres', sql.VarChar(120), nombres)
-            .input('apellidos', sql.VarChar(120), apellidos)
-            .input('id_sede', sql.Int, Number(id_sede))
+            .input('nombres', sql.VarChar(120), nombres || null)
+            .input('apellidos', sql.VarChar(120), apellidos || null)
+            .input('id_sede', sql.SmallInt, id_sede || null)
             .input('prioridad', sql.VarChar(20), prioridad || 'NORMAL')
-            .input('id_cita', sql.Int, id_cita || null)
-            .input('id_recepcionista', sql.Int, idUsuario)
-            .output('id_ticket_out', sql.Int)
+            .input('id_cita', sql.SmallInt, id_cita || null)
+            .input('id_recepcionista', sql.SmallInt, idUsuario)
+            .output('id_ticket_out', sql.SmallInt)
             .output('codigo_out', sql.VarChar(20))
             .output('mensaje_out', sql.VarChar(200))
             .execute('dbo.sp_GenerarTicket');
@@ -81,7 +93,7 @@ export const generarTicketService = async ({ body, set, request }: Context) => {
 // LLAMAR SIGUIENTE
 // =============================================
 export const llamarSiguienteService = async ({ body, set, request }: Context) => {
-    const idUsuario = extraerUsuario(request.headers.get('authorization'));
+    const idUsuario = await extraerUsuarioAsync(request.headers.get('authorization'));
     if (!idUsuario) { set.status = 401; return { success: false, error: 'No autorizado' }; }
 
     const { id_sede, id_servicio } = body as { id_sede: number; id_servicio: number };
@@ -90,11 +102,11 @@ export const llamarSiguienteService = async ({ body, set, request }: Context) =>
     try {
         const pool = await getConnection();
         const result = await pool.request()
-            .input('id_sede', sql.Int, id_sede)
-            .input('id_servicio', sql.Int, id_servicio)
-            .input('id_recepcionista', sql.Int, idUsuario)
+            .input('id_sede', sql.SmallInt, id_sede)
+            .input('id_servicio', sql.SmallInt, id_servicio)
+            .input('id_recepcionista', sql.SmallInt, idUsuario)
             .input('k_fairness', sql.Int, 3)
-            .output('id_ticket_out', sql.Int)
+            .output('id_ticket_out', sql.SmallInt)
             .output('codigo_out', sql.VarChar(20))
             .output('prioridad_out', sql.VarChar(20))
             .output('mensaje_out', sql.VarChar(200))
@@ -119,7 +131,7 @@ export const llamarSiguienteService = async ({ body, set, request }: Context) =>
 // CAMBIAR ESTADO TICKET (ruta: /api/tickets/:id/estado)
 // =============================================
 export const cambiarEstadoTicketService = async ({ params, body, set, request }: Context) => {
-    const idUsuario = extraerUsuario(request.headers.get('authorization'));
+    const idUsuario = await extraerUsuarioAsync(request.headers.get('authorization'));
     if (!idUsuario) { set.status = 401; return { success: false, error: 'No autorizado' }; }
 
     const { id } = params as { id: string };
@@ -134,9 +146,9 @@ export const cambiarEstadoTicketService = async ({ params, body, set, request }:
     try {
         const pool = await getConnection();
         const result = await pool.request()
-            .input('id_ticket', sql.Int, parseInt(id, 10))
+            .input('id_ticket', sql.SmallInt, parseInt(id, 10))
             .input('nuevo_estado', sql.VarChar(20), est)
-            .input('id_usuario', sql.Int, idUsuario)
+            .input('id_usuario', sql.SmallInt, idUsuario)
             .input('motivo', sql.VarChar(300), motivo || null)
             .output('mensaje_out', sql.VarChar(200))
             .execute('dbo.sp_CambiarEstadoTicket');
@@ -168,8 +180,8 @@ export const obtenerColaPublicaService = async ({ query, set }: Context) => {
     try {
         const pool = await getConnection();
         const result = await pool.request()
-            .input('id_sede', sql.Int, parseInt(id_sede))
-            .input('id_servicio', sql.Int, id_servicio ? parseInt(id_servicio) : null)
+            .input('id_sede', sql.SmallInt, parseInt(id_sede))
+            .input('id_servicio', sql.SmallInt, id_servicio ? parseInt(id_servicio) : null)
             .execute('dbo.sp_ObtenerColaPublica');
 
         const recordsets = result.recordsets as any[][];
@@ -195,7 +207,7 @@ export const obtenerTicketsColaActuales = async ({ query, set }: Context) => {
     try {
         const pool = await getConnection();
         const result = await pool.request()
-            .input('id_sede', sql.Int, parseInt(id_sede))
+            .input('id_sede', sql.SmallInt, parseInt(id_sede))
             .input('fecha_hora', sql.DateTime, new Date())
             .input('minutos_gracia', sql.Int, 5)
             .execute('dbo.sp_tickets_cola_actuales');
@@ -242,7 +254,7 @@ export const obtenerPacientePorTicketService = async ({ query, set }: Context) =
 // CAMBIAR ESTADO MANUAL (ruta: /api/tickets/:id/cambiar-estado)
 // =============================================
 export const cambiarEstadoTicketManual = async ({ params, body, set, request }: Context) => {
-    const idUsuario = extraerUsuario(request.headers.get('authorization'));
+    const idUsuario = await extraerUsuarioAsync(request.headers.get('authorization'));
     if (!idUsuario) { set.status = 401; return { success: false, error: 'No autorizado' }; }
 
     const { id } = params as { id: string };
@@ -257,9 +269,9 @@ export const cambiarEstadoTicketManual = async ({ params, body, set, request }: 
     try {
         const pool = await getConnection();
         const result = await pool.request()
-            .input('id_ticket', sql.Int, parseInt(id, 10))
+            .input('id_ticket', sql.SmallInt, parseInt(id, 10))
             .input('nuevo_estado', sql.VarChar(20), est)
-            .input('id_usuario', sql.Int, idUsuario)
+            .input('id_usuario', sql.SmallInt, idUsuario)
             .input('motivo', sql.VarChar(300), motivo || null)
             .output('mensaje_out', sql.VarChar(200))
             .execute('dbo.sp_CambiarEstadoTicket');
@@ -274,6 +286,53 @@ export const cambiarEstadoTicketManual = async ({ params, body, set, request }: 
         set.status = rv === 404 ? 404 : 422;
         return { success: false, error: mensaje };
     } catch (error) {
+        set.status = 500;
+        return { success: false, error: 'Error interno' };
+    }
+};
+
+// =============================================
+// NOTIFICAR WHATSAPP (PLACEHOLDER)
+// =============================================
+export const notificarWhatsappService = async ({ params, set, request }: Context) => {
+    const idUsuario = await extraerUsuarioAsync(request.headers.get('authorization'));
+    if (!idUsuario) { set.status = 401; return { success: false, error: 'No autorizado' }; }
+
+    const { id } = params as { id: string };
+    const idTicket = parseInt(id, 10);
+    if (isNaN(idTicket)) { set.status = 422; return { success: false, error: 'id_ticket invalido' }; }
+
+    try {
+        const pool = await getConnection();
+        const result = await pool.request()
+            .input('id_ticket', sql.SmallInt, idTicket)
+            .execute('dbo.sp_GetPacienteByTicket');
+
+        const rows = result.recordset as any[];
+        if (!rows || rows.length === 0) {
+            set.status = 404;
+            return { success: false, error: 'Ticket no encontrado' };
+        }
+
+        const paciente = rows[0];
+        const telefono = paciente.telefono || paciente.telefono_paciente;
+        const nombre = paciente.paciente || paciente.nombre_completo || 'Paciente';
+        const codigo = paciente.codigo_ticket;
+
+        console.log(`[WHATSAPP-PLACEHOLDER] Enviar mensaje a ${nombre} (tel: ${telefono}) - Ticket ${codigo}: "Su turno ha sido llamado. Pase a recepcion."`);
+
+        return {
+            success: true,
+            mensaje: 'Notificacion enviada (placeholder)',
+            data: {
+                destinatario: nombre,
+                telefono: telefono || 'No registrado',
+                ticket: codigo,
+                mensaje: `Hola ${nombre}, su turno ${codigo} ha sido llamado. Pase a recepcion.`
+            }
+        };
+    } catch (error) {
+        console.error('Error en notificarWhatsapp:', error);
         set.status = 500;
         return { success: false, error: 'Error interno' };
     }

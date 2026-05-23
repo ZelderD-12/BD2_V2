@@ -21,8 +21,10 @@ import {
     obtenerColaPublicaService,
     obtenerTicketsColaActuales,
     cambiarEstadoTicketManual,
-    obtenerPacientePorTicketService
+    obtenerPacientePorTicketService,
+    notificarWhatsappService
 } from './services/tickets';
+import { buscarPacientesService, obtenerDetalleCitaService, obtenerCitasDelDiaService } from './services/pacientes';
 import {
     obtenerHistorialPaciente,
     obtenerHistorialCompletoPaciente,
@@ -33,7 +35,8 @@ import {
     consultarReceta,
     obtenerMedicamentos,
     finalizarAtencion,
-    crearRecetaConMedicamentos
+    crearRecetaConMedicamentos,
+    obtenerRecetasPaciente
 } from './services/historialClinico';
 
 import { logout, renovarSesion, obtenerUsuariosActivos, obtenerUsuariosInactivos, limpiarSesionesExpiradas } from './Controlles/usuarios/logout';
@@ -104,19 +107,7 @@ app.get('/api/citas/medico/:id', obtenerCitasMedico);
 app.get('/api/citas/servicios', obtenerServicios);
 app.get('/api/citas/medicos', obtenerMedicos);
 
-// Endpoint alternativo para confirmar cita (id_cita en body)
-// Endpoint para confirmar cita (id_cita en body)
-app.post('/api/citas/confirmar', async ({ body, set }) => {
-  const { id_cita, id_paciente } = body as { id_cita: number; id_paciente: number };
-  
-  const mockContext = {
-      params: { id: String(id_cita) },
-      body: { id_paciente },
-      set
-  } as any;
-  
-  return confirmarCitaService(mockContext);
-});
+app.post('/api/reservar/cita/:id/confirmar', confirmarCitaService);
 
 app.put('/api/citas/:id/modificar', modificarCitaService);
 app.post('/api/citas/:id/cancelar', cancelarCitaService);
@@ -129,6 +120,12 @@ app.get('/api/pantalla/cola', obtenerColaPublicaService);
 app.get('/api/tickets/cola-actuales', obtenerTicketsColaActuales);
 app.get('/api/tickets/paciente-por-codigo', obtenerPacientePorTicketService);
 app.post('/api/tickets/:id/cambiar-estado', cambiarEstadoTicketManual);
+app.post('/api/tickets/:id/notificar-whatsapp', notificarWhatsappService);
+
+// Pacientes
+app.get('/api/pacientes/buscar', buscarPacientesService);
+app.get('/api/citas/hoy', obtenerCitasDelDiaService);
+app.get('/api/citas/:id/detalle', obtenerDetalleCitaService);
 
 app.get('/api/medico/:id_usuario_m/citas', obtenerTodasCitasMedico);
 app.get('/api/medico/:id_usuario_m/citas/atencion', obtenerCitasMedicoEnAtencion);
@@ -145,9 +142,49 @@ app.post('/api/receta/crear', crearReceta);
 app.post('/api/receta/agregar', agregarMedicamentoReceta);
 app.get('/api/receta/:orden_receta', consultarReceta);
 app.get('/api/medicamentos', obtenerMedicamentos);
+app.get('/api/recetas/paciente/:id_paciente', obtenerRecetasPaciente);
 
 // ========== ATENCIÓN ==========
 app.post('/api/atencion/finalizar', finalizarAtencion);
+
+// ========== AUTO-EXPIRAR CITAS VENCIDAS ==========
+async function expirarCitasVencidas() {
+    try {
+        const pool = await getConnection();
+        // Confirmadas sin atender -> No_Show (6)
+        const r1 = await pool.request()
+            .input('nuevo_estado', sql.SmallInt, 6) // No_Show
+            .input('estado_actual', sql.SmallInt, 2) // Confirmada
+            .query(`
+                UPDATE dbo.Cita
+                SET id_estado_cita = @nuevo_estado
+                WHERE id_estado_cita = @estado_actual
+                  AND fecha_inicio < DATEADD(MINUTE, -30, GETDATE())
+            `);
+        if (r1.rowsAffected[0] > 0) {
+            console.log(`[Auto-Expiracion] ${r1.rowsAffected[0]} citas Confirmadas -> No_Show`);
+        }
+        // Pendientes sin confirmar -> Expirada (7)
+        const r2 = await pool.request()
+            .input('nuevo_estado', sql.SmallInt, 7) // Expirada
+            .input('estado_actual', sql.SmallInt, 1) // Pendiente
+            .query(`
+                UPDATE dbo.Cita
+                SET id_estado_cita = @nuevo_estado
+                WHERE id_estado_cita = @estado_actual
+                  AND fecha_inicio < GETDATE()
+            `);
+        if (r2.rowsAffected[0] > 0) {
+            console.log(`[Auto-Expiracion] ${r2.rowsAffected[0]} citas Pendientes -> Expirada`);
+        }
+    } catch (e) {
+        console.error('[Auto-Expiracion] Error:', e);
+    }
+}
+// Ejecutar cada 5 minutos
+setInterval(expirarCitasVencidas, 5 * 60 * 1000);
+// Primera ejecucion al iniciar
+expirarCitasVencidas();
 
 const port = 8080;
 app.listen(port);

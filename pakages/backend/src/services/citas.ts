@@ -132,14 +132,16 @@ export const reservarCitaService = async ({ body, set }: Context) => {
 // =============================================
 // 2. VER CITAS DE UN PACIENTE
 // =============================================
-export const obtenerCitasPaciente = async ({ params, set }: Context) => {
+export const obtenerCitasPaciente = async ({ params, query, set }: Context) => {
     const { id } = params as ParamsWithId;
+    const { mostrar_todas } = query as { mostrar_todas?: string };
 
     try {
         const pool = await getConnection();
 
         const result = await pool.request()
             .input('id_paciente', sql.SmallInt, parseInt(id))
+            .input('mostrar_todas', sql.Bit, mostrar_todas === '1' || mostrar_todas === 'true')
             .execute('dbo.sp_ObtenerCitasPaciente');
 
         return {

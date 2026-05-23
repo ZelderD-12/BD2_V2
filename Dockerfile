@@ -2,21 +2,18 @@ FROM oven/bun:1.1-alpine
 
 WORKDIR /app
 
-# Copiar archivos de dependencias primero (caching)
-COPY package.json bun.lock ./
-COPY pakages/backend/package.json ./pakages/backend/
-COPY pakages/frontend/package.json ./pakages/frontend/
-
-# Instalar dependencias
-RUN bun install --frozen-lockfile --production
-
-# Copiar el resto del código
+# Copiar todo el código (sin node_modules)
 COPY . .
 
-EXPOSE 8080
+# Eliminar node_modules locales (vienen con symlinks rotos de Windows)
+RUN rm -rf node_modules pakages/*/node_modules
 
-# Healthcheck para esperar SQL Server
+# Instalar dependencias del monorepo
+RUN bun install
+
 COPY docker-entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
+
+EXPOSE 8080
 
 ENTRYPOINT ["/entrypoint.sh"]

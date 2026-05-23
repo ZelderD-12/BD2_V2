@@ -36,14 +36,26 @@ export default function Nav() {
             </Link>
           </li>
           
-          {/* Citas: público o paciente (rol 2) */}
+          {/* Mis Citas: público o paciente (rol 2) */}
           {mostrarCitas && (
             <li>
               <Link
                 to={isLoggedIn ? '/citas' : '/login'}
                 className={`nav-simple-link ${location.pathname === '/citas' ? 'active' : ''}`}
               >
-                Citas
+                Mis Citas
+              </Link>
+            </li>
+          )}
+
+          {/* Mis Recetas: solo paciente (rol 2) */}
+          {isLoggedIn && userRolId === 2 && (
+            <li>
+              <Link
+                to="/mis-recetas"
+                className={`nav-simple-link ${location.pathname === '/mis-recetas' ? 'active' : ''}`}
+              >
+                Mis Recetas
               </Link>
             </li>
           )}

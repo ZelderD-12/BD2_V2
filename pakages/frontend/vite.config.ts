@@ -8,7 +8,7 @@ export default defineConfig({
     strictPort: true,  // Fuerza este puerto, no busca otro
     proxy: {
       '/api': {
-        target: 'http://localhost:5000',
+        target: process.env.VITE_PROXY_TARGET || 'http://localhost:8080',
         changeOrigin: true
       }
     }

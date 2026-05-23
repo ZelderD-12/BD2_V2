@@ -120,7 +120,7 @@ export default function PantallaPage() {
         setLlamado(nuevo)
         setUltimoLlamadoId(nt.id_ticket)
         beep()
-        hablar(`Ticket ${nt.codigo_ticket ?? ''}. Pase a ventanilla.`)
+        hablar(`Ticket ${nt.codigo_ticket ?? ''}. Pase a recepcion.`)
       } else if (!nuevo) {
         setLlamado(null)
       } else {
@@ -158,7 +158,7 @@ export default function PantallaPage() {
               <div className="ticket-numero-pantalla">{llamado.codigo_ticket}</div>
               {llamado.paciente && <div className="ticket-paciente-nombre"><i className="fas fa-user"></i> {llamado.paciente}</div>}
               <div className={`ticket-prioridad-pantalla prior-${llamado.prioridad}`}>{llamado.prioridad}</div>
-              <div className="ticket-consultorio"><i className="fas fa-door-open"></i> Pase a ventanilla</div>
+              <div className="ticket-consultorio"><i className="fas fa-door-open"></i> Pase a recepcion</div>
             </div>
           ) : (
             <div className="ticket-llamado-vacio">

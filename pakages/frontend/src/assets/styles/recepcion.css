@@ -472,6 +472,92 @@
     margin-bottom: 10px;
 }
 
+/* ========== PESTAÑAS GENERAR TICKET ========== */
+.recepcion-page .tab-group {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 15px;
+}
+
+.recepcion-page .tab-btn {
+    flex: 1;
+    padding: 8px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 600;
+    transition: all 0.3s;
+    text-align: center;
+}
+
+.recepcion-page .tab-btn.tab-active {
+    background: linear-gradient(135deg, #0077B6 0%, #00B4D8 100%);
+    color: white;
+    border: none;
+}
+
+.recepcion-page .tab-btn.tab-inactive {
+    background: white;
+    color: #6C757D;
+    border: 2px solid #E9ECEF;
+}
+
+.recepcion-page .tab-btn.tab-inactive:hover {
+    border-color: #0077B6;
+    color: #0077B6;
+}
+
+/* ========== BUSCADOR CITA ========== */
+.recepcion-page .buscador-cita-row {
+    display: flex;
+    gap: 8px;
+    align-items: stretch;
+}
+
+.recepcion-page .buscador-cita-input {
+    flex: 3;
+    min-width: 0;
+    padding: 11px 14px;
+    border: 2px solid #E9ECEF;
+    border-radius: 10px;
+    font-size: 0.95rem;
+    font-family: 'Poppins', sans-serif;
+    transition: border-color 0.3s;
+}
+
+.recepcion-page .buscador-cita-input:focus {
+    outline: none;
+    border-color: #00C49A;
+    box-shadow: 0 0 0 3px rgba(0, 196, 154, 0.1);
+}
+
+.recepcion-page .btn-buscar-cita {
+    flex: 0 0 auto;
+    padding: 11px 20px;
+    font-size: 0.9rem;
+    background: linear-gradient(135deg, #0077B6 0%, #00B4D8 100%);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    font-family: 'Poppins', sans-serif;
+    transition: all 0.3s;
+}
+
+.recepcion-page .btn-buscar-cita:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 3px 10px rgba(0, 119, 182, 0.3);
+}
+
+.recepcion-page .btn-buscar-cita:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
 /* ========== MENSAJES ========== */
 .recepcion-page .mensaje {
     margin-top: 12px;
