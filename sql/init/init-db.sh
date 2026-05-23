@@ -6,7 +6,9 @@
 set -e
 
 DB_NAME="ClinicaF"
-BACKUP_FILE="/var/opt/mssql/backup/ClinicaF_backup_2026050910-05-2026.bak"
+BACKUP_FILE="/var/opt/mssql/backup/ClinicaF_2026-05-23.bak"
+DW_BACKUP_FILE="/var/opt/mssql/backup/ClinicaF_DW_2026-05-23.bak"
+DW_DB_NAME="ClinicaF_DW"
 MIGRATIONS="/sql/migrate"
 SP_SCRIPTS="/sql/scripts"
 
@@ -25,34 +27,41 @@ for i in $(seq 1 60); do
   sleep 2
 done
 
-# Verificar si la base de datos existe
-DB_EXISTS=$($SQLCMD_BASE -h-1 -W -Q "SET NOCOUNT ON; SELECT COUNT(*) FROM sys.databases WHERE name='$DB_NAME'" 2>/dev/null | tr -d ' ')
-
-if [ "$DB_EXISTS" = "0" ] || [ -z "$DB_EXISTS" ]; then
-  echo "[INIT-DB] Restaurando base de datos desde backup..."
+restore_db() {
+  local db_name="$1"
+  local backup_file="$2"
   
-  LOGICAL_NAMES=$($SQLCMD_BASE -h-1 -W -Q "RESTORE FILELISTONLY FROM DISK = N'$BACKUP_FILE'" 2>/dev/null | tail -n +3 | head -n -2 | awk '{print $1}')
-  DATA_FILE=$(echo "$LOGICAL_NAMES" | head -1)
-  LOG_FILE=$(echo "$LOGICAL_NAMES" | tail -1)
+  local exists=$($SQLCMD_BASE -h-1 -W -Q "SET NOCOUNT ON; SELECT COUNT(*) FROM sys.databases WHERE name='$db_name'" 2>/dev/null | tr -d ' ')
   
-  if [ -z "$DATA_FILE" ]; then
-    echo "[INIT-DB] Error: No se pudo leer el backup"
-    exit 1
-  fi
-  
-  $SQLCMD_BASE -Q "
-RESTORE DATABASE $DB_NAME
-FROM DISK = N'$BACKUP_FILE'
+  if [ "$exists" = "0" ] || [ -z "$exists" ]; then
+    echo "[INIT-DB] Restaurando $db_name desde $(basename "$backup_file")..."
+    
+    local logical_names=$($SQLCMD_BASE -h-1 -W -Q "SET NOCOUNT ON; RESTORE FILELISTONLY FROM DISK = N'$backup_file'" 2>/dev/null | awk '{print $1}')
+    local data_file=$(echo "$logical_names" | head -1)
+    local log_file=$(echo "$logical_names" | tail -1)
+    
+    if [ -z "$data_file" ]; then
+      echo "[INIT-DB] Error: No se pudo leer el backup $backup_file"
+      return 1
+    fi
+    
+    $SQLCMD_BASE -Q "
+RESTORE DATABASE $db_name
+FROM DISK = N'$backup_file'
 WITH
-  MOVE '$DATA_FILE' TO '/var/opt/mssql/data/${DB_NAME}.mdf',
-  MOVE '$LOG_FILE' TO '/var/opt/mssql/data/${DB_NAME}_log.ldf',
+  MOVE '$data_file' TO '/var/opt/mssql/data/${db_name}.mdf',
+  MOVE '$log_file' TO '/var/opt/mssql/data/${db_name}_log.ldf',
   REPLACE;
 " 2>&1 | grep -v "RESTORE DATABASE successfully\|rows affected\|Processed" || true
-  
-  echo "[INIT-DB] Backup restaurado exitosamente!"
-else
-  echo "[INIT-DB] Base de datos $DB_NAME ya existe."
-fi
+    
+    echo "[INIT-DB] $db_name restaurada exitosamente!"
+  else
+    echo "[INIT-DB] $db_name ya existe."
+  fi
+}
+
+restore_db "$DB_NAME" "$BACKUP_FILE"
+restore_db "$DW_DB_NAME" "$DW_BACKUP_FILE"
 
 # Aplicar migraciones
 for f in "$MIGRATIONS"/*.sql; do

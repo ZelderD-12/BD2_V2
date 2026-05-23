@@ -1,9 +1,9 @@
 RESTORE FILELISTONLY 
-FROM DISK = N'/var/opt/mssql/backup/ClinicaF_backup_2026050910-05-2026.bak';
+FROM DISK = N'/var/opt/mssql/backup/ClinicaF_2026-05-23.bak';
 
 
 RESTORE DATABASE ClinicaF
-FROM DISK = N'/var/opt/mssql/backup/ClinicaF_backup_2026050910-05-2026.bak'
+FROM DISK = N'/var/opt/mssql/backup/ClinicaF_2026-05-23.bak'
 WITH 
     MOVE 'ClinicaF' TO '/var/opt/mssql/data/ClinicaF.mdf',
     MOVE 'ClinicaF_log' TO '/var/opt/mssql/data/ClinicaF_log.ldf',

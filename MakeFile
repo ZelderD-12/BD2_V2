@@ -1,4 +1,4 @@
-.PHONY: dev stop clean start db-export db-import docker-up docker-down docker-restart
+.PHONY: dev stop clean start db-export db-import db-restore-all restaurarbd docker-up docker-down docker-restart
 
 # Detectar sistema operativo
 ifeq ($(OS),Windows_NT)
@@ -64,6 +64,14 @@ db-import-downloads:
 	@docker cp "$(DOWNLOADS)/ClinicaF.bak" $(DB_CONTAINER):/var/opt/mssql/backup/restore.bak
 	@docker exec -it $(DB_CONTAINER) $(SQLCMD) -S localhost -U $(DB_USER) -P $(DB_PASSWORD) -C -Q "RESTORE DATABASE [$(DB_NAME)] FROM DISK = N'/var/opt/mssql/backup/restore.bak' WITH REPLACE, RECOVERY"
 	@echo ✅ Base de datos restaurada exitosamente
+
+# Restaurar todas las BDs desde sql/backup/
+db-restore-all: restaurarbd
+restaurarbd:
+	@echo 🔄 Restaurando todas las bases de datos desde sql/backup/...
+	@docker cp scripts/restore-all.sh $(DB_CONTAINER):/tmp/restore-all.sh
+	@docker exec $(DB_CONTAINER) bash /tmp/restore-all.sh
+	@echo ✅ Restauracion completada
 
 # Docker - levanta SQL Server + Backend en contenedores
 docker-up:

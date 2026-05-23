@@ -16,6 +16,7 @@ services:
     volumes:
       - sqlserver_data:/var/opt/mssql
       - ./sql/backup:/var/opt/mssql/backup
+      - ./scripts:/scripts
     networks:
       - clinica_network
     restart: unless-stopped
