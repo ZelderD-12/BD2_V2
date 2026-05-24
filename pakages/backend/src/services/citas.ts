@@ -144,9 +144,56 @@ export const obtenerCitasPaciente = async ({ params, query, set }: Context) => {
             .input('mostrar_todas', sql.Bit, mostrar_todas === '1' || mostrar_todas === 'true')
             .execute('dbo.sp_ObtenerCitasPaciente');
 
+        let historialMap: Record<number, any> = {};
+        if (mostrar_todas === '1' || mostrar_todas === 'true') {
+            const histResult = await pool.request()
+                .input('id_paciente', sql.SmallInt, parseInt(id))
+                .query(`
+                    SELECT
+                        h.id_cita,
+                        h.diagnostico,
+                        h.sintomas,
+                        h.signos_vitales,
+                        h.notas_doctor,
+                        h.proxima_cita,
+                        h.orden_receta,
+                        r.Orden_Receta,
+                        r.medicamentos_json
+                    FROM HistorialClinico h
+                    LEFT JOIN Receta r ON r.id_cita = h.id_cita AND r.id_paciente = h.id_paciente
+                    WHERE h.id_paciente = @id_paciente
+                `);
+            for (const row of histResult.recordset) {
+                historialMap[row.id_cita] = {
+                    diagnostico: row.diagnostico,
+                    sintomas: row.sintomas,
+                    signos_vitales: row.signos_vitales,
+                    notas_doctor: row.notas_doctor,
+                    proxima_cita: row.proxima_cita,
+                    orden_receta: row.Orden_Receta,
+                    medicamentos: row.medicamentos_json ? JSON.parse(row.medicamentos_json) : null,
+                };
+            }
+        }
+
+        const data = result.recordset.map((row: any) => {
+            const hist = historialMap[row.id_cita];
+            return {
+                id_cita: row.id_cita,
+                id_paciente: row.id_paciente,
+                servicio: row.nombre_servicio,
+                medico: `${row.medico_nombres || ''} ${row.medico_apellidos || ''}`.trim(),
+                fecha_inicio: row.fecha_inicio,
+                estado: row.estado_cita,
+                motivo_consulta: row.motivo_consulta,
+                motivo_cancelacion: row.motivo_cancelacion,
+                historial: hist || null,
+            };
+        });
+
         return {
             success: true,
-            data: result.recordset
+            data
         };
 
     } catch (error: unknown) {

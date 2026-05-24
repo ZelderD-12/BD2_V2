@@ -48,17 +48,6 @@ export default function Nav() {
             </li>
           )}
 
-          {/* Mis Recetas: solo paciente (rol 2) */}
-          {isLoggedIn && userRolId === 2 && (
-            <li>
-              <Link
-                to="/mis-recetas"
-                className={`nav-simple-link ${location.pathname === '/mis-recetas' ? 'active' : ''}`}
-              >
-                Mis Recetas
-              </Link>
-            </li>
-          )}
           
           {/* Panel Doctor - SOLO para rol 3 */}
           {isLoggedIn && userRolId === 3 && (

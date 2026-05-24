@@ -31,7 +31,6 @@ export default function App() {
             <Route path="servicios" element={<ServiciosPage />} />
             <Route path="contacto" element={<ContactoPage />} />
             <Route path="recepcion" element={<RecepcionPage />} />  
-            <Route path="mis-recetas" element={<RecetasPage />} />
             <Route path="/historial/:id_paciente" element={<HistorialClinico />} />
             <Route path="/atencion/:id_cita" element={<AtencionMedica />} />
           </Route>

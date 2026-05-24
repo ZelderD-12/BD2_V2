@@ -745,14 +745,53 @@ export default function CitasPage() {
                     </div>
                   )}
 
-                  {/* HISTORIAL: citas finalizadas/canceladas (solo info) */}
-                  {verHistorial && cita.estado !== "Pendiente" && cita.estado !== "Confirmada" && (
+                  {/* HISTORIAL: solo citas atendidas */}
+                  {verHistorial && cita.estado === "Atendida" && cita.historial && (
+                    <div className="cita-historial-box">
+                      <div className="historial-detalles">
+                        <p><strong>Diagnóstico:</strong> {cita.historial.diagnostico || "No registrado"}</p>
+                        <p><strong>Síntomas:</strong> {cita.historial.sintomas || "No registrado"}</p>
+                        {cita.historial.notas_doctor && (
+                          <p><strong>Notas del doctor:</strong> {cita.historial.notas_doctor}</p>
+                        )}
+                        {cita.historial.signos_vitales && (
+                          <p><strong>Signos vitales:</strong> {cita.historial.signos_vitales}</p>
+                        )}
+                        {cita.historial.orden_receta && (
+                          <p>
+                            <strong>Receta:</strong>{" "}
+                            <span style={{ color: "var(--color-primary)", fontWeight: 600 }}>
+                              {cita.historial.orden_receta}
+                            </span>
+                          </p>
+                        )}
+                        {cita.historial.medicamentos && cita.historial.medicamentos.length > 0 && (
+                          <div style={{ marginTop: "8px" }}>
+                            <strong>Medicamentos recetados:</strong>
+                            <ul style={{ margin: "4px 0 0 16px", fontSize: "0.85rem" }}>
+                              {cita.historial.medicamentos.map((med: any, i: number) => (
+                                <li key={i}>
+                                  {med.nombre || med.medicamento} — {med.dosis} c/{med.frecuencia || med.cada} hrs
+                                  {med.duracion ? ` por ${med.duracion} días` : ""}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                        {cita.historial.proxima_cita && (
+                          <p style={{ marginTop: "8px" }}>
+                            <strong>Próxima cita:</strong>{" "}
+                            {new Date(cita.historial.proxima_cita).toLocaleDateString()}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                  {verHistorial && cita.estado === "Cancelada" && (
                     <div className="cita-historial-box">
                       <p style={{ margin: "4px 0", color: "#666", fontSize: "0.85rem" }}>
                         <i className="fas fa-info-circle"></i>{" "}
-                        {cita.motivo_cancelacion
-                          ? "Cancelada: " + cita.motivo_cancelacion
-                          : "Cita " + cita.estado.toLowerCase()}
+                        Cancelada: {cita.motivo_cancelacion || "Sin motivo"}
                       </p>
                     </div>
                   )}

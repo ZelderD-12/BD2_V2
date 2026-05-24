@@ -6,15 +6,17 @@ const EMAIL = __ENV.EMAIL || 'tobiasgusito@gmail.com';
 const PASSWORD = __ENV.PASSWORD || '123456789';
 
 const ID_SEDE = parseInt(__ENV.ID_SEDE || '1');
-const ID_SERVICIO = parseInt(__ENV.ID_SERVICIO || '1');
-const TICKETS_QTY = 250;
+const ID_SERVICIO = parseInt(__ENV.ID_SERVICIO || '3');
+
+const VUS = parseInt(__ENV.VUS || '200');
+const TICKETS_QTY = VUS;
 
 export const options = {
     setupTimeout: '300s',
     scenarios: {
         g3_siguiente: {
             executor: 'per-vu-iterations',
-            vus: 200,
+            vus: VUS,
             iterations: 1,
             maxDuration: '5m',
         },
@@ -49,8 +51,8 @@ export function setup() {
                 body: JSON.stringify({
                     nombres: `G3Paciente_${runId}_${i}`,
                     apellidos: `Test_${runId}`,
-                    dpi: String(8000000000000 + (i % 9999)),
-                    telefono: '11223344',
+                    dpi: String(8000000000000 + i + (runId % 100000) * 1000),
+                    telefono: String(30000000 + ((runId % 10000) * batchSize + i) % 69999999),
                     direccion: 'Test G3',
                     rol: 2,
                     sexo: i % 2 === 0 ? 'M' : 'F',

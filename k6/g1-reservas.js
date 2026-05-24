@@ -6,18 +6,20 @@ const EMAIL = __ENV.EMAIL || 'tobiasgusito@gmail.com';
 const PASSWORD = __ENV.PASSWORD || '123456789';
 
 const ID_SEDE = parseInt(__ENV.ID_SEDE || '1');
-const ID_SERVICIO = parseInt(__ENV.ID_SERVICIO || '1');
-const ID_MEDICO = parseInt(__ENV.ID_MEDICO || '1');
+const ID_SERVICIO = parseInt(__ENV.ID_SERVICIO || '3');
+const ID_MEDICO = parseInt(__ENV.ID_MEDICO || '2');
 
-const PACIENTES_QTY = 1000;
 const SLOT_FECHA = __ENV.SLOT_FECHA || '2026-06-06T10:00:00.000';
+
+const VUS = parseInt(__ENV.VUS || '200');
+const PACIENTES_QTY = VUS;
 
 export const options = {
     setupTimeout: '300s',
     scenarios: {
         g1_reservas: {
             executor: 'per-vu-iterations',
-            vus: 1000,
+            vus: VUS,
             iterations: 1,
             maxDuration: '5m',
         },
@@ -50,6 +52,7 @@ export function setup() {
     const pacientesIds = [];
     const batchSize = 50;
     const totalBatches = Math.ceil(PACIENTES_QTY / batchSize);
+    const runId = Date.now();
 
     for (let batch = 0; batch < totalBatches; batch++) {
         const requests = [];
@@ -57,15 +60,14 @@ export function setup() {
         const end = Math.min(start + batchSize - 1, PACIENTES_QTY);
 
         for (let i = start; i <= end; i++) {
-            const runId = `${Date.now()}`;
             requests.push({
                 method: 'POST',
                 url: `${BASE_URL}/Usuario/crear`,
                 body: JSON.stringify({
                     nombres: `G1Paciente_${runId}_${i}`,
                     apellidos: `Test_${runId}`,
-                    dpi: String(1000000000000 + (i % 9999)),
-                    telefono: '12345678',
+                    dpi: String(1000000000000 + i + (runId % 100000) * 1000),
+                    telefono: String(10000000 + ((runId % 10000) * batchSize + i) % 89999999),
                     direccion: 'Test G1',
                     rol: 2,
                     sexo: i % 2 === 0 ? 'M' : 'F',

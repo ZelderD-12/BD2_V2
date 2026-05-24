@@ -4,15 +4,19 @@ const dbConfig = {
     server: process.env.DB_HOST || '',
     database: process.env.DB_NAME || '',
     user: process.env.DB_USER || '',
-    password: process.env.DB_PASSWORD || '',
+    password: (process.env.DB_PASSWORD || '').replace(/^"(.*)"$/, '$1'),
     port: parseInt(process.env.DB_PORT || ''),
     options: {
         encrypt: false,
         trustServerCertificate: true
     },
+    pool: {
+        max: 50,
+        min: 5,
+        idleTimeoutMillis: 60000
+    },
     connectionTimeout: 30000,
-    requestTimeout: 30000,
-    // Deshabilitar logs detallados
+    requestTimeout: 45000,
     debug: false
 };
 

@@ -1,0 +1,1 @@
+UPDATE Receta SET medicamentos_json = '[{"nombre":"Losartan Potasico","dosis":"50mg","cada":"24","duracion":"90"},{"nombre":"Hidroclorotiazida","dosis":"12.5mg","cada":"24","duracion":"90"},{"nombre":"Acido Acetilsalicilico","dosis":"100mg","cada":"24","duracion":"90"}]', observaciones = 'Tomar con alimentos. No suspender sin indicacion medica.' WHERE id_cita = 126

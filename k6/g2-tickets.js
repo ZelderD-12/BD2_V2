@@ -6,16 +6,18 @@ const EMAIL = __ENV.EMAIL || 'tobiasgusito@gmail.com';
 const PASSWORD = __ENV.PASSWORD || '123456789';
 
 const ID_SEDE = parseInt(__ENV.ID_SEDE || '1');
-const ID_SERVICIO = parseInt(__ENV.ID_SERVICIO || '1');
-const ID_MEDICO = parseInt(__ENV.ID_MEDICO || '1');
+const ID_SERVICIO = parseInt(__ENV.ID_SERVICIO || '3');
+const ID_MEDICO = parseInt(__ENV.ID_MEDICO || '2');
 const SLOT_FECHA = __ENV.SLOT_FECHA || '2026-06-06T14:00:00.000';
+
+const VUS = parseInt(__ENV.VUS || '200');
 
 export const options = {
     setupTimeout: '120s',
     scenarios: {
         g2_tickets: {
             executor: 'per-vu-iterations',
-            vus: 500,
+            vus: VUS,
             iterations: 1,
             maxDuration: '5m',
         },
@@ -40,8 +42,8 @@ export function setup() {
         JSON.stringify({
             nombres: `G2Paciente_${runId}`,
             apellidos: 'Test',
-            dpi: String(9000000000000 + (runId % 9999)),
-            telefono: '87654321',
+            dpi: String(9000000000000 + (runId % 1000000)),
+            telefono: String(80000000 + (runId % 10000000)),
             direccion: 'Test G2',
             rol: 2,
             sexo: 'M',

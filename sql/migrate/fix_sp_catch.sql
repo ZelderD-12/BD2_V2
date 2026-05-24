@@ -1,4 +1,4 @@
-CREATE   PROCEDURE dbo.sp_crear_usuario
+ALTER PROCEDURE dbo.sp_crear_usuario
     @nombres VARCHAR(120),
     @apellidos VARCHAR(120),
     @dpi CHAR(13),
@@ -10,7 +10,7 @@ CREATE   PROCEDURE dbo.sp_crear_usuario
     @email VARCHAR(100),
     @antecedetes_medicos VARCHAR(300) = NULL,
     @password VARCHAR(125),
-    @contacto_emergencia CHAR(8) = NULL,  -- Nuevo parámetro
+    @contacto_emergencia CHAR(8) = NULL,
     @usuario_ejecutor VARCHAR(100) = NULL,
     @ip_origen VARCHAR(50) = NULL,
     @id_usuario INT OUTPUT

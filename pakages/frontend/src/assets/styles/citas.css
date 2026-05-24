@@ -756,6 +756,24 @@
     border-left: 4px solid #6c757d;
 }
 
+.historial-detalles {
+    text-align: left;
+    font-size: 0.85rem;
+    line-height: 1.5;
+}
+
+.historial-detalles p {
+    margin: 4px 0;
+}
+
+.historial-detalles ul {
+    padding-left: 20px;
+}
+
+.historial-detalles li {
+    margin-bottom: 2px;
+}
+
 .cita-confirmada-box {
     width: 100%;
     display: flex;
