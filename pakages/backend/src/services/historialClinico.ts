@@ -444,15 +444,122 @@ export const obtenerRecetasPaciente = async ({ params, set }: Context) => {
 
         const rows = result.recordset || [];
 
-        // Parsear medicamentos_json
-        const data = rows.map((r: any) => ({
-            ...r,
-            medicamentos: r.medicamentos_json ? JSON.parse(r.medicamentos_json) : []
-        }));
+        const data = rows.map((r: any) => {
+            const meds = r.medicamentos_json ? JSON.parse(r.medicamentos_json) : [];
+            return {
+                ...r,
+                medicamentos: meds,
+                total_medicamentos: meds.length,
+            };
+        });
 
         return { success: true, data };
     } catch (error: any) {
         console.error('Error obtener recetas paciente:', error);
+        set.status = 500;
+        return { success: false, error: error.message };
+    }
+};
+
+// =============================================
+// FARMACIA: Obtener medicamentos por sede
+// GET /api/farmacia/medicamentos/:id_sede
+// =============================================
+export const obtenerMedicamentosPorSede = async ({ params, set }: Context) => {
+    const { id_sede } = params as { id_sede: string };
+
+    try {
+        const pool = await getConnection();
+        const result = await pool.request()
+            .input('id_sede', sql.SmallInt, parseInt(id_sede))
+            .execute('dbo.SP_Medicamentos_PorSede');
+
+        return { success: true, data: result.recordset || [] };
+    } catch (error: any) {
+        console.error('Error obtener medicamentos por sede:', error);
+        set.status = 500;
+        return { success: false, error: error.message };
+    }
+};
+
+// =============================================
+// FARMACIA: Aumentar stock
+// POST /api/farmacia/aumentar-stock
+// =============================================
+export const aumentarStock = async ({ body, set }: Context) => {
+    const { id_medicamento, id_sede, cantidad, id_usuario } = body as any;
+
+    if (!id_medicamento || !id_sede || !cantidad) {
+        set.status = 422;
+        return { success: false, error: 'Faltan campos requeridos' };
+    }
+
+    try {
+        const pool = await getConnection();
+        const result = await pool.request()
+            .input('id_medicamento', sql.SmallInt, id_medicamento)
+            .input('id_sede', sql.SmallInt, id_sede)
+            .input('cantidad', sql.Int, cantidad)
+            .input('id_usuario', sql.SmallInt, id_usuario || null)
+            .execute('dbo.SP_AumentarStock');
+
+        return { success: true, mensaje: 'Stock actualizado' };
+    } catch (error: any) {
+        console.error('Error aumentar stock:', error);
+        set.status = 500;
+        return { success: false, error: error.message };
+    }
+};
+
+// =============================================
+// FARMACIA: Recetas pendientes por sede
+// GET /api/farmacia/recetas-pendientes/:id_sede
+// =============================================
+export const obtenerRecetasPendientes = async ({ params, set }: Context) => {
+    const { id_sede } = params as { id_sede: string };
+
+    try {
+        const pool = await getConnection();
+        const result = await pool.request()
+            .input('id_sede', sql.SmallInt, parseInt(id_sede))
+            .execute('dbo.SP_RecetasPendientesPorSede');
+
+        return { success: true, data: result.recordset || [] };
+    } catch (error: any) {
+        console.error('Error obtener recetas pendientes:', error);
+        set.status = 500;
+        return { success: false, error: error.message };
+    }
+};
+
+// =============================================
+// FARMACIA: Entregar receta
+// POST /api/farmacia/entregar-receta
+// =============================================
+export const entregarReceta = async ({ body, set }: Context) => {
+    const { orden_receta, id_usuario } = body as any;
+
+    if (!orden_receta) {
+        set.status = 422;
+        return { success: false, error: 'orden_receta requerido' };
+    }
+
+    try {
+        const pool = await getConnection();
+        const result = await pool.request()
+            .input('orden_receta', sql.VarChar(30), orden_receta)
+            .input('id_usuario', sql.SmallInt, id_usuario || null)
+            .execute('dbo.SP_Receta_Entregar');
+
+        const output = result.recordset[0];
+        if (output && output.return_value === 0) {
+            return { success: true, mensaje: output.mensaje };
+        } else {
+            set.status = 404;
+            return { success: false, error: output?.mensaje || 'Error al entregar receta' };
+        }
+    } catch (error: any) {
+        console.error('Error entregar receta:', error);
         set.status = 500;
         return { success: false, error: error.message };
     }

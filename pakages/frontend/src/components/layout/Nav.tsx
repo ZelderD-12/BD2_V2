@@ -79,6 +79,15 @@ export default function Nav() {
               </Link>
             </li>
           )}
+
+          {/* Farmacia - SOLO para roles 1 y 4 */}
+          {tienePermiso('VER_FARMACIA') && (
+            <li>
+              <Link to="/farmacia" className={`nav-simple-link ${location.pathname === '/farmacia' ? 'active' : ''}`}>
+                <i className="fas fa-tablets"></i> Farmacia
+              </Link>
+            </li>
+          )}
         </ul>
 
         <ul className="nav-simple-menu nav-right">

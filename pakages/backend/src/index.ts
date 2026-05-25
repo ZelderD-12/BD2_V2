@@ -36,7 +36,11 @@ import {
     obtenerMedicamentos,
     finalizarAtencion,
     crearRecetaConMedicamentos,
-    obtenerRecetasPaciente
+    obtenerRecetasPaciente,
+    obtenerMedicamentosPorSede,
+    aumentarStock,
+    obtenerRecetasPendientes,
+    entregarReceta
 } from './services/historialClinico';
 
 import { logout, renovarSesion, obtenerUsuariosActivos, obtenerUsuariosInactivos, limpiarSesionesExpiradas } from './Controlles/usuarios/logout';
@@ -146,6 +150,12 @@ app.get('/api/recetas/paciente/:id_paciente', obtenerRecetasPaciente);
 
 // ========== ATENCIÓN ==========
 app.post('/api/atencion/finalizar', finalizarAtencion);
+
+// ========== FARMACIA ==========
+app.get('/api/farmacia/medicamentos/:id_sede', obtenerMedicamentosPorSede);
+app.post('/api/farmacia/aumentar-stock', aumentarStock);
+app.get('/api/farmacia/recetas-pendientes/:id_sede', obtenerRecetasPendientes);
+app.post('/api/farmacia/entregar-receta', entregarReceta);
 
 // ========== AUTO-EXPIRAR CITAS VENCIDAS ==========
 async function expirarCitasVencidas() {

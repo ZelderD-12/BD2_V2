@@ -34,12 +34,15 @@ for bak in "$BACKUP_DIR"/*.bak; do
 done
 
 echo ""
-echo "--- Aplicando migraciones ---"
-for sql in /sql/migrate/*.sql; do
-    [ -f "$sql" ] || continue
-    echo "  ClinicaF <- $(basename "$sql")"
-    $SQLCMD -d ClinicaF -i "$sql" 2>&1 | grep -iv "rows affected\|already exists\|changed database context\|Commands completed" || true
-done
+MIGRATE_DIR="/tmp/migrate"
+if [ -d "$MIGRATE_DIR" ]; then
+    echo "--- Aplicando migraciones ---"
+    for sql in "$MIGRATE_DIR"/*.sql; do
+        [ -f "$sql" ] || continue
+        echo "  ClinicaF <- $(basename "$sql")"
+        $SQLCMD -d ClinicaF -i "$sql" 2>&1 | grep -iv "rows affected\|already exists\|changed database context\|Commands completed" || true
+    done
+fi
 
 echo ""
 echo "=== RESTAURACION COMPLETADA ==="

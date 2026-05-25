@@ -34,24 +34,21 @@ interface Ticket {
 interface CitaDelDia {
   id_cita: number;
   id_paciente: number;
-  nombres: string;
-  apellidos: string;
+  paciente_nombre: string;
+  telefono: string;
   email: string;
   id_sede: number;
-  nombre_sede: string;
+  sede_nombre: string;
   id_servicio: number;
-  nombre_servicio: string;
+  servicio_nombre: string;
   id_medico: number;
-  medico_nombres: string;
-  medico_apellidos: string;
+  medico_nombre: string;
   fecha_inicio: string;
   fecha_fin: string;
   id_estado_cita: number;
   estado_cita: string;
   motivo_consulta: string;
   tiene_ticket: number;
-  codigo_ticket: string;
-  id_estado_ticket: number;
 }
 
 function estadoDeTicket(t: Ticket): string {
@@ -75,10 +72,12 @@ export default function RecepcionPage() {
   const { isLoggedIn, userRolId } = useAuth();
   const navigate = useNavigate();
 
-  const [idSede, setIdSede] = useState("1");
+  const [idSede, setIdSede] = useState("");
   const [idServicio, setIdServicio] = useState("");
   const [serviciosCola, setServiciosCola] = useState<{ id_servicio: number; servicio: string }[]>([]);
   const [cargandoServiciosCola, setCargandoServiciosCola] = useState(true);
+  const [sedes, setSedes] = useState<{ id_sede: number; nombre: string }[]>([]);
+  const [fechaFiltro, setFechaFiltro] = useState(new Date().toISOString().split("T")[0]);
 
   const [idCita, setIdCita] = useState("");
   const [citaDetalle, setCitaDetalle] = useState<CitaDelDia | null>(null);
@@ -114,21 +113,41 @@ export default function RecepcionPage() {
     (async () => {
       setCargandoServiciosCola(true);
       try {
-        const res = await fetch(`${API_BASE}/api/citas/servicios`);
-        const data = await res.json();
-        if (cancel || !data.success) return;
-        const list = (data.data || []).map((s: any) => ({
-          id_servicio: Number(s.id_servicio),
-          servicio: String(s.servicio || s.Nombre_Servicio || s.nombre || `Servicio ${s.id_servicio}`),
-        }));
-        setServiciosCola(list);
-        setIdServicio((prev) => {
-          if (list.length === 0) return "";
-          if (prev && list.some((x) => String(x.id_servicio) === prev)) return prev;
-          return String(list[0].id_servicio);
-        });
+        const [servRes, sedeRes] = await Promise.all([
+          fetch(`${API_BASE}/api/citas/servicios`),
+          fetch(`${API_BASE}/api/sedes`),
+        ]);
+        const servData = await servRes.json();
+        const sedeData = await sedeRes.json();
+        if (cancel) return;
+
+        if (servData.success) {
+          const list = (servData.data || []).map((s: any) => ({
+            id_servicio: Number(s.id_servicio),
+            servicio: String(s.servicio || s.Nombre_Servicio || s.nombre || `Servicio ${s.id_servicio}`),
+          }));
+          setServiciosCola(list);
+          setIdServicio((prev) => {
+            if (list.length === 0) return "";
+            if (prev && list.some((x) => String(x.id_servicio) === prev)) return prev;
+            return String(list[0].id_servicio);
+          });
+        }
+
+        if (sedeData.success) {
+          const sedesList = (sedeData.data || []).map((s: any) => ({
+            id_sede: Number(s.id_sede),
+            nombre: String(s.nombre || `Sede ${s.id_sede}`),
+          }));
+          setSedes(sedesList);
+          setIdSede((prev) => {
+            if (sedesList.length === 0) return "";
+            if (prev && sedesList.some((x) => String(x.id_sede) === prev)) return prev;
+            return String(sedesList[0]?.id_sede || "");
+          });
+        }
       } catch {
-        if (!cancel) setServiciosCola([]);
+        if (!cancel) { setServiciosCola([]); setSedes([]); }
       } finally {
         if (!cancel) setCargandoServiciosCola(false);
       }
@@ -171,7 +190,10 @@ export default function RecepcionPage() {
   const cargarCitasDelDia = useCallback(async () => {
     setCargandoCitas(true);
     try {
-      const res = await fetch(`${API_BASE}/api/citas/hoy?id_sede=${idSede}`);
+      const params = new URLSearchParams();
+      if (idSede) params.set("id_sede", idSede);
+      if (fechaFiltro) params.set("fecha", fechaFiltro);
+      const res = await fetch(`${API_BASE}/api/citas/hoy?${params}`);
       const data = await res.json();
       if (data.success) setCitasDelDia(data.data || []);
     } catch {
@@ -179,7 +201,7 @@ export default function RecepcionPage() {
     } finally {
       setCargandoCitas(false);
     }
-  }, [idSede]);
+  }, [idSede, fechaFiltro]);
 
   useEffect(() => {
     cargarCitasDelDia();
@@ -212,7 +234,7 @@ export default function RecepcionPage() {
   const seleccionarCitaDeLista = (cita: CitaDelDia) => {
     setIdCita(String(cita.id_cita));
     setCitaDetalle(cita);
-    setMensajeTicket({ texto: "Cita #" + cita.id_cita + " seleccionada: " + cita.nombres + " " + cita.apellidos, tipo: "success" });
+    setMensajeTicket({ texto: "Cita #" + cita.id_cita + " seleccionada: " + cita.paciente_nombre, tipo: "success" });
   };
 
   // ===== NOTIFICAR WHATSAPP =====
@@ -494,11 +516,21 @@ export default function RecepcionPage() {
                   {citaDetalle && (
                     <div style={{
                       background: "#e8f5e9", padding: "10px 12px", borderRadius: 8,
-                      marginBottom: 10, fontSize: "0.85rem", border: "1px solid #c8e6c9"
+                      marginBottom: 10, fontSize: "0.85rem", border: "1px solid #c8e6c9",
+                      position: "relative"
                     }}>
-                      <p style={{ margin: "2px 0" }}><strong><i className="fas fa-user"></i> Paciente:</strong> {citaDetalle.nombres} {citaDetalle.apellidos}</p>
-                      <p style={{ margin: "2px 0" }}><strong><i className="fas fa-stethoscope"></i> Servicio:</strong> {citaDetalle.nombre_servicio}</p>
-                      <p style={{ margin: "2px 0" }}><strong><i className="fas fa-user-md"></i> Medico:</strong> {citaDetalle.medico_nombres} {citaDetalle.medico_apellidos}</p>
+                      <button type="button" onClick={() => { setIdCita(""); setCitaDetalle(null); }}
+                        style={{
+                          position: "absolute", top: 4, right: 4, border: "none",
+                          background: "transparent", cursor: "pointer", fontSize: "1.1rem",
+                          color: "#999", padding: "2px 6px", lineHeight: 1
+                        }}
+                        title="Quitar cita">
+                        <i className="fas fa-times"></i>
+                      </button>
+                      <p style={{ margin: "2px 0" }}><strong><i className="fas fa-user"></i> Paciente:</strong> {citaDetalle.paciente_nombre || (citaDetalle.nombres + ' ' + citaDetalle.apellidos)}</p>
+                      <p style={{ margin: "2px 0" }}><strong><i className="fas fa-stethoscope"></i> Servicio:</strong> {citaDetalle.servicio_nombre || citaDetalle.nombre_servicio}</p>
+                      <p style={{ margin: "2px 0" }}><strong><i className="fas fa-user-md"></i> Medico:</strong> {citaDetalle.medico_nombre || (citaDetalle.medico_nombres + ' ' + citaDetalle.medico_apellidos)}</p>
                       <p style={{ margin: "2px 0" }}><strong><i className="fas fa-clock"></i> Fecha:</strong> {new Date(citaDetalle.fecha_inicio).toLocaleString()}</p>
                     </div>
                   )}
@@ -524,7 +556,20 @@ export default function RecepcionPage() {
 
             {/* CITAS DEL DIA */}
             <div className="panel-card">
-              <div className="card-header"><i className="fas fa-calendar-day"></i><h2>Citas de Hoy</h2><span className="badge-contador">{citasDelDia.length}</span></div>
+              <div className="card-header">
+                <i className="fas fa-calendar-day"></i>
+                <h2>Citas</h2>
+                <div style={{ display: "flex", gap: 8, marginLeft: "auto", alignItems: "center" }}>
+                  <select value={idSede} onChange={(e) => setIdSede(e.target.value)}
+                    style={{ padding: "4px 8px", borderRadius: 6, border: "1px solid #ccc", fontSize: "0.85rem" }}>
+                    <option value="">Todas las sedes</option>
+                    {sedes.map((s) => <option key={s.id_sede} value={s.id_sede}>{s.nombre}</option>)}
+                  </select>
+                  <input type="date" value={fechaFiltro} onChange={(e) => setFechaFiltro(e.target.value)}
+                    style={{ padding: "4px 8px", borderRadius: 6, border: "1px solid #ccc", fontSize: "0.85rem" }} />
+                  <span className="badge-contador">{citasDelDia.length}</span>
+                </div>
+              </div>
               <div className="card-body">
                 {cargandoCitas ? (
                   <p style={{ textAlign: "center", color: "#999" }}><i className="fas fa-spinner fa-spin"></i> Cargando...</p>
@@ -540,14 +585,17 @@ export default function RecepcionPage() {
                         style={{ cursor: "pointer" }}>
                         <span style={{ fontSize: "0.9rem", fontWeight: 700, color: "#0077B6", minWidth: 55 }}>{hora}</span>
                         <div className="cola-datos" style={{ flex: 1 }}>
-                          <p style={{ margin: 0, fontWeight: 600 }}>{cita.nombres} {cita.apellidos}</p>
-                          <p style={{ margin: 0, fontSize: "0.75rem", color: "#888" }}>
-                            {cita.nombre_servicio} - Dr. {cita.medico_nombres} {cita.medico_apellidos}
+                          <p style={{ margin: 0, fontWeight: 600 }}>{cita.paciente_nombre}</p>
+                          <p style={{ margin: 0, fontSize: "0.8rem", color: "#666" }}>
+                            {cita.servicio_nombre} - Dr. {cita.medico_nombre}
+                          </p>
+                          <p style={{ margin: 0, fontSize: "0.75rem", color: "#999" }}>
+                            <i className="fas fa-phone"></i> {cita.telefono || "Sin teléfono"}
                           </p>
                         </div>
                         {cita.tiene_ticket === 1 ? (
                           <span style={{ fontSize: "0.7rem", padding: "2px 8px", borderRadius: 10, background: "#fff3cd", color: "#856404" }}>
-                            <i className="fas fa-ticket-alt"></i> {cita.codigo_ticket}
+                            <i className="fas fa-ticket-alt"></i> Con ticket
                           </span>
                         ) : (
                           <span style={{ fontSize: "0.7rem", padding: "2px 8px", borderRadius: 10, background: "#d4edda", color: "#155724" }}>

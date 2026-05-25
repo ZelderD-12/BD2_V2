@@ -46,14 +46,7 @@ db-export:
 
 # Importar base de datos desde sql/import/
 db-import:
-	@echo 📥 Buscando archivo .bak en $(IMPORT_DIR)...
-	@if not exist "$(IMPORT_DIR)\\*.bak" ( \
-		echo ❌ No se encontró ningún archivo .bak en $(IMPORT_DIR) & \
-		echo 💡 Coloca tu archivo .bak en la carpeta $(IMPORT_DIR) & \
-		exit 1 \
-	)
-	@echo 📋 Copiando archivo al contenedor...
-	@for %%f in ("$(IMPORT_DIR)\\*.bak") do @docker cp "%%f" $(DB_CONTAINER):/var/opt/mssql/backup/restore.bak
+	@powershell -Command "& { $$bak = Get-ChildItem '$(IMPORT_DIR)' -Filter '*.bak' | Select-Object -First 1; if (-not $$bak) { Write-Host '❌ No se encontró ningún archivo .bak en $(IMPORT_DIR)'; exit 1 } Write-Host '📋 Copiando '$$bak.Name' al contenedor...'; docker cp $$bak.FullName $(DB_CONTAINER):/var/opt/mssql/backup/restore.bak }"
 	@echo 🔄 Restaurando base de datos $(DB_NAME)...
 	@docker exec -it $(DB_CONTAINER) $(SQLCMD) -S localhost -U $(DB_USER) -P $(DB_PASSWORD) -C -Q "RESTORE DATABASE [$(DB_NAME)] FROM DISK = N'/var/opt/mssql/backup/restore.bak' WITH REPLACE, RECOVERY"
 	@echo ✅ Base de datos restaurada exitosamente
@@ -70,6 +63,7 @@ db-restore-all: restaurarbd
 restaurarbd:
 	@echo 🔄 Restaurando todas las bases de datos desde sql/backup/...
 	@docker cp scripts/restore-all.sh $(DB_CONTAINER):/tmp/restore-all.sh
+	@docker cp sql/migrate $(DB_CONTAINER):/tmp/migrate 2>nul || echo "   Sin migraciones"
 	@docker exec $(DB_CONTAINER) bash /tmp/restore-all.sh
 	@echo ✅ Restauracion completada
 

@@ -453,7 +453,7 @@ export default function AtencionMedica() {
                   <option value="">Seleccionar medicamento...</option>
                   {medicamentosList.map(med => (
                     <option key={med.id_medicamento} value={med.id_medicamento}>
-                      {med.nombre}
+                      {med.nombre} {med.stock_total !== undefined ? `(Stock: ${med.stock_total})` : ''}
                     </option>
                   ))}
                 </select>

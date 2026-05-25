@@ -74,7 +74,7 @@ CREATE PROCEDURE dbo.sp_ObtenerSedes
 AS
 BEGIN
     SET NOCOUNT ON;
-    SELECT id_sede, nombre, direccion, capacidad_slots
+    SELECT id_sede, nombre, ubicacion, capacidad_slots
     FROM dbo.Sede
     WHERE activo = 1
     ORDER BY id_sede;
@@ -394,7 +394,7 @@ BEGIN
         u.id_usuario,
         u.nombres + ' ' + u.apellidos AS nombre_completo,
         u.email,
-        r.Nombre_Rol AS rol,
+        r.rol,
         s.ultima_actividad
     FROM dbo.Sesion s
     JOIN dbo.Usuario u ON s.id_usuario = u.id_usuario
@@ -590,7 +590,7 @@ BEGIN
     SET NOCOUNT ON;
     
     DECLARE @nueva_orden VARCHAR(30);
-    SELECT @nueva_orden = 'RX-' + CAST(GETDATE(), 112) + '-' + CAST(@id_paciente AS VARCHAR);
+    SELECT @nueva_orden = 'RX-' + CONVERT(VARCHAR(8), GETDATE(), 112) + '-' + CAST(@id_paciente AS VARCHAR);
     SET @orden_receta_out = @nueva_orden;
 
     INSERT INTO dbo.Receta (Orden_Receta, id_cita, id_medico, id_paciente, id_medicamento, observaciones, fecha_emision)

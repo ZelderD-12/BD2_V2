@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import '../../assets/styles/pantalla_publica.css'
 
@@ -23,7 +23,7 @@ export default function PantallaPage() {
   const [hora, setHora] = useState('')
   const [llamado, setLlamado] = useState<any>(null)
   const [cola, setCola] = useState<any[]>([])
-  const [ultimoLlamadoId, setUltimoLlamadoId] = useState<number | null>(null)
+  const ultimoLlamadoIdRef = useRef<number | null>(null)
 
   // Limpiar estilos del body al montar/desmontar
   useEffect(() => {
@@ -115,19 +115,20 @@ export default function PantallaPage() {
       }
       setCola([...byId.values()].slice(0, 8))
 
-      if (nuevo && (nuevo as { id_ticket?: number }).id_ticket !== ultimoLlamadoId) {
+      if (nuevo && (nuevo as { id_ticket?: number }).id_ticket !== ultimoLlamadoIdRef.current) {
         const nt = nuevo as { id_ticket: number; codigo_ticket?: string }
         setLlamado(nuevo)
-        setUltimoLlamadoId(nt.id_ticket)
+        ultimoLlamadoIdRef.current = nt.id_ticket
         beep()
         hablar(`Ticket ${nt.codigo_ticket ?? ''}. Pase a recepcion.`)
       } else if (!nuevo) {
         setLlamado(null)
+        ultimoLlamadoIdRef.current = null
       } else {
         setLlamado(nuevo)
       }
     } catch (e) {}
-  }, [idSede, idServicio, ultimoLlamadoId])
+  }, [idSede, idServicio])
 
   useEffect(() => {
     obtenerCola()

@@ -31,12 +31,13 @@ export const buscarPacientesService = async ({ query, set }: Context) => {
 // GET /api/citas/hoy?id_sede=1
 // =============================================
 export const obtenerCitasDelDiaService = async ({ query, set }: Context) => {
-    const { id_sede } = query as { id_sede?: string };
+    const { id_sede, fecha } = query as { id_sede?: string; fecha?: string };
 
     try {
         const pool = await getConnection();
         const result = await pool.request()
             .input('id_sede', sql.SmallInt, id_sede ? parseInt(id_sede) : null)
+            .input('fecha', sql.Date, fecha || null)
             .execute('dbo.sp_ObtenerCitasDelDia');
 
         return { success: true, data: result.recordset || [] };
