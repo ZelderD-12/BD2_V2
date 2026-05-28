@@ -20,8 +20,10 @@ interface ConfirmarCitaBody {
 interface ModificarCitaBody {
     id_paciente: number;
     nuevo_id_servicio?: number;
+    nuevo_id_medico?: number;
     nueva_fecha_inicio?: string;
     motivo_consulta?: string;
+    id_recepcionista?: number;
 }
 
 interface CancelarCitaBody {
@@ -81,10 +83,19 @@ export const reservarCitaService = async ({ body, set }: Context) => {
         const id_cita: number = result.output.id_cita_out;
 
         if (returnValue === 0) {
+            // Auto-confirmar la cita
+            try {
+                await pool.request()
+                    .input('id_cita', sql.SmallInt, id_cita)
+                    .input('id_paciente', sql.SmallInt, id_paciente)
+                    .output('mensaje_out', sql.VarChar(200))
+                    .execute('dbo.sp_ConfirmarCita');
+            } catch { /* si falla la confirmacion, la cita queda pendiente */ }
+
             set.status = 201;
             return {
                 success: true,
-                mensaje: 'Cita creada exitosamente',
+                mensaje: 'Cita creada y confirmada exitosamente',
                 code: 'CITA_CREADA',
                 data: {
                     id_cita,
@@ -93,7 +104,7 @@ export const reservarCitaService = async ({ body, set }: Context) => {
                     id_servicio,
                     id_sede,
                     fecha_inicio,
-                    estado: 'Pendiente'
+                    estado: 'Confirmada'
                 }
             };
         }
@@ -317,7 +328,7 @@ export const confirmarCitaService = async ({ params, body, set }: Context) => {
 // =============================================
 export const modificarCitaService = async ({ params, body, set }: Context) => {
     const { id } = params as ParamsWithId;
-    const { id_paciente, nuevo_id_servicio, nueva_fecha_inicio, motivo_consulta } = body as ModificarCitaBody;
+    const { id_paciente, nuevo_id_servicio, nuevo_id_medico, nueva_fecha_inicio, motivo_consulta, id_recepcionista } = body as ModificarCitaBody;
 
     try {
         const pool = await getConnection();
@@ -328,8 +339,10 @@ export const modificarCitaService = async ({ params, body, set }: Context) => {
             .input('id_cita', sql.SmallInt, parseInt(id))
             .input('id_paciente', sql.SmallInt, id_paciente)
             .input('nuevo_id_servicio', sql.SmallInt, nuevo_id_servicio || null)
+            .input('nuevo_id_medico', sql.SmallInt, nuevo_id_medico || null)
             .input('nueva_fecha_inicio', sql.DateTime2, fecha)
-            .input('motivo_consulta', sql.VarChar(300), motivo_consulta || null)
+            .input('nuevo_motivo', sql.VarChar(300), motivo_consulta || null)
+            .input('id_recepcionista', sql.SmallInt, id_recepcionista || null)
             .output('mensaje_out', sql.VarChar(200))
             .execute('dbo.sp_ModificarCita');
 

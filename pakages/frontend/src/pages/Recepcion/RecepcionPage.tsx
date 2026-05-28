@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth, tienePermiso } from "../../context/AuthContext";
 import "../../assets/styles/recepcion.css";
+import "../../assets/styles/citas.css";
 
 const API_BASE = "http://localhost:8080";
 
@@ -35,7 +36,6 @@ interface CitaDelDia {
   id_cita: number;
   id_paciente: number;
   paciente_nombre: string;
-  telefono: string;
   email: string;
   id_sede: number;
   sede_nombre: string;
@@ -101,6 +101,12 @@ export default function RecepcionPage() {
   const [detallePaciente, setDetallePaciente] = useState<Record<string, unknown> | null>(null);
   const [cargandoPaciente, setCargandoPaciente] = useState(false);
   const colaCardRef = useRef<HTMLDivElement>(null);
+  const primeraCargaRef = useRef(true);
+
+  const [modalModificarOpen, setModalModificarOpen] = useState(false);
+  const [medicos, setMedicos] = useState<{ id_medico: number; nombre_completo: string }[]>([]);
+  const [modForm, setModForm] = useState({ id_servicio: "", id_medico: "", fecha: "", hora: "", motivo_consulta: "" });
+  const [modificando, setModificando] = useState(false);
 
   const cerrarDetalleCola = useCallback(() => {
     setColaSeleccion(null);
@@ -113,9 +119,10 @@ export default function RecepcionPage() {
     (async () => {
       setCargandoServiciosCola(true);
       try {
-        const [servRes, sedeRes] = await Promise.all([
+        const [servRes, sedeRes, medRes] = await Promise.all([
           fetch(`${API_BASE}/api/citas/servicios`),
           fetch(`${API_BASE}/api/sedes`),
+          fetch(`${API_BASE}/api/citas/medicos`),
         ]);
         const servData = await servRes.json();
         const sedeData = await sedeRes.json();
@@ -146,9 +153,16 @@ export default function RecepcionPage() {
             return String(sedesList[0]?.id_sede || "");
           });
         }
+        const medData = await medRes.json();
+        if (medData.success && !cancel) {
+          setMedicos((medData.data || []).map((m: any) => ({
+            id_medico: Number(m.id_medico),
+            nombre_completo: m.nombre_completo || `${m.nombres || ''} ${m.apellidos || ''}`.trim(),
+          })));
+        }
       } catch {
-        if (!cancel) { setServiciosCola([]); setSedes([]); }
-      } finally {
+          if (!cancel) { setServiciosCola([]); setSedes([]); }
+        } finally {
         if (!cancel) setCargandoServiciosCola(false);
       }
     })();
@@ -163,7 +177,8 @@ export default function RecepcionPage() {
   useEffect(() => {
     let interval: ReturnType<typeof setInterval>;
     if (timerActivo && ticketActual) {
-      setTiempoLlamado(0);
+      if (primeraCargaRef.current) setTiempoLlamado(0);
+      primeraCargaRef.current = false;
       interval = setInterval(() => {
         setTiempoLlamado((prev) => {
           if (prev >= 300) { clearInterval(interval); handleNoShowAutomatico(); return 0; }
@@ -235,6 +250,58 @@ export default function RecepcionPage() {
     setIdCita(String(cita.id_cita));
     setCitaDetalle(cita);
     setMensajeTicket({ texto: "Cita #" + cita.id_cita + " seleccionada: " + cita.paciente_nombre, tipo: "success" });
+  };
+
+  // ===== MODIFICAR CITA =====
+  const horarios = ["08:00","08:30","09:00","09:30","10:00","10:30","11:00","11:30","14:00","14:30","15:00","15:30","16:00","16:30","17:00","17:30"];
+
+  const abrirModificar = () => {
+    if (!citaDetalle) return;
+    const fecha = citaDetalle.fecha_inicio.split("T")[0];
+    const hora = citaDetalle.fecha_inicio.split("T")[1]?.substring(0, 5);
+    setModForm({
+      id_servicio: String(citaDetalle.id_servicio),
+      id_medico: String(citaDetalle.id_medico),
+      fecha, hora: hora || "",
+      motivo_consulta: citaDetalle.motivo_consulta || ""
+    });
+    setModalModificarOpen(true);
+  };
+
+  const handleModificarCita = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!citaDetalle) return;
+    setModificando(true);
+    try {
+      const fechaHora = `${modForm.fecha}T${modForm.hora}:00`;
+      const userId = localStorage.getItem("user_id") || localStorage.getItem("id_usuario");
+      const res = await fetch(`${API_BASE}/api/citas/${citaDetalle.id_cita}/modificar`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id_paciente: citaDetalle.id_paciente,
+          nuevo_id_servicio: modForm.id_servicio ? parseInt(modForm.id_servicio) : undefined,
+          nuevo_id_medico: modForm.id_medico ? parseInt(modForm.id_medico) : undefined,
+          nueva_fecha_inicio: fechaHora,
+          motivo_consulta: modForm.motivo_consulta || undefined,
+          id_recepcionista: userId ? parseInt(userId) : undefined
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setMensajeTicket({ texto: "Cita modificada correctamente", tipo: "success" });
+        setModalModificarOpen(false);
+        setCitaDetalle(null);
+        setIdCita("");
+        cargarCitasDelDia();
+      } else {
+        setMensajeTicket({ texto: data.error || "Error al modificar", tipo: "error" });
+      }
+    } catch {
+      setMensajeTicket({ texto: "Error de conexion", tipo: "error" });
+    } finally {
+      setModificando(false);
+    }
   };
 
   // ===== NOTIFICAR WHATSAPP =====
@@ -369,11 +436,9 @@ export default function RecepcionPage() {
     if (!idSede) return;
     try {
       const fecha = encodeURIComponent(new Date().toISOString());
-      const colaPubQs = new URLSearchParams({ id_sede: idSede });
-      if (idServicio.trim() !== "") colaPubQs.set("id_servicio", idServicio);
       const [resActuales, resPublica] = await Promise.all([
         fetch(`${API_BASE}/api/tickets/cola-actuales?id_sede=${idSede}&fecha_hora=${fecha}&minutos_gracia=5`),
-        fetch(`${API_BASE}/api/pantalla/cola?${colaPubQs}`),
+        fetch(`${API_BASE}/api/pantalla/cola?id_sede=${idSede}`),
       ]);
       const dataActuales = await resActuales.json();
       const dataPublica = await resPublica.json();
@@ -387,6 +452,13 @@ export default function RecepcionPage() {
         const llamado = dataPublica.data?.llamado_actual as Ticket | null;
         if (llamado?.id_ticket && ticketActivoEnCola(llamado) && !byId.has(llamado.id_ticket)) {
           byId.set(llamado.id_ticket, { ...llamado, estado: estadoDeTicket(llamado) });
+        }
+        if (primeraCargaRef.current && llamado?.id_ticket) {
+          primeraCargaRef.current = false;
+          setTicketActual({ ...llamado, estado: 'LLAMADO' });
+          setTimerActivo(true);
+          const elapsed = llamado.fecha_llamado ? Math.floor((Date.now() - new Date(llamado.fecha_llamado).getTime()) / 1000) : 0;
+          setTiempoLlamado(Math.max(0, elapsed));
         }
         const proximos = (dataPublica.data?.proximos || []) as Ticket[];
         for (const t of proximos) {
@@ -532,6 +604,10 @@ export default function RecepcionPage() {
                       <p style={{ margin: "2px 0" }}><strong><i className="fas fa-stethoscope"></i> Servicio:</strong> {citaDetalle.servicio_nombre || citaDetalle.nombre_servicio}</p>
                       <p style={{ margin: "2px 0" }}><strong><i className="fas fa-user-md"></i> Medico:</strong> {citaDetalle.medico_nombre || (citaDetalle.medico_nombres + ' ' + citaDetalle.medico_apellidos)}</p>
                       <p style={{ margin: "2px 0" }}><strong><i className="fas fa-clock"></i> Fecha:</strong> {new Date(citaDetalle.fecha_inicio).toLocaleString()}</p>
+                      <button type="button" onClick={abrirModificar}
+                        style={{ marginTop: 6, padding: "4px 12px", borderRadius: 6, border: "1px solid #0077B6", background: "white", color: "#0077B6", cursor: "pointer", fontSize: "0.8rem", fontWeight: 600 }}>
+                        <i className="fas fa-edit"></i> Modificar Cita
+                      </button>
                     </div>
                   )}
                   <div className="form-group">
@@ -553,6 +629,59 @@ export default function RecepcionPage() {
                 </form>
               </div>
             </div>
+
+            {/* MODAL MODIFICAR CITA */}
+            {modalModificarOpen && (
+              <div className="modal-cita" onClick={() => setModalModificarOpen(false)}>
+                <div className="modal-cita-content" onClick={e => e.stopPropagation()}>
+                  <div className="modal-cita-header">
+                    <h2><i className="fas fa-edit"></i> Modificar Cita #{citaDetalle?.id_cita}</h2>
+                    <span className="close-modal" onClick={() => setModalModificarOpen(false)}>&times;</span>
+                  </div>
+                  <div className="modal-cita-body">
+                    <form onSubmit={handleModificarCita}>
+                      <div className="form-group-cita">
+                        <label><i className="fas fa-stethoscope"></i> Servicio</label>
+                        <select value={modForm.id_servicio} onChange={e => setModForm({ ...modForm, id_servicio: e.target.value })} required>
+                          <option value="">Selecciona servicio</option>
+                          {serviciosCola.map(s => <option key={s.id_servicio} value={s.id_servicio}>{s.servicio}</option>)}
+                        </select>
+                      </div>
+                      <div className="form-group-cita">
+                        <label><i className="fas fa-user-md"></i> Médico</label>
+                        <select value={modForm.id_medico} onChange={e => setModForm({ ...modForm, id_medico: e.target.value })} required>
+                          <option value="">Selecciona médico</option>
+                          {medicos.map(m => <option key={m.id_medico} value={m.id_medico}>{m.nombre_completo}</option>)}
+                        </select>
+                      </div>
+                      <div className="form-row-cita">
+                        <div className="form-group-cita">
+                          <label><i className="fas fa-calendar-day"></i> Fecha</label>
+                          <input type="date" value={modForm.fecha}
+                            onChange={e => setModForm({ ...modForm, fecha: e.target.value })} required />
+                        </div>
+                        <div className="form-group-cita">
+                          <label><i className="fas fa-clock"></i> Hora</label>
+                          <select value={modForm.hora} onChange={e => setModForm({ ...modForm, hora: e.target.value })} required>
+                            <option value="">Selecciona hora</option>
+                            {horarios.map(h => <option key={h} value={h}>{h}</option>)}
+                          </select>
+                        </div>
+                      </div>
+                      <div className="form-group-cita">
+                        <label><i className="fas fa-comment"></i> Motivo</label>
+                        <textarea value={modForm.motivo_consulta}
+                          onChange={e => setModForm({ ...modForm, motivo_consulta: e.target.value })}
+                          placeholder="Motivo de consulta..." />
+                      </div>
+                      <button type="submit" className="btn-guardar-cita" disabled={modificando}>
+                        {modificando ? <><i className="fas fa-spinner fa-spin"></i> Guardando...</> : <><i className="fas fa-save"></i> Guardar Cambios</>}
+                      </button>
+                    </form>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* CITAS DEL DIA */}
             <div className="panel-card">
@@ -588,9 +717,6 @@ export default function RecepcionPage() {
                           <p style={{ margin: 0, fontWeight: 600 }}>{cita.paciente_nombre}</p>
                           <p style={{ margin: 0, fontSize: "0.8rem", color: "#666" }}>
                             {cita.servicio_nombre} - Dr. {cita.medico_nombre}
-                          </p>
-                          <p style={{ margin: 0, fontSize: "0.75rem", color: "#999" }}>
-                            <i className="fas fa-phone"></i> {cita.telefono || "Sin teléfono"}
                           </p>
                         </div>
                         {cita.tiene_ticket === 1 ? (

@@ -18,6 +18,9 @@ Start order: Docker up first (SQL Server required), then `make dev`.
 - **DB:** SQL Server via `mssql`, connection from `.env` (`DB_HOST`, `DB_PORT=1436/1437`).
 - **Dev:** `bun --hot src/index.ts` (file-watching reload).
 - **Entry:** `src/index.ts` — routes for `/Login`, `/Usuario/*`, `/api/citas/*`, `/api/tickets/*`, `/api/pantalla/cola`.
+- **Email:** Gmail SMTP via `nodemailer`. Config in `.env` (`EMAIL_USER`, `EMAIL_PASS` — app password).
+  - `emailService.ts` exports `sendLlamadoEmail` and `sendNoShowEmail` (async, fire & forget via `setTimeout`).
+  - Se envía correo automático al paciente cuando su ticket es **llamado** y cuando expira (**No Show**).
 
 ## Frontend (`pakages/frontend`)
 - React 19 + Vite, strict port **5173**.

@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { api } from "../../services/api";
 import "../../assets/styles/citas.css";
+import "../../assets/styles/historial.css";
 
 interface Cita {
   id_cita: number;
@@ -68,6 +69,18 @@ export default function CitasPage() {
   const [modalModo, setModalModo] = useState<"crear" | "modificar">("crear");
 
   const [citaModificarId, setCitaModificarId] = useState<number | null>(null);
+
+  const [selectedHistorial, setSelectedHistorial] = useState<any>(null);
+  const [showModalHistorial, setShowModalHistorial] = useState(false);
+
+  const LABEL_SIGNOS: Record<string, string> = {
+    peso: 'Peso', talla: 'Talla', presion_arterial: 'Presión Arterial',
+    temperatura: 'Temperatura', frecuencia_cardiaca: 'Frecuencia Cardíaca', glucosa: 'Glucosa'
+  }
+  const UNIDAD_SIGNOS: Record<string, string> = {
+    peso: 'kg', talla: 'cm', presion_arterial: 'mmHg',
+    temperatura: '°C', frecuencia_cardiaca: 'lpm', glucosa: 'mg/dL'
+  }
 
   const [mensaje, setMensaje] = useState({
     texto: "",
@@ -702,47 +715,27 @@ export default function CitasPage() {
                 </div>
 
                 <div className="cita-acciones">
-                  {/* PENDIENTE (solo en vista activa) */}
-                  {!verHistorial && cita.estado === "Pendiente" && (
+                  {/* CONFIRMADA (solo en vista activa) */}
+                  {!verHistorial && cita.estado === "Confirmada" && (
                     <>
-                      <button
-                        className="btn-confirmar"
-                        onClick={() =>
-                          handleConfirmarCita(cita.id_cita, cita.id_paciente)
-                        }
-                      >
-                        <i className="fas fa-check-circle"></i>
-                        Confirmar Cita
-                      </button>
-                      <button
-                        className="btn-accion-cita btn-modificar"
-                        onClick={() => abrirModificar(cita)}
-                      >
-                        <i className="fas fa-edit"></i>
-                        Modificar
-                      </button>
+                      <div className="cita-confirmada-box">
+                        <div className="cita-confirmada-info">
+                          <i className="fas fa-check-circle"></i>
+                          Cita confirmada
+                        </div>
+                        <div className="ticket-cita">
+                          <span className="ticket-label">Número de cita</span>
+                          <span className="ticket-id">#{cita.id_cita}</span>
+                        </div>
+                      </div>
                       <button
                         className="btn-accion-cita btn-cancelar"
                         onClick={() => handleCancelarCita(cita.id_cita)}
                       >
                         <i className="fas fa-times"></i>
-                        Cancelar
+                        Cancelar Cita
                       </button>
                     </>
-                  )}
-
-                  {/* CONFIRMADA (solo en vista activa) */}
-                  {!verHistorial && cita.estado === "Confirmada" && (
-                    <div className="cita-confirmada-box">
-                      <div className="cita-confirmada-info">
-                        <i className="fas fa-check-circle"></i>
-                        Cita confirmada
-                      </div>
-                      <div className="ticket-cita">
-                        <span className="ticket-label">Número de cita</span>
-                        <span className="ticket-id">#{cita.id_cita}</span>
-                      </div>
-                    </div>
                   )}
 
                   {/* HISTORIAL: solo citas atendidas */}
@@ -754,9 +747,26 @@ export default function CitasPage() {
                         {cita.historial.notas_doctor && (
                           <p><strong>Notas del doctor:</strong> {cita.historial.notas_doctor}</p>
                         )}
-                        {cita.historial.signos_vitales && (
-                          <p><strong>Signos vitales:</strong> {cita.historial.signos_vitales}</p>
-                        )}
+                        {(() => {
+                          if (!cita.historial.signos_vitales) return null
+                          try {
+                            const sv = JSON.parse(cita.historial.signos_vitales)
+                            const entries = Object.entries(LABEL_SIGNOS).filter(([k]) => sv[k] !== null && sv[k] !== '')
+                            if (entries.length === 0) return null
+                            return (
+                              <div className="signos-vitales-list" style={{ marginTop: '6px' }}>
+                                <strong>Signos Vitales:</strong>
+                                <div className="signos-grid-mini" style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '4px' }}>
+                                  {entries.map(([key, label]) => (
+                                    <span key={key} className="signo-item" style={{ background: 'var(--color-card-bg)', padding: '3px 8px', borderRadius: '6px', fontSize: '0.82rem' }}>
+                                      {label}: <strong>{sv[key]}</strong> {UNIDAD_SIGNOS[key]}
+                                    </span>
+                                  ))}
+                                </div>
+                              </div>
+                            )
+                          } catch { return null }
+                        })()}
                         {cita.historial.orden_receta && (
                           <p>
                             <strong>Receta:</strong>{" "}
@@ -784,6 +794,13 @@ export default function CitasPage() {
                             {new Date(cita.historial.proxima_cita).toLocaleDateString()}
                           </p>
                         )}
+                        <button
+                          className="btn-detalle"
+                          onClick={() => { setSelectedHistorial(cita.historial); setShowModalHistorial(true) }}
+                          style={{ marginTop: '8px', padding: '4px 12px', fontSize: '0.82rem', cursor: 'pointer' }}
+                        >
+                          <i className="fas fa-eye"></i> Ver Detalle Completo
+                        </button>
                       </div>
                     </div>
                   )}
@@ -801,6 +818,104 @@ export default function CitasPage() {
           )}
         </div>
       </div>
+
+      {/* Modal detalle completo historial */}
+      {showModalHistorial && selectedHistorial && (
+        <div className="modal-overlay" onClick={() => setShowModalHistorial(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}
+            style={{ maxWidth: '600px', maxHeight: '80vh', overflowY: 'auto', padding: '24px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+              <h2 style={{ margin: 0 }}><i className="fas fa-file-medical"></i> Detalle de Consulta</h2>
+              <button className="modal-close" onClick={() => setShowModalHistorial(false)}
+                style={{ background: 'none', border: 'none', fontSize: '1.4rem', cursor: 'pointer' }}>
+                <i className="fas fa-times"></i>
+              </button>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+              <div><strong>Servicio:</strong> {selectedHistorial.servicio || selectedHistorial.servicio_nombre}</div>
+              <div><strong>Médico:</strong> {selectedHistorial.medico_atendio || selectedHistorial.medico}</div>
+              <div><strong>Fecha:</strong> {new Date(selectedHistorial.fecha_atencion).toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' })}</div>
+              <div><strong>Motivo:</strong> {selectedHistorial.motivo_consulta || 'No especificado'}</div>
+            </div>
+
+            <hr style={{ margin: '16px 0', borderColor: 'var(--color-border)' }} />
+
+            <div><strong>Diagnóstico:</strong> {selectedHistorial.diagnostico || 'No registrado'}</div>
+            <div style={{ marginTop: '8px' }}><strong>Síntomas:</strong> {selectedHistorial.sintomas || 'No registrados'}</div>
+
+            {(() => {
+              if (!selectedHistorial.signos_vitales) return null
+              try {
+                const sv = JSON.parse(selectedHistorial.signos_vitales)
+                const entries = Object.entries(LABEL_SIGNOS).filter(([k]) => sv[k] !== null && sv[k] !== '')
+                if (entries.length === 0) return null
+                return (
+                  <div style={{ marginTop: '12px' }}>
+                    <strong>Signos Vitales:</strong>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '6px' }}>
+                      {entries.map(([key, label]) => (
+                        <span key={key} style={{ background: 'var(--color-card-bg)', padding: '6px 12px', borderRadius: '8px', border: '1px solid var(--color-border)' }}>
+                          {label}: <strong>{sv[key]}</strong> {UNIDAD_SIGNOS[key]}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )
+              } catch { return null }
+            })()}
+
+            {selectedHistorial.notas_doctor && (
+              <div style={{ marginTop: '12px' }}>
+                <strong>Notas del doctor:</strong> {selectedHistorial.notas_doctor}
+              </div>
+            )}
+
+            {(() => {
+              if (!selectedHistorial.medicamentos) return null
+              const meds = typeof selectedHistorial.medicamentos === 'string'
+                ? JSON.parse(selectedHistorial.medicamentos)
+                : selectedHistorial.medicamentos
+              if (!Array.isArray(meds) || meds.length === 0) return null
+              return (
+                <div style={{ marginTop: '16px' }}>
+                  <strong>Medicamentos recetados:</strong>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '6px' }}>
+                    <thead>
+                      <tr style={{ background: 'var(--color-bg-secondary)' }}>
+                        <th style={{ padding: '6px 8px', textAlign: 'left', borderBottom: '1px solid var(--color-border)' }}>Medicamento</th>
+                        <th style={{ padding: '6px 8px', textAlign: 'left', borderBottom: '1px solid var(--color-border)' }}>Indicaciones</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {meds.map((med: any, i: number) => (
+                        <tr key={i}>
+                          <td style={{ padding: '6px 8px', borderBottom: '1px solid var(--color-border)' }}><strong>{med.nombre || med.medicamento}</strong></td>
+                          <td style={{ padding: '6px 8px', borderBottom: '1px solid var(--color-border)' }}>
+                            {med.dosis} c/{med.frecuencia || med.cada} hrs{med.duracion ? ` x ${med.duracion} días` : ''}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )
+            })()}
+
+            {selectedHistorial.orden_receta && (
+              <div style={{ marginTop: '12px' }}>
+                <strong>Receta:</strong> <span style={{ color: 'var(--color-primary)', fontWeight: 600 }}>{selectedHistorial.orden_receta}</span>
+              </div>
+            )}
+
+            {selectedHistorial.proxima_cita && (
+              <div style={{ marginTop: '12px' }}>
+                <strong>Próxima cita:</strong> {new Date(selectedHistorial.proxima_cita).toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' })}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

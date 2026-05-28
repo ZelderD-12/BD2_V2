@@ -85,12 +85,8 @@ export default function PantallaPage() {
   const obtenerCola = useCallback(async () => {
     try {
       const fecha = encodeURIComponent(new Date().toISOString())
-      const qsPub = new URLSearchParams({ id_sede: idSede })
-      if (idServicio != null && idServicio !== '' && idServicio.toLowerCase() !== 'all') {
-        qsPub.set('id_servicio', idServicio)
-      }
       const [resPub, resAct] = await Promise.all([
-        fetch(`${API_BASE}/api/pantalla/cola?${qsPub}`),
+        fetch(`${API_BASE}/api/pantalla/cola?id_sede=${idSede}`),
         fetch(`${API_BASE}/api/tickets/cola-actuales?id_sede=${idSede}&fecha_hora=${fecha}&minutos_gracia=5`)
       ])
       const dataPub = await resPub.json()

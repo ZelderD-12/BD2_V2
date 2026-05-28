@@ -403,9 +403,9 @@ BEGIN
             RETURN 404;
         END
 
-        IF @estado_cita <> 2
+        IF @estado_cita IN (3, 4, 6, 7)
         BEGIN
-            SET @mensaje_out = 'Solo citas Confirmadas pueden generar ticket. Estado actual: ' + CAST(@estado_cita AS VARCHAR);
+            SET @mensaje_out = 'La cita ya no esta vigente (Reprogramada, Cancelada, No Show o Expirada)';
             RETURN 422;
         END
 

@@ -162,23 +162,33 @@ BEGIN
     SET NOCOUNT ON;
     SET XACT_ABORT ON;
 
-    IF NOT EXISTS (SELECT 1 FROM dbo.Cita WHERE id_cita = @id_cita AND id_paciente = @id_paciente)
+    DECLARE @estado_actual INT;
+
+    SELECT @estado_actual = id_estado_cita
+    FROM dbo.Cita
+    WHERE id_cita = @id_cita AND id_paciente = @id_paciente;
+
+    IF @estado_actual IS NULL
     BEGIN
         SET @mensaje_out = 'CITA_NO_ENCONTRADA';
         RETURN 404;
     END
 
-    IF EXISTS (SELECT 1 FROM dbo.Cita WHERE id_cita = @id_cita AND id_estado_cita <> 1)
+    IF @estado_actual IN (3, 4, 6, 7)
     BEGIN
-        SET @mensaje_out = 'SOLO_PENDIENTES_PUEDEN_CONFIRMARSE';
+        SET @mensaje_out = 'CITA_NO_VIGENTE';
         RETURN 422;
     END
 
-    BEGIN TRAN
-        UPDATE dbo.Cita
-        SET id_estado_cita = 2, fecha_confirmacion = GETDATE()
-        WHERE id_cita = @id_cita;
-    COMMIT TRAN
+    IF @estado_actual = 2
+    BEGIN
+        SET @mensaje_out = 'YA_CONFIRMADA';
+        RETURN 0;
+    END
+
+    UPDATE dbo.Cita
+    SET id_estado_cita = 2, fecha_confirmacion = GETDATE()
+    WHERE id_cita = @id_cita;
 
     SET @mensaje_out = 'CONFIRMADA';
     RETURN 0;
@@ -208,7 +218,7 @@ BEGIN
     END
 
     UPDATE dbo.Cita
-    SET id_estado_cita = 3,
+    SET id_estado_cita = 4,
         motivo_cancelacion = @motivo_cancelacion
     WHERE id_cita = @id_cita AND id_paciente = @id_paciente;
 
@@ -237,6 +247,7 @@ BEGIN
         t.id_paciente,
         u.nombres,
         u.apellidos,
+        u.email,
         t.id_sede,
         s.nombre AS nombre_sede,
         t.id_servicio,
@@ -343,18 +354,25 @@ CREATE PROCEDURE dbo.sp_ObtenerCitasEnAtencion
 AS
 BEGIN
     SET NOCOUNT ON;
-
     SELECT 
         c.id_cita,
         c.id_paciente,
         u.nombres + ' ' + u.apellidos AS paciente,
+        u.telefono AS telefono_paciente,
         s.Nombre_Servicio AS servicio,
-        c.fecha_inicio
+        c.fecha_inicio,
+        c.motivo_consulta,
+        t.id_ticket,
+        t.codigo_ticket,
+        e.Nombre_Estado_Ticket AS estado_ticket,
+        DATEDIFF(MINUTE, t.fecha_llamado, GETDATE()) AS minutos_en_atencion
     FROM dbo.Cita c
     JOIN dbo.Usuario u ON c.id_paciente = u.id_usuario
     JOIN dbo.Servicio s ON c.id_servicio = s.id_servicio
+    LEFT JOIN dbo.Ticket t ON c.id_cita = t.id_cita AND CAST(t.fecha_generacion AS DATE) = CAST(GETDATE() AS DATE)
+    LEFT JOIN dbo.Estados_Tickets e ON t.id_estado_ticket = e.Id_Estado_Ticket
     WHERE c.id_medico = @id_usuario_m
-      AND c.id_estado_cita IN (4, 5)
+      AND c.id_estado_cita IN (2, 5)
     ORDER BY c.fecha_inicio ASC;
 END;
 GO
@@ -472,7 +490,26 @@ END;
 GO
 
 -- =============================================
--- sp_ModificarCita
+-- Tabla de auditoria para cambios en citas
+-- =============================================
+IF OBJECT_ID('dbo.Cita_Historial_Cambios', 'U') IS NOT NULL
+    DROP TABLE dbo.Cita_Historial_Cambios;
+GO
+
+CREATE TABLE dbo.Cita_Historial_Cambios (
+    id_historial       INT IDENTITY(1,1) PRIMARY KEY,
+    id_cita            SMALLINT NOT NULL,
+    id_paciente        SMALLINT NOT NULL,
+    id_recepcionista SMALLINT NULL,
+    campo_modificado   VARCHAR(50) NOT NULL,
+    valor_anterior     VARCHAR(500) NULL,
+    valor_nuevo        VARCHAR(500) NULL,
+    fecha_modificacion DATETIME2 DEFAULT GETDATE()
+);
+GO
+
+-- =============================================
+-- sp_ModificarCita (con auditoria)
 -- =============================================
 IF OBJECT_ID('dbo.sp_ModificarCita', 'P') IS NOT NULL
     DROP PROCEDURE dbo.sp_ModificarCita;
@@ -482,26 +519,48 @@ CREATE PROCEDURE dbo.sp_ModificarCita
     @id_cita            SMALLINT,
     @id_paciente        SMALLINT,
     @nuevo_id_servicio  SMALLINT = NULL,
+    @nuevo_id_medico    SMALLINT = NULL,
     @nueva_fecha_inicio DATETIME2 = NULL,
     @nuevo_motivo       VARCHAR(300) = NULL,
+    @id_recepcionista SMALLINT = NULL,
     @mensaje_out        VARCHAR(200) OUTPUT
 AS
 BEGIN
     SET NOCOUNT ON;
 
-    IF NOT EXISTS (SELECT 1 FROM dbo.Cita WHERE id_cita = @id_cita AND id_paciente = @id_paciente)
-    BEGIN
-        SET @mensaje_out = 'CITA_NO_ENCONTRADA';
-        RETURN 404;
-    END
+    DECLARE @old_id_servicio SMALLINT, @old_id_medico SMALLINT, @old_fecha DATETIME2, @old_motivo VARCHAR(300);
+
+    SELECT @old_id_servicio = id_servicio, @old_id_medico = id_medico,
+           @old_fecha = fecha_inicio, @old_motivo = motivo_consulta
+    FROM dbo.Cita WHERE id_cita = @id_cita AND id_paciente = @id_paciente;
+
+    IF @old_id_servicio IS NULL
+    BEGIN SET @mensaje_out = 'CITA_NO_ENCONTRADA'; RETURN 404; END
 
     UPDATE dbo.Cita
-    SET 
-        id_servicio = ISNULL(@nuevo_id_servicio, id_servicio),
+    SET id_servicio = ISNULL(@nuevo_id_servicio, id_servicio),
+        id_medico = ISNULL(@nuevo_id_medico, id_medico),
         fecha_inicio = ISNULL(@nueva_fecha_inicio, fecha_inicio),
         fecha_fin = DATEADD(MINUTE, 30, ISNULL(@nueva_fecha_inicio, fecha_inicio)),
         motivo_consulta = ISNULL(@nuevo_motivo, motivo_consulta)
     WHERE id_cita = @id_cita;
+
+    -- Registrar cambios
+    IF @nuevo_id_servicio IS NOT NULL AND @nuevo_id_servicio <> @old_id_servicio
+        INSERT INTO dbo.Cita_Historial_Cambios (id_cita, id_paciente, id_recepcionista, campo_modificado, valor_anterior, valor_nuevo)
+        VALUES (@id_cita, @id_paciente, @id_recepcionista, 'servicio', CAST(@old_id_servicio AS VARCHAR), CAST(@nuevo_id_servicio AS VARCHAR));
+
+    IF @nuevo_id_medico IS NOT NULL AND @nuevo_id_medico <> @old_id_medico
+        INSERT INTO dbo.Cita_Historial_Cambios (id_cita, id_paciente, id_recepcionista, campo_modificado, valor_anterior, valor_nuevo)
+        VALUES (@id_cita, @id_paciente, @id_recepcionista, 'medico', CAST(@old_id_medico AS VARCHAR), CAST(@nuevo_id_medico AS VARCHAR));
+
+    IF @nueva_fecha_inicio IS NOT NULL AND @nueva_fecha_inicio <> @old_fecha
+        INSERT INTO dbo.Cita_Historial_Cambios (id_cita, id_paciente, id_recepcionista, campo_modificado, valor_anterior, valor_nuevo)
+        VALUES (@id_cita, @id_paciente, @id_recepcionista, 'fecha', CONVERT(VARCHAR, @old_fecha, 120), CONVERT(VARCHAR, @nueva_fecha_inicio, 120));
+
+    IF @nuevo_motivo IS NOT NULL AND @nuevo_motivo <> @old_motivo
+        INSERT INTO dbo.Cita_Historial_Cambios (id_cita, id_paciente, id_recepcionista, campo_modificado, valor_anterior, valor_nuevo)
+        VALUES (@id_cita, @id_paciente, @id_recepcionista, 'motivo', @old_motivo, @nuevo_motivo);
 
     SET @mensaje_out = 'MODIFICADA';
     RETURN 0;
@@ -581,20 +640,27 @@ GO
 
 CREATE PROCEDURE dbo.SP_Receta_CrearConMedicamentos
     @id_cita SMALLINT,
-    @id_medico SMALLINT,
-    @id_paciente SMALLINT,
     @medicamentos_json VARCHAR(MAX),
     @orden_receta_out VARCHAR(30) OUTPUT
 AS
 BEGIN
     SET NOCOUNT ON;
-    
-    DECLARE @nueva_orden VARCHAR(30);
-    SELECT @nueva_orden = 'RX-' + CONVERT(VARCHAR(8), GETDATE(), 112) + '-' + CAST(@id_paciente AS VARCHAR);
+
+    DECLARE @id_medico_emp SMALLINT, @id_paciente SMALLINT, @id_usuario_m SMALLINT;
+    SELECT @id_usuario_m = id_medico, @id_paciente = id_paciente FROM dbo.Cita WHERE id_cita = @id_cita;
+
+    IF @id_usuario_m IS NULL BEGIN SET @orden_receta_out = NULL; RETURN 404; END
+
+    SELECT @id_medico_emp = id_medico FROM dbo.Empleado WHERE id_usuario_m = @id_usuario_m;
+    IF @id_medico_emp IS NULL BEGIN SET @orden_receta_out = NULL; RETURN 404; END
+
+    DECLARE @nueva_orden VARCHAR(30), @seq INT;
+    SELECT @seq = ISNULL(MAX(CAST(SUBSTRING(Orden_Receta, 13, 10) AS INT)), 0) + 1 FROM dbo.Receta WHERE Orden_Receta LIKE 'RX-' + CONVERT(VARCHAR(8), GETDATE(), 112) + '-%';
+    SET @nueva_orden = 'RX-' + CONVERT(VARCHAR(8), GETDATE(), 112) + '-' + CAST(@seq AS VARCHAR);
     SET @orden_receta_out = @nueva_orden;
 
-    INSERT INTO dbo.Receta (Orden_Receta, id_cita, id_medico, id_paciente, id_medicamento, observaciones, fecha_emision)
-    VALUES (@nueva_orden, @id_cita, @id_medico, @id_paciente, 1, 'Receta creada via app', GETDATE());
+    INSERT INTO dbo.Receta (Orden_Receta, id_cita, id_medico, id_paciente, id_medicamento, medicamentos_json, observaciones, fecha_emision)
+    VALUES (@nueva_orden, @id_cita, @id_medico_emp, @id_paciente, 1, @medicamentos_json, 'Receta creada via app', GETDATE());
 END;
 GO
 

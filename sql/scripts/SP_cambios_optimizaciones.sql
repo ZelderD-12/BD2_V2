@@ -260,10 +260,10 @@ BEGIN
             RETURN 404;
         END
 
-        -- Solo confirmadas
-        IF @estado_cita <> 2
+        -- Validar que la cita aun este vigente (no cancelada, no vencida)
+        IF @estado_cita IN (3, 4, 6, 7)
         BEGIN
-            SET @mensaje_out = 'Solo citas Confirmadas pueden generar ticket. Estado actual: ' + CAST(@estado_cita AS VARCHAR);
+            SET @mensaje_out = 'La cita ya no esta vigente (Reprogramada, Cancelada, No Show o Expirada)';
             RETURN 422;
         END
 
@@ -536,24 +536,26 @@ IF OBJECT_ID('dbo.sp_ObtenerCitasDelDia', 'P') IS NOT NULL
 GO
 
 CREATE PROCEDURE dbo.sp_ObtenerCitasDelDia
-    @id_sede SMALLINT = NULL
+    @id_sede SMALLINT = NULL,
+    @fecha DATE = NULL
 AS
 BEGIN
     SET NOCOUNT ON;
 
+    IF @fecha IS NULL
+        SET @fecha = CAST(GETDATE() AS DATE);
+
     SELECT
         c.id_cita,
         c.id_paciente,
-        u.nombres,
-        u.apellidos,
+        CONCAT(u.nombres, ' ', u.apellidos) AS paciente_nombre,
         u.email,
         c.id_sede,
-        s.nombre AS nombre_sede,
+        s.nombre AS sede_nombre,
         c.id_servicio,
-        sv.Nombre_Servicio AS nombre_servicio,
+        sv.Nombre_Servicio AS servicio_nombre,
         c.id_medico,
-        m.nombres AS medico_nombres,
-        m.apellidos AS medico_apellidos,
+        CONCAT(m.nombres, ' ', m.apellidos) AS medico_nombre,
         c.fecha_inicio,
         c.fecha_fin,
         c.id_estado_cita,
@@ -569,8 +571,8 @@ BEGIN
     JOIN dbo.Usuario m ON c.id_medico = m.id_usuario
     LEFT JOIN dbo.Estados_Citas e ON c.id_estado_cita = e.Id_Estado_Cita
     LEFT JOIN dbo.Ticket t ON c.id_cita = t.id_cita AND t.id_estado_ticket IN (1, 2)
-    WHERE CAST(c.fecha_inicio AS DATE) = CAST(GETDATE() AS DATE)
-      AND c.id_estado_cita = 2  -- Solo CONFIRMADAS
+    WHERE CAST(c.fecha_inicio AS DATE) = @fecha
+      AND c.id_estado_cita = 2
       AND (@id_sede IS NULL OR c.id_sede = @id_sede)
     ORDER BY c.fecha_inicio ASC;
 END;

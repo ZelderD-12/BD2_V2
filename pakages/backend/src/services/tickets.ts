@@ -1,5 +1,6 @@
 import { sql, getConnection } from '../Connection';
 import type { Context } from 'elysia';
+import { sendLlamadoEmail, sendNoShowEmail } from './emailService';
 
 const ESTADOS_TICKET_SP = [
     'EN_ESPERA', 'LLAMADO', 'EN_ATENCION', 'FINALIZADO', 'NO_SHOW'
@@ -119,7 +120,23 @@ export const llamarSiguienteService = async ({ body, set, request }: Context) =>
         if (rv === 409) { set.status = 409; return { success: false, error: mensaje, code: 'TICKET_TOMADO' }; }
         if (rv === 500) { set.status = 500; return { success: false, error: 'Error interno' }; }
 
-        return { success: true, mensaje, data: { id_ticket: result.output.id_ticket_out, codigo_ticket: result.output.codigo_out, prioridad: result.output.prioridad_out, estado: 'LLAMADO' } };
+        const idTicket = result.output.id_ticket_out;
+        const codigoTicket = result.output.codigo_out;
+
+        // Enviar email en segundo plano (fire & forget)
+        (async () => {
+            try {
+                const pacienteRes = await pool.request()
+                    .input('id_ticket', sql.Int, idTicket)
+                    .execute('dbo.sp_GetPacienteByTicket');
+                const row = pacienteRes.recordset[0];
+                if (row?.email) {
+                    sendLlamadoEmail(row.email, row.nombres, codigoTicket, row.nombre_sede || 'Sede');
+                }
+            } catch { /* email background fail silencioso */ }
+        })();
+
+        return { success: true, mensaje, data: { id_ticket: idTicket, codigo_ticket: codigoTicket, prioridad: result.output.prioridad_out, estado: 'LLAMADO' } };
     } catch (error) {
         console.error('Error en llamarSiguiente:', error);
         set.status = 500;
@@ -157,6 +174,23 @@ export const cambiarEstadoTicketService = async ({ params, body, set, request }:
         const mensaje = result.output.mensaje_out;
 
         if (rv === 0) {
+            (async () => {
+                try {
+                    if (est === 'LLAMADO') {
+                        const pacienteRes = await pool.request()
+                            .input('id_ticket', sql.Int, parseInt(id, 10))
+                            .execute('dbo.sp_GetPacienteByTicket');
+                        const row = pacienteRes.recordset[0];
+                        if (row?.email) sendLlamadoEmail(row.email, row.nombres, row.codigo_ticket, row.nombre_sede || 'Sede');
+                    } else if (est === 'NO_SHOW') {
+                        const pacienteRes = await pool.request()
+                            .input('id_ticket', sql.Int, parseInt(id, 10))
+                            .execute('dbo.sp_GetPacienteByTicket');
+                        const row = pacienteRes.recordset[0];
+                        if (row?.email) sendNoShowEmail(row.email, row.nombres || 'Paciente', row.codigo_ticket, row.nombre_sede || 'Sede');
+                    }
+                } catch { /* email background fail silencioso */ }
+            })();
             return { success: true, mensaje, data: { id_ticket: parseInt(id), estado: est } };
         }
 
@@ -173,7 +207,7 @@ export const cambiarEstadoTicketService = async ({ params, body, set, request }:
 // OBTENER COLA PUBLICA
 // =============================================
 export const obtenerColaPublicaService = async ({ query, set }: Context) => {
-    const { id_sede, id_servicio } = query as { id_sede?: string; id_servicio?: string };
+    const { id_sede } = query as { id_sede?: string };
 
     if (!id_sede) { set.status = 422; return { success: false, error: 'id_sede requerido' }; }
 
@@ -181,7 +215,6 @@ export const obtenerColaPublicaService = async ({ query, set }: Context) => {
         const pool = await getConnection();
         const result = await pool.request()
             .input('id_sede', sql.SmallInt, parseInt(id_sede))
-            .input('id_servicio', sql.SmallInt, id_servicio ? parseInt(id_servicio) : null)
             .execute('dbo.sp_ObtenerColaPublica');
 
         const recordsets = result.recordsets as any[][];
@@ -280,6 +313,23 @@ export const cambiarEstadoTicketManual = async ({ params, body, set, request }: 
         const mensaje = result.output.mensaje_out;
 
         if (rv === 0) {
+            (async () => {
+                try {
+                    if (est === 'LLAMADO') {
+                        const pacienteRes = await pool.request()
+                            .input('id_ticket', sql.Int, parseInt(id, 10))
+                            .execute('dbo.sp_GetPacienteByTicket');
+                        const row = pacienteRes.recordset[0];
+                        if (row?.email) sendLlamadoEmail(row.email, row.nombres, row.codigo_ticket, row.nombre_sede || 'Sede');
+                    } else if (est === 'NO_SHOW') {
+                        const pacienteRes = await pool.request()
+                            .input('id_ticket', sql.Int, parseInt(id, 10))
+                            .execute('dbo.sp_GetPacienteByTicket');
+                        const row = pacienteRes.recordset[0];
+                        if (row?.email) sendNoShowEmail(row.email, row.nombres || 'Paciente', row.codigo_ticket, row.nombre_sede || 'Sede');
+                    }
+                } catch { /* email background fail silencioso */ }
+            })();
             return { success: true, mensaje, data: { id_ticket: parseInt(id), estado: est } };
         }
 

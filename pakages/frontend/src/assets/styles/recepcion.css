@@ -695,6 +695,183 @@
     border-color: var(--borde);
 }
 
+.dark-mode .recepcion-page .panel-card {
+    background: var(--bg-card);
+    color: var(--texto-principal);
+    border-color: var(--borde);
+}
+
+.dark-mode .recepcion-page .card-body {
+    color: var(--texto-principal);
+}
+
+.dark-mode .recepcion-page .cola-item {
+    background: var(--bg-card);
+    color: var(--texto-principal);
+    border-color: var(--borde);
+}
+
+.dark-mode .recepcion-page .cola-item:hover {
+    background: var(--blanco-humo);
+}
+
+.dark-mode .recepcion-page .cola-item.cola-item-seleccionado {
+    background: rgba(0, 119, 182, 0.2);
+}
+
+.dark-mode .recepcion-page .cola-posicion {
+    color: var(--texto-secundario);
+}
+
+.dark-mode .recepcion-page .cola-codigo {
+    color: var(--celeste-oscuro);
+}
+
+.dark-mode .recepcion-page .cola-datos p {
+    color: var(--texto-secundario);
+}
+
+.dark-mode .recepcion-page .form-group label {
+    color: var(--texto-principal);
+}
+
+.dark-mode .recepcion-page .tab-btn.tab-inactive {
+    background: var(--bg-card);
+    color: var(--texto-secundario);
+    border-color: var(--borde);
+}
+
+.dark-mode .recepcion-page .tab-btn.tab-inactive:hover {
+    border-color: var(--celeste-oscuro);
+    color: var(--celeste-oscuro);
+}
+
+.dark-mode .recepcion-page .ticket-detalle p {
+    color: var(--texto-secundario);
+}
+
+.dark-mode .recepcion-page .ticket-detalle strong {
+    color: var(--texto-principal);
+}
+
+.dark-mode .recepcion-page .ticket-info-card {
+    background: var(--blanco-humo);
+    border-color: var(--borde);
+    color: var(--texto-principal);
+}
+
+.dark-mode .recepcion-page .seccion-especial {
+    background: rgba(255, 165, 0, 0.1);
+    border-color: #FFA500;
+}
+
+.dark-mode .recepcion-page .btn-cerrar-detalle-cola {
+    background: var(--bg-card);
+    border-color: var(--borde);
+    color: var(--texto-secundario);
+}
+
+.dark-mode .recepcion-page .btn-cerrar-detalle-cola:hover {
+    background: var(--blanco-humo);
+    border-color: var(--texto-secundario);
+}
+
+.dark-mode .recepcion-page .cola-vacia {
+    color: var(--texto-secundario);
+}
+
+.dark-mode .recepcion-page .ticket-actual-vacio {
+    color: var(--texto-secundario);
+}
+
+.dark-mode .recepcion-page .loading-spinner {
+    color: var(--texto-secundario);
+}
+
+.dark-mode .recepcion-page .buscador-cita-input {
+    background: var(--bg-card);
+    color: var(--texto-principal);
+    border-color: var(--borde);
+}
+
+/* ========== MODAL MODIFICAR CITA (RECEPCION) ========== */
+.recepcion-page .modal-cita {
+    align-items: center;
+    padding-top: 0;
+}
+
+.recepcion-page .modal-cita .modal-cita-content {
+    max-width: 500px;
+    margin: 0;
+}
+
+.recepcion-page .modal-cita .form-group-cita {
+    margin-bottom: 18px;
+}
+
+.recepcion-page .modal-cita .form-group-cita label {
+    margin-bottom: 8px;
+    display: block;
+    color: #212529;
+    font-weight: 500;
+    font-size: 0.9rem;
+}
+
+.recepcion-page .modal-cita .form-group-cita input,
+.recepcion-page .modal-cita .form-group-cita select,
+.recepcion-page .modal-cita .form-group-cita textarea {
+    width: 100%;
+    padding: 11px 14px;
+    border: 2px solid #E9ECEF;
+    border-radius: 10px;
+    font-size: 0.9rem;
+    font-family: 'Poppins', sans-serif;
+    background: white;
+    color: #212529;
+}
+
+.recepcion-page .modal-cita .form-row-cita {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+}
+
+.recepcion-page .modal-cita .btn-guardar-cita {
+    width: 100%;
+    padding: 14px;
+    background: linear-gradient(135deg, #0077B6 0%, #00B4D8 100%);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: 'Poppins', sans-serif;
+    margin-top: 8px;
+    transition: all 0.3s;
+}
+
+.recepcion-page .modal-cita .btn-guardar-cita:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 119, 182, 0.4);
+}
+
+.recepcion-page .modal-cita .modal-cita-body {
+    padding: 25px;
+}
+
+.dark-mode .recepcion-page .modal-cita .form-group-cita label {
+    color: var(--texto-principal);
+}
+
+.dark-mode .recepcion-page .modal-cita .form-group-cita input,
+.dark-mode .recepcion-page .modal-cita .form-group-cita select,
+.dark-mode .recepcion-page .modal-cita .form-group-cita textarea {
+    background: var(--bg-card);
+    color: var(--texto-principal);
+    border-color: var(--borde);
+}
+
 @media (max-width: 480px) {
     .recepcion-page .acciones-ticket {
         flex-direction: column;

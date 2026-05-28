@@ -404,10 +404,10 @@ export const crearRecetaConMedicamentos = async ({ body, set }: Context) => {
         const result = await pool.request()
             .input('id_cita', sql.SmallInt, id_cita)
             .input('medicamentos_json', sql.VarChar(sql.MAX), medicamentos_json)
-            .output('Orden_Receta', sql.VarChar(30))
+            .output('orden_receta_out', sql.VarChar(30))
             .execute('dbo.SP_Receta_CrearConMedicamentos');
 
-        const orden_receta = result.output.Orden_Receta;
+        const orden_receta = result.output.orden_receta_out;
 
         return {
             success: true,
