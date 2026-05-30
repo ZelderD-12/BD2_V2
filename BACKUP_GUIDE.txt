@@ -1,0 +1,81 @@
+# 🗄️ BACKUP y RESTAURACION de la BD (ClinicaF)
+
+## 📤 EXPORTAR / HACER BACKUP
+
+Esto crea un .bak de la BD actual:
+
+# Paso 1: Abrir terminal en la raiz del proyecto
+cd C:\Users\tobia\Desktop\Programas\Docker\BD PF
+
+# Paso 2: Exportar (se guarda en sql/export/)
+make db-export
+
+# El backup queda en:
+#   sql/export/ClinicaF_20260530_123456.bak  (fecha automatica)
+# Adentro del contenedor:
+#   /var/opt/mssql/backup/ClinicaF.bak
+
+# Alternativa manual SOLO dentro del contenedor:
+docker exec clinica_sqlserver /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "ClinicaDBgrupo3#" -C -Q "BACKUP DATABASE [ClinicaF] TO DISK = N'/var/opt/mssql/backup/ClinicaF.bak'"
+
+# Para copiar el backup del contenedor a tu PC:
+docker cp clinica_sqlserver:/var/opt/mssql/backup/ClinicaF.bak C:\Users\tobia\Desktop\Programas\Docker\BD PF\sql\export\ClinicaF.bak
+
+
+## 📥 IMPORTAR / RESTAURAR desde un backup
+
+### Opcion 1: Usar make (mas facil)
+# 1. Pone el .bak en:   sql/import/mi_backup.bak
+# 2. Ejecuta:
+make db-import
+
+# Toma el primer .bak que encuentre en sql/import/ y lo restaura
+
+
+### Opcion 2: Restaurar desde Downloads
+# Pone ClinicaF.bak en Descargas y ejecuta:
+make db-import-downloads
+
+
+### Opcion 3: Manual (para cuando NO funciona make)
+# 1. Copiar backup al contenedor:
+docker cp C:\Users\tobia\Desktop\Programas\Docker\BD PF\sql\import\mi_backup.bak clinica_sqlserver:/var/opt/mssql/backup/restore.bak
+
+# 2. Restaurar:
+docker exec clinica_sqlserver /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "ClinicaDBgrupo3#" -C -Q "RESTORE DATABASE [ClinicaF] FROM DISK = N'/var/opt/mssql/backup/restore.bak' WITH REPLACE, RECOVERY"
+
+### Opcion 4: Reset completo (borra BD y la recrea desde init)
+# Esto restaura el .bak original que esta en sql/init/
+# UTIL cuando la BD esta corrupta o queres empezar de cero
+make docker-down
+make docker-up    # el init.sql restaura el .bak automaticamente
+
+
+## 📂 DONDE SE GUARDAN LOS BACKUPS
+
+| Ubicacion                   | Descripcion                           |
+|-----------------------------|---------------------------------------|
+| sql/export/                 | Backups exportados con make db-export |
+| sql/import/                 | Aca se ponen los .bak para importar   |
+| sql/init/01-init.sql        | Script que corre al hacer docker-up   |
+| sql/init/                   | .bak original de la BD limpia         |
+| /var/opt/mssql/backup/      | Dentro del contenedor (tmp)           |
+
+
+## ✅ VERIFICACION RAPIDA
+
+# Ver que la BD existe y tiene tablas:
+docker exec clinica_sqlserver /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "ClinicaDBgrupo3#" -d ClinicaF -C -Q "SELECT COUNT(*) FROM information_schema.tables WHERE table_type='BASE TABLE'"
+
+
+## ⚠️ NOTAS IMPORTANTES
+
+- La password del SA es: ClinicaDBgrupo3#
+- El contenedor se llama: clinica_sqlserver
+- La BD se llama: ClinicaF
+- El puerto del contenedor: 1436
+- El puerto interno: 1433
+- Al hacer docker-up, el init.sql RESTAURA el .bak ORIGINAL
+  (todas las SPs, datos, etc. se revierten)
+
+listo funcionando

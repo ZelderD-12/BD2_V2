@@ -15,7 +15,7 @@ endif
 
 DB_CONTAINER = clinica_sqlserver
 DB_USER = sa
-DB_PASSWORD = "ClinicaDBgrupo3#"
+DB_PASSWORD = ClinicaDBgrupo3\#
 DB_NAME = ClinicaF
 SQLCMD = /opt/mssql-tools18/bin/sqlcmd
 DATE = $(shell powershell -Command "Get-Date -Format 'yyyyMMdd_HHmmss'")
@@ -38,7 +38,7 @@ start: stop dev
 # Exportar base de datos
 db-export:
 	@echo 📦 Exportando base de datos $(DB_NAME)...
-	@docker exec -it $(DB_CONTAINER) $(SQLCMD) -S localhost -U $(DB_USER) -P $(DB_PASSWORD) -C -Q "BACKUP DATABASE [$(DB_NAME)] TO DISK = N'/var/opt/mssql/backup/$(DB_NAME).bak'"
+	@docker exec -it $(DB_CONTAINER) $(SQLCMD) -S localhost -U $(DB_USER) -P "$(DB_PASSWORD)" -C -Q "BACKUP DATABASE [$(DB_NAME)] TO DISK = N'/var/opt/mssql/backup/$(DB_NAME).bak'"
 	@echo ✅ Backup creado en el contenedor
 	@mkdir -p sql/export 2>nul || true
 	@docker cp $(DB_CONTAINER):/var/opt/mssql/backup/$(DB_NAME).bak "./sql/export/$(DB_NAME)_$(DATE).bak"
@@ -48,14 +48,14 @@ db-export:
 db-import:
 	@powershell -Command "& { $$bak = Get-ChildItem '$(IMPORT_DIR)' -Filter '*.bak' | Select-Object -First 1; if (-not $$bak) { Write-Host '❌ No se encontró ningún archivo .bak en $(IMPORT_DIR)'; exit 1 } Write-Host '📋 Copiando '$$bak.Name' al contenedor...'; docker cp $$bak.FullName $(DB_CONTAINER):/var/opt/mssql/backup/restore.bak }"
 	@echo 🔄 Restaurando base de datos $(DB_NAME)...
-	@docker exec -it $(DB_CONTAINER) $(SQLCMD) -S localhost -U $(DB_USER) -P $(DB_PASSWORD) -C -Q "RESTORE DATABASE [$(DB_NAME)] FROM DISK = N'/var/opt/mssql/backup/restore.bak' WITH REPLACE, RECOVERY"
+	@docker exec -it $(DB_CONTAINER) $(SQLCMD) -S localhost -U $(DB_USER) -P "$(DB_PASSWORD)" -C -Q "RESTORE DATABASE [$(DB_NAME)] FROM DISK = N'/var/opt/mssql/backup/restore.bak' WITH REPLACE, RECOVERY"
 	@echo ✅ Base de datos restaurada exitosamente
 
 # Importar desde Downloads
 db-import-downloads:
 	@echo 📥 Restaurando desde Downloads...
 	@docker cp "$(DOWNLOADS)/ClinicaF.bak" $(DB_CONTAINER):/var/opt/mssql/backup/restore.bak
-	@docker exec -it $(DB_CONTAINER) $(SQLCMD) -S localhost -U $(DB_USER) -P $(DB_PASSWORD) -C -Q "RESTORE DATABASE [$(DB_NAME)] FROM DISK = N'/var/opt/mssql/backup/restore.bak' WITH REPLACE, RECOVERY"
+	@docker exec -it $(DB_CONTAINER) $(SQLCMD) -S localhost -U $(DB_USER) -P "$(DB_PASSWORD)" -C -Q "RESTORE DATABASE [$(DB_NAME)] FROM DISK = N'/var/opt/mssql/backup/restore.bak' WITH REPLACE, RECOVERY"
 	@echo ✅ Base de datos restaurada exitosamente
 
 # Restaurar todas las BDs desde sql/backup/

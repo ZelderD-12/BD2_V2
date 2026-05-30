@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import '../../assets/styles/pantalla_publica.css'
 
-const API_BASE = 'http://localhost:8080'
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8080'
 
 function normEst(t: Record<string, unknown>): string {
   const e = t.estado ?? t.estado_ticket ?? t.id_estado_ticket

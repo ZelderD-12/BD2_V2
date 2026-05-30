@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth, tienePermiso } from "../../context/AuthContext";
 import "../../assets/styles/farmacia.css";
 
-const API_BASE = "http://localhost:8080";
+const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:8080";
 
 export default function FarmaciaPage() {
   const { isLoggedIn, userRolId } = useAuth();

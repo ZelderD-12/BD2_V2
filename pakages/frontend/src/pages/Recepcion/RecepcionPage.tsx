@@ -4,7 +4,7 @@ import { useAuth, tienePermiso } from "../../context/AuthContext";
 import "../../assets/styles/recepcion.css";
 import "../../assets/styles/citas.css";
 
-const API_BASE = "http://localhost:8080";
+const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:8080";
 
 function useAutoClearMessage(delay = 5000) {
   const [msg, setMsg] = useState({ texto: "", tipo: "" });
