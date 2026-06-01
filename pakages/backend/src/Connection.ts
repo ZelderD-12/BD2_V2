@@ -1,7 +1,10 @@
 import sql, { ConnectionPool } from 'mssql';
 
+const dbHost = (process.env.DB_HOST || '').toLowerCase();
+const server = dbHost === 'localhost' ? '127.0.0.1' : dbHost;
+
 const dbConfig = {
-    server: process.env.DB_HOST || '',
+    server,
     database: process.env.DB_NAME || '',
     user: process.env.DB_USER || '',
     password: (process.env.DB_PASSWORD || '').replace(/^"(.*)"$/, '$1'),
@@ -11,12 +14,12 @@ const dbConfig = {
         trustServerCertificate: true
     },
     pool: {
-        max: 50,
-        min: 5,
-        idleTimeoutMillis: 60000
+        max: 10,
+        min: 1,
+        idleTimeoutMillis: 30000
     },
-    connectionTimeout: 30000,
-    requestTimeout: 45000,
+    connectionTimeout: 5000,
+    requestTimeout: 20000,
     debug: false
 };
 

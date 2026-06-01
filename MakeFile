@@ -35,28 +35,39 @@ stop:
 
 start: stop dev
 
-# Exportar base de datos
+# Exportar base de datos (ClinicaF + ClinicaF_DW)
 db-export:
-	@echo 📦 Exportando base de datos $(DB_NAME)...
-	@docker exec -it $(DB_CONTAINER) $(SQLCMD) -S localhost -U $(DB_USER) -P "$(DB_PASSWORD)" -C -Q "BACKUP DATABASE [$(DB_NAME)] TO DISK = N'/var/opt/mssql/backup/$(DB_NAME).bak'"
-	@echo ✅ Backup creado en el contenedor
+	@echo 📦 Exportando ClinicaF...
+	@docker exec -it $(DB_CONTAINER) $(SQLCMD) -S localhost -U $(DB_USER) -P "$(DB_PASSWORD)" -C -Q "BACKUP DATABASE [ClinicaF] TO DISK = N'/var/opt/mssql/backup/ClinicaF.bak'"
+	@echo 📦 Exportando ClinicaF_DW...
+	@docker exec -it $(DB_CONTAINER) $(SQLCMD) -S localhost -U $(DB_USER) -P "$(DB_PASSWORD)" -C -Q "BACKUP DATABASE [ClinicaF_DW] TO DISK = N'/var/opt/mssql/backup/ClinicaF_DW.bak'"
+	@echo ✅ Backups creados en el contenedor
 	@mkdir -p sql/export 2>nul || true
-	@docker cp $(DB_CONTAINER):/var/opt/mssql/backup/$(DB_NAME).bak "./sql/export/$(DB_NAME)_$(DATE).bak"
-	@echo ✅ Backup guardado en: sql/export/$(DB_NAME)_$(DATE).bak
+	@docker cp $(DB_CONTAINER):/var/opt/mssql/backup/ClinicaF.bak "./sql/export/ClinicaF.bak"
+	@docker cp $(DB_CONTAINER):/var/opt/mssql/backup/ClinicaF.bak "./sql/export/ClinicaF_$(DATE).bak"
+	@docker cp $(DB_CONTAINER):/var/opt/mssql/backup/ClinicaF_DW.bak "./sql/export/ClinicaF_DW.bak"
+	@docker cp $(DB_CONTAINER):/var/opt/mssql/backup/ClinicaF_DW.bak "./sql/export/ClinicaF_DW_$(DATE).bak"
+	@echo ✅ Backups guardados en: sql/export/
 
-# Importar base de datos desde sql/import/
+# Importar base de datos desde sql/export/
 db-import:
-	@powershell -Command "& { $$bak = Get-ChildItem '$(IMPORT_DIR)' -Filter '*.bak' | Select-Object -First 1; if (-not $$bak) { Write-Host '❌ No se encontró ningún archivo .bak en $(IMPORT_DIR)'; exit 1 } Write-Host '📋 Copiando '$$bak.Name' al contenedor...'; docker cp $$bak.FullName $(DB_CONTAINER):/var/opt/mssql/backup/restore.bak }"
-	@echo 🔄 Restaurando base de datos $(DB_NAME)...
-	@docker exec -it $(DB_CONTAINER) $(SQLCMD) -S localhost -U $(DB_USER) -P "$(DB_PASSWORD)" -C -Q "RESTORE DATABASE [$(DB_NAME)] FROM DISK = N'/var/opt/mssql/backup/restore.bak' WITH REPLACE, RECOVERY"
-	@echo ✅ Base de datos restaurada exitosamente
+	@echo 📋 Restaurando ClinicaF...
+	@docker cp "./sql/export/ClinicaF.bak" $(DB_CONTAINER):/var/opt/mssql/backup/restore_f.bak 2>$null
+	@docker exec -it $(DB_CONTAINER) $(SQLCMD) -S localhost -U $(DB_USER) -P "$(DB_PASSWORD)" -C -Q "RESTORE DATABASE [ClinicaF] FROM DISK = N'/var/opt/mssql/backup/restore_f.bak' WITH REPLACE, RECOVERY"
+	@echo 📋 Restaurando ClinicaF_DW...
+	@docker cp "./sql/export/ClinicaF_DW.bak" $(DB_CONTAINER):/var/opt/mssql/backup/restore_dw.bak 2>$null
+	@docker exec -it $(DB_CONTAINER) $(SQLCMD) -S localhost -U $(DB_USER) -P "$(DB_PASSWORD)" -C -Q "RESTORE DATABASE [ClinicaF_DW] FROM DISK = N'/var/opt/mssql/backup/restore_dw.bak' WITH REPLACE, RECOVERY"
+	@echo ✅ Bases de datos restauradas
 
 # Importar desde Downloads
 db-import-downloads:
-	@echo 📥 Restaurando desde Downloads...
-	@docker cp "$(DOWNLOADS)/ClinicaF.bak" $(DB_CONTAINER):/var/opt/mssql/backup/restore.bak
-	@docker exec -it $(DB_CONTAINER) $(SQLCMD) -S localhost -U $(DB_USER) -P "$(DB_PASSWORD)" -C -Q "RESTORE DATABASE [$(DB_NAME)] FROM DISK = N'/var/opt/mssql/backup/restore.bak' WITH REPLACE, RECOVERY"
-	@echo ✅ Base de datos restaurada exitosamente
+	@echo 📥 Restaurando ClinicaF desde Downloads...
+	@docker cp "$(DOWNLOADS)/ClinicaF.bak" $(DB_CONTAINER):/var/opt/mssql/backup/restore_f.bak
+	@docker exec -it $(DB_CONTAINER) $(SQLCMD) -S localhost -U $(DB_USER) -P "$(DB_PASSWORD)" -C -Q "RESTORE DATABASE [ClinicaF] FROM DISK = N'/var/opt/mssql/backup/restore_f.bak' WITH REPLACE, RECOVERY"
+	@echo 📥 Restaurando ClinicaF_DW desde Downloads...
+	@docker cp "$(DOWNLOADS)/ClinicaF_DW.bak" $(DB_CONTAINER):/var/opt/mssql/backup/restore_dw.bak
+	@docker exec -it $(DB_CONTAINER) $(SQLCMD) -S localhost -U $(DB_USER) -P "$(DB_PASSWORD)" -C -Q "RESTORE DATABASE [ClinicaF_DW] FROM DISK = N'/var/opt/mssql/backup/restore_dw.bak' WITH REPLACE, RECOVERY"
+	@echo ✅ Bases de datos restauradas
 
 # Restaurar todas las BDs desde sql/backup/
 db-restore-all: restaurarbd

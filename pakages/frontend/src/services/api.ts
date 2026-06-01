@@ -1,4 +1,5 @@
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
+const base = import.meta.env.VITE_API_URL || window.location.origin;
+const API_URL = base.endsWith('/') ? base.slice(0, -1) : base;
 
 export const api = {
   // Auth

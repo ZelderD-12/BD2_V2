@@ -1,6 +1,5 @@
 import { sql, getConnection } from '../Connection';
 import type { Context } from 'elysia';
-import { sendLlamadoEmail, sendNoShowEmail } from './emailService';
 
 const ESTADOS_TICKET_SP = [
     'EN_ESPERA', 'LLAMADO', 'EN_ATENCION', 'FINALIZADO', 'NO_SHOW'
@@ -123,19 +122,6 @@ export const llamarSiguienteService = async ({ body, set, request }: Context) =>
         const idTicket = result.output.id_ticket_out;
         const codigoTicket = result.output.codigo_out;
 
-        // Enviar email en segundo plano (fire & forget)
-        (async () => {
-            try {
-                const pacienteRes = await pool.request()
-                    .input('id_ticket', sql.Int, idTicket)
-                    .execute('dbo.sp_GetPacienteByTicket');
-                const row = pacienteRes.recordset[0];
-                if (row?.email) {
-                    sendLlamadoEmail(row.email, row.nombres, codigoTicket, row.nombre_sede || 'Sede');
-                }
-            } catch { /* email background fail silencioso */ }
-        })();
-
         return { success: true, mensaje, data: { id_ticket: idTicket, codigo_ticket: codigoTicket, prioridad: result.output.prioridad_out, estado: 'LLAMADO' } };
     } catch (error) {
         console.error('Error en llamarSiguiente:', error);
@@ -169,28 +155,10 @@ export const cambiarEstadoTicketService = async ({ params, body, set, request }:
             .input('motivo', sql.VarChar(300), motivo || null)
             .output('mensaje_out', sql.VarChar(200))
             .execute('dbo.sp_CambiarEstadoTicket');
-
-        const rv = result.returnValue;
+        const rv = result.output.return_value;
         const mensaje = result.output.mensaje_out;
 
         if (rv === 0) {
-            (async () => {
-                try {
-                    if (est === 'LLAMADO') {
-                        const pacienteRes = await pool.request()
-                            .input('id_ticket', sql.Int, parseInt(id, 10))
-                            .execute('dbo.sp_GetPacienteByTicket');
-                        const row = pacienteRes.recordset[0];
-                        if (row?.email) sendLlamadoEmail(row.email, row.nombres, row.codigo_ticket, row.nombre_sede || 'Sede');
-                    } else if (est === 'NO_SHOW') {
-                        const pacienteRes = await pool.request()
-                            .input('id_ticket', sql.Int, parseInt(id, 10))
-                            .execute('dbo.sp_GetPacienteByTicket');
-                        const row = pacienteRes.recordset[0];
-                        if (row?.email) sendNoShowEmail(row.email, row.nombres || 'Paciente', row.codigo_ticket, row.nombre_sede || 'Sede');
-                    }
-                } catch { /* email background fail silencioso */ }
-            })();
             return { success: true, mensaje, data: { id_ticket: parseInt(id), estado: est } };
         }
 
@@ -313,23 +281,6 @@ export const cambiarEstadoTicketManual = async ({ params, body, set, request }: 
         const mensaje = result.output.mensaje_out;
 
         if (rv === 0) {
-            (async () => {
-                try {
-                    if (est === 'LLAMADO') {
-                        const pacienteRes = await pool.request()
-                            .input('id_ticket', sql.Int, parseInt(id, 10))
-                            .execute('dbo.sp_GetPacienteByTicket');
-                        const row = pacienteRes.recordset[0];
-                        if (row?.email) sendLlamadoEmail(row.email, row.nombres, row.codigo_ticket, row.nombre_sede || 'Sede');
-                    } else if (est === 'NO_SHOW') {
-                        const pacienteRes = await pool.request()
-                            .input('id_ticket', sql.Int, parseInt(id, 10))
-                            .execute('dbo.sp_GetPacienteByTicket');
-                        const row = pacienteRes.recordset[0];
-                        if (row?.email) sendNoShowEmail(row.email, row.nombres || 'Paciente', row.codigo_ticket, row.nombre_sede || 'Sede');
-                    }
-                } catch { /* email background fail silencioso */ }
-            })();
             return { success: true, mensaje, data: { id_ticket: parseInt(id), estado: est } };
         }
 

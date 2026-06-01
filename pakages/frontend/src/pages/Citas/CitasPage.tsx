@@ -660,12 +660,7 @@ export default function CitasPage() {
 
         {/* LISTADO */}
         <div className="citas-grid">
-          {loading ? (
-            <div className="loading-spinner">
-              <i className="fas fa-spinner fa-spin"></i>
-              Cargando citas...
-            </div>
-          ) : (verHistorial ? citasHistorial : citas).length === 0 ? (
+          {(verHistorial ? citasHistorial : citas).length === 0 ? (
             <div className="empty-state">
               <i className="fas fa-calendar-alt"></i>
               <h3>{verHistorial ? "No hay historial de citas" : "No tienes citas"}</h3>

@@ -37,7 +37,7 @@ export default function RecetasPage() {
     const userId = localStorage.getItem("user_id") || localStorage.getItem("id_usuario");
     if (!userId) { setLoading(false); return; }
     try {
-      const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
+      const API_URL = import.meta.env.VITE_API_URL || window.location.origin;
       const res = await fetch(`${API_URL}/api/recetas/paciente/${userId}`);
       const data = await res.json();
       if (data.success) setRecetas(data.data || []);

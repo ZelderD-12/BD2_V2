@@ -199,3 +199,21 @@ expirarCitasVencidas();
 const port = 8080;
 app.listen(port);
 console.log('\n🚀 API corriendo en http://localhost:' + port);
+
+// Pre-calentar pool de BD
+getConnection().then(() => console.log('✅ Pool de BD listo')).catch(() => {});
+
+// ========== REFRESCAR DATA WAREHOUSE ==========
+async function refrescarDW() {
+    try {
+        const pool = await getConnection();
+        await pool.request().query(`EXEC ClinicaF_DW.dbo.sp_ETL_Incremental; EXEC ClinicaF_DW.dbo.sp_ETL_RefreshCubes;`);
+        console.log('[DW] Data Warehouse actualizado');
+    } catch (e) {
+        console.error('[DW] Error al refrescar:', e);
+    }
+}
+// Cada 10 minutos
+setInterval(refrescarDW, 10 * 60 * 1000);
+// Primera ejecucion al iniciar
+setTimeout(refrescarDW, 5000);
